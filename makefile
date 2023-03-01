@@ -11,5 +11,5 @@ cee.o: cee.h cee.c
 	$(CC) $(CFLAGS) -c cee.c
 
 clean:
-	rm *.o hellomake
+	rm *.o *.~ hellomake
 
