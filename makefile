@@ -14,5 +14,5 @@ subset.o: subset.h subset.c
 	$(CC) $(CFLAGS) -c subset.c
 
 clean:
-	rm *.o *.~ sch_ch
+	rm *.o *~ sch_ch
 

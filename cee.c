@@ -124,3 +124,60 @@ void print_double_cee(struct double_cee my_cee) {
   }
     printf("\n");
 }
+
+
+int minimum_gmc_inequality(struct double_cee my_cee, struct subset school_subset) {
+  int i,j;
+  double school_sum = 0;
+  double student_sum = 0;
+  struct subset student_subset = nullset(my_cee.no_students);  
+
+  for (i = 1; i <= my_cee.no_students; i++) {
+    student_subset.indicator[i-1] = 1;
+    j = 1; 
+    while (student_subset.indicator[i-1] == 1 && j <= my_cee.no_schools) {
+      if (school_subset.indicator[j]==0 && my_cee.eligibility[(i-1)*my_cee.no_schools+j-1]==1) {
+      student_subset.indicator[i-1] = 0;
+      }
+      j++;      
+    }
+  }
+
+  for (i = 1; i <= my_cee.no_students; i++) {
+    if (student_subset.indicator[i-1] == 1) {
+      student_sum += my_cee.requirements[i-1];
+    }
+  }
+    
+  for (j = 1; j <= my_cee.no_students; j++) {
+    if (school_subset.indicator[j-1] == 1) {
+      school_sum += my_cee.quotas[j-1];
+    }
+  }
+
+  destroy_subset(student_subset);
+
+  if (student_sum <= school_sum) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+
+int gmc_holds(struct double_cee my_cee) {
+  int answer = 1;
+  struct subset school_subset = nullset(my_cee.no_schools);
+
+  while (answer == 1 && school_subset.subset_size < my_cee.no_schools) {
+    iterate(&school_subset);
+    if (!minimum_gmc_inequality(my_cee,school_subset)) {
+      answer = 0;
+    }
+  }
+
+  destroy_subset(school_subset);
+
+  return answer;
+}

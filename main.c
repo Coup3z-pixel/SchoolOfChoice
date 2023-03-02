@@ -8,7 +8,6 @@
 
 #include "cee.h"
 #include "student.h"
-#include "subset.h"
 
 struct school
 {
@@ -123,23 +122,30 @@ int main(int argc, char const *argv[])
   
   struct double_cee my_new_cee = double_cee_from_int_cee(my_cee);
   print_double_cee(my_new_cee);
+
+  if (gmc_holds(my_new_cee)) {
+    printf("We have checked that the derived double cee satisfies the GMC.\n");
+      }
+  else {
+    printf("Unexpectedly, the derived double cee does not satify the GMC.\n");
+  }
   
   destroy_int_cee(my_cee);
   destroy_double_cee(my_new_cee);
   
   printf("\nWe made an integer cee, printed it, derived the double cee, printed that, and destroyed both.\n\n");
 
-  printf("We now generate all the subsets of a four element set, but go a step too far.\n");
-
   struct subset my_subset = nullset(4);
   print_subset(my_subset);
   printf("\n");
-  for (int i = 1; i <= 16; i++) {
+  for (int i = 1; i <= 15; i++) {
     iterate(&my_subset);
     print_subset(my_subset);
     printf("\n");
   }
+  destroy_subset(my_subset);
 
+  printf("We have iterated the subsets of a four element set, then destroyed the subset.\n");
   
   exit(0);
   

@@ -21,6 +21,10 @@ void print_subset(struct subset my_subset) {
   printf("%d)",my_subset.indicator[my_subset.large_set_size-1]);
 }
 
+void destroy_subset(struct subset my_subset) {
+  free(my_subset.indicator);
+}
+
 
 void iterate(struct subset *my_subset) {
   int i,j,k;

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "subset.h"
+
 struct int_cee {
   char name[20];
   int no_students;
@@ -33,3 +35,7 @@ struct double_cee double_cee_from_int_cee(struct int_cee my_cee);
 void print_int_cee(struct int_cee my_cee);
 
 void print_double_cee(struct double_cee my_cee);
+
+int minimum_gmc_inequality(struct double_cee my_cee, struct subset school_subset);
+
+int gmc_holds(struct double_cee my_cee);

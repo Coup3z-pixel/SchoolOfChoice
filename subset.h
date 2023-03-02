@@ -11,6 +11,6 @@ struct subset nullset(int large_set_size);
 
 void print_subset(struct subset my_subset);
 
-void iterate(struct subset *my_subset); /* We go from smallest to largest */
+void destroy_subset(struct subset my_subset);
 
-int is_element_of(int element, struct subset my_subset);
+void iterate(struct subset *my_subset); /* We go from smallest to largest */
