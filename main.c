@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
+#include <string.h>
 
+#include "cee.h"
 #include "student.h"
 
 struct school
@@ -114,6 +116,21 @@ int GMCinequality(struct school *OSet, struct student *ISet, int ILength, int OL
 
 int main(int argc, char const *argv[])
 {
+  struct int_cee my_cee;
+  my_cee = make_toy_cee();
+  print_int_cee(my_cee);
+  printf("\n");
+  
+  struct double_cee my_new_cee;
+  my_new_cee = double_cee_from_int_cee(my_cee);
+  print_double_cee(my_new_cee);
+  
+  destroy_int_cee(my_cee);
+  destroy_double_cee(my_new_cee);
+  
+  printf("\nWe made an integer cee, printed it, derived the double cee, printed that, and destroyed both.\n");
+  exit(0);
+  
 	int OLength = 3;
 	int ILength = 3;
 
