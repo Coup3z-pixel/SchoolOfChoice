@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <string.h>
 
-#include "cee.h"
+#include "partalloc.h"
 #include "student.h"
 
 struct school
@@ -129,6 +129,10 @@ int main(int argc, char const *argv[])
   else {
     printf("Unexpectedly, the derived double cee does not satify the GMC.\n");
   }
+
+  struct partial_alloc my_partial_alloc = zero_partial_alloc(my_new_cee);
+  print_partial_alloc(my_partial_alloc);
+  destroy_partial_alloc(my_partial_alloc);
   
   destroy_int_cee(my_cee);
   destroy_double_cee(my_new_cee);

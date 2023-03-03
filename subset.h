@@ -1,3 +1,6 @@
+#ifndef SUBSET_H
+#define SUBSET_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -14,3 +17,5 @@ void print_subset(struct subset my_subset);
 void destroy_subset(struct subset my_subset);
 
 void iterate(struct subset *my_subset); /* We go from smallest to largest */
+
+#endif /* SUBSET_H */

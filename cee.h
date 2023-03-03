@@ -1,3 +1,6 @@
+#ifndef CEE_H
+#define CEE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,3 +42,5 @@ void print_double_cee(struct double_cee my_cee);
 int minimum_gmc_inequality(struct double_cee my_cee, struct subset school_subset);
 
 int gmc_holds(struct double_cee my_cee);
+
+#endif /* CEE_H */
