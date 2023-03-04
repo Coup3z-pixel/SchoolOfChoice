@@ -8,6 +8,7 @@
 
 #include "partalloc.h"
 #include "student.h"
+#include "schchprob.h"
 
 struct school
 {
@@ -116,6 +117,12 @@ int GMCinequality(struct school *OSet, struct student *ISet, int ILength, int OL
 
 int main(int argc, char const *argv[])
 {
+  struct sch_ch_prob my_sch_ch_prob = make_toy_sch_ch_prob();
+  print_sch_ch_prob(my_sch_ch_prob);
+  destroy_sch_ch_prob(my_sch_ch_prob);
+  printf("We created the toy school choice problem, printed it, and destroyed it.\n");
+  
+  /*
   struct int_cee my_cee = make_toy_cee();
   print_int_cee(my_cee);
   printf("\n");
@@ -150,6 +157,8 @@ int main(int argc, char const *argv[])
   destroy_subset(my_subset);
 
   printf("We have iterated the subsets of a four element set, then destroyed the subset.\n");
+
+  */
   
   exit(0);
   
