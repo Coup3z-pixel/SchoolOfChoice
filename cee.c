@@ -4,8 +4,7 @@
 struct int_cee make_toy_cee() {
   int i,j;
   struct int_cee my_cee;
-  char str[20] = "My Little CEE";
-  strcpy(my_cee.name,str);
+  
   my_cee.no_students = 4;
   my_cee.no_schools = 3;
   
@@ -37,8 +36,7 @@ void destroy_double_cee(struct double_cee my_cee) {
 struct double_cee double_cee_from_int_cee(struct int_cee my_cee){
   int i,j;
   struct double_cee my_new_cee;
-  char str[20] = "My Little CEE";
-  strcpy(my_new_cee.name,str);
+  
   my_new_cee.no_students = my_cee.no_students;
   my_new_cee.no_schools = my_cee.no_schools;
   
@@ -67,17 +65,18 @@ struct double_cee make_toy_double_cee() {
 
 void print_int_cee(struct int_cee my_cee) {
   int i,j;
-  printf("%s\n",my_cee.name);
-  printf("There are %d students and %d schools.\n", my_cee.no_students, my_cee.no_schools);
+  printf("/* This is a sample introductory comment. */\n");
+  
+  printf("There are %d students and %d schools\n", my_cee.no_students, my_cee.no_schools);
     
-  printf("The vector of quotas is: (");
+  printf("The vector of quotas is (");
   for (i = 1; i < my_cee.no_schools; i++) {
     printf("%d,",my_cee.quotas[i-1]);
   }
-  printf("%d).\n",my_cee.quotas[my_cee.no_schools-1]);
+  printf("%d)\n",my_cee.quotas[my_cee.no_schools-1]);
   
   
-  printf("The priority matrix is:");
+  printf("The priority matrix is");
     for (i = 1; i <= my_cee.no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee.no_schools; j++) {
@@ -89,16 +88,16 @@ void print_int_cee(struct int_cee my_cee) {
 
 void print_double_cee(struct double_cee my_cee) {
   int i,j;
-  printf("%s\n",my_cee.name);
+  printf("/* This is a sample introductory comment. */\n");
   printf("There are %d students and %d schools.\n", my_cee.no_students, my_cee.no_schools);
     
-  printf("The vector of quotas is: (");
+  printf("The vector of quotas is (");
   for (i = 1; i < my_cee.no_schools; i++) {
     printf("%1.2f,",my_cee.quotas[i-1]);
   }
-  printf("%1.2f).\n",my_cee.quotas[my_cee.no_schools-1]);
+  printf("%1.2f)\n",my_cee.quotas[my_cee.no_schools-1]);
   
-  printf("The priority matrix is:");
+  printf("The priority matrix is");
     for (i = 1; i <= my_cee.no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee.no_schools; j++) {

@@ -8,7 +8,6 @@
 #include "subset.h"
 
 struct int_cee {
-  char name[20];
   int no_students;
   int no_schools;
   int* quotas;
@@ -17,7 +16,6 @@ struct int_cee {
 };
 
 struct double_cee {
-  char name[20];
   int no_students;
   int no_schools;
   double* quotas;

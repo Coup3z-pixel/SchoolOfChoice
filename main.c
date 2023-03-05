@@ -9,6 +9,7 @@
 #include "partalloc.h"
 #include "student.h"
 #include "schchprob.h"
+#include "parser.h"
 
 struct school
 {
@@ -117,48 +118,18 @@ int GMCinequality(struct school *OSet, struct student *ISet, int ILength, int OL
 
 int main(int argc, char const *argv[])
 {
-  struct sch_ch_prob my_sch_ch_prob = make_toy_sch_ch_prob();
-  print_sch_ch_prob(my_sch_ch_prob);
-  destroy_sch_ch_prob(my_sch_ch_prob);
-  printf("We created the toy school choice problem, printed it, and destroyed it.\n");
+  struct input_sch_ch_prob my_sch_ch_prob;
+    
+  /*  my_sch_ch_prob = make_toy_sch_ch_prob(); */
+  my_sch_ch_prob = sch_ch_prob_from_file(); 
+  print_input_sch_ch_prob(my_sch_ch_prob); 
+  destroy_input_sch_ch_prob(my_sch_ch_prob);
+
+  exit(0);
   
-  /*
-  struct int_cee my_cee = make_toy_cee();
-  print_int_cee(my_cee);
-  printf("\n");
-  
-  struct double_cee my_new_cee = double_cee_from_int_cee(my_cee);
-  print_double_cee(my_new_cee);
-
-  if (gmc_holds(my_new_cee)) {
-    printf("We have checked that the derived double cee satisfies the GMC.\n");
-      }
-  else {
-    printf("Unexpectedly, the derived double cee does not satify the GMC.\n");
-  }
-
-  struct partial_alloc my_partial_alloc = zero_partial_alloc(my_new_cee);
-  print_partial_alloc(my_partial_alloc);
-  destroy_partial_alloc(my_partial_alloc);
-  
-  destroy_int_cee(my_cee);
-  destroy_double_cee(my_new_cee);
-  
-  printf("\nWe made an integer cee, printed it, derived the double cee, printed that, and destroyed both.\n\n");
-
-  struct subset my_subset = nullset(4);
-  print_subset(my_subset);
-  printf("\n");
-  for (int i = 1; i <= 15; i++) {
-    iterate(&my_subset);
-    print_subset(my_subset);
-    printf("\n");
-  }
-  destroy_subset(my_subset);
-
-  printf("We have iterated the subsets of a four element set, then destroyed the subset.\n");
-
-  */
+  my_sch_ch_prob = make_toy_sch_ch_prob();
+  print_input_sch_ch_prob(my_sch_ch_prob);
+  destroy_input_sch_ch_prob(my_sch_ch_prob);
   
   exit(0);
   

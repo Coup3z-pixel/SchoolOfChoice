@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-I.
 
-sch_ch: main.c cee.o student.o subset.o partalloc.o schchprob.o
-	$(CC) -o sch_ch main.c cee.o student.o subset.o partalloc.o schchprob.o -lm
+sch_ch: main.c cee.o student.o subset.o partalloc.o schchprob.o parser.o
+	$(CC) -o sch_ch main.c cee.o student.o subset.o partalloc.o schchprob.o parser.o -lm
 
 cee.o: cee.h cee.c
 	$(CC) $(CFLAGS) -c cee.c
@@ -18,6 +18,9 @@ partalloc.o: partalloc.h partalloc.c
 
 schchprob.o: schchprob.h schchprob.c
 	$(CC) $(CFLAGS) -c schchprob.c
+
+parser.o: parser.h parser.c
+	$(CC) $(CFLAGS) -c parser.c
 
 clean:
 	rm *.o *~ sch_ch
