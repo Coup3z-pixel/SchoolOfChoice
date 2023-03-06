@@ -284,7 +284,7 @@ int get_number(FILE *fp, char next) {
     next = getc(fp);
   }
   if (!is_white_space(next)) {
-    printf("ERROR: numbers should be surrounded by white space.\n");
+    printf("ERROR: must be surrounded by white space (\' \',\'\\n\',\'\\t\',\'(\',\')\',\',\').\n");
     exit(0);
   }
   return answer;

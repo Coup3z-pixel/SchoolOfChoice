@@ -95,4 +95,117 @@ void print_input_sch_ch_prob(struct input_sch_ch_prob my_sch_ch_prob) {
   printf("\n");
 }
 
+
+struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob my_sch_ch_prob) {
+  int i, j, k;
+  struct sch_ch_prob new_sch_ch_prob;
+
+  int nst = my_sch_ch_prob.cee.no_students;
+  int nsc = my_sch_ch_prob.cee.no_schools;
+
+  new_sch_ch_prob.cee.no_students = nst;
+  new_sch_ch_prob.cee.no_schools = nsc;
+
+  new_sch_ch_prob.cee.quotas = malloc(nsc * sizeof(double));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.cee.quotas[j-1] = (double)my_sch_ch_prob.cee.quotas[j-1];
+  }
+
+  new_sch_ch_prob.cee.priority = malloc(nst * nsc * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] =
+	my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1];
+    }
+  }
+
+  new_sch_ch_prob.no_eligible_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.no_eligible_schools[i-1] = my_sch_ch_prob.no_eligible_schools[i-1];
+  }
+
+  new_sch_ch_prob.preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.preferences[i-1]=malloc(new_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
+    for (k = 1; k <= new_sch_ch_prob.no_eligible_schools[i-1]; k++) {
+      new_sch_ch_prob.preferences[i-1][k-1] = my_sch_ch_prob.preferences[i-1][k-1];
+    }
+  }
+
+  new_sch_ch_prob.priority_threshold = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.priority_threshold[j-1] = my_sch_ch_prob.priority_threshold[j-1];
+  }
+
+  new_sch_ch_prob.time_remaining = 1.0;
+
+  return new_sch_ch_prob;
+}
+
+struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob my_sch_ch_prob) {
+  int i, j, k, count;
+  struct sch_ch_prob new_sch_ch_prob;
+
+  int nst = my_sch_ch_prob.cee.no_students;
+  int nsc = my_sch_ch_prob.cee.no_schools;
+
+  new_sch_ch_prob.cee.no_students = nst;
+  new_sch_ch_prob.cee.no_schools = nsc;
+
+  new_sch_ch_prob.cee.quotas = malloc(nsc * sizeof(double));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.cee.quotas[j-1] = my_sch_ch_prob.cee.quotas[j-1];
+  }
+
+  new_sch_ch_prob.cee.priority = malloc(nst * nsc * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      if (my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] <
+	  my_sch_ch_prob.priority_threshold[j-1] ||
+	  my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 0) {
+	new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] = 0;
+      }
+      else {
+	new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] = 1;
+      }
+    }
+  }
+
+  new_sch_ch_prob.no_eligible_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    count = 0;
+    for (j = 1; j <= nsc; j++) {
+      if (new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 1) {
+	count++;
+      }
+      if (count == 0) {
+	printf("Student %i has no eligible schools.\n",i);
+	exit(0);
+      }
+    }
+    new_sch_ch_prob.no_eligible_schools[i-1] = count;
+  }
+  
+  new_sch_ch_prob.preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.preferences[i-1]=malloc(new_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
+    j = 1;
+    for (k = 1; k <= new_sch_ch_prob.no_eligible_schools[i-1]; k++) {
+      while (new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 0) {
+	j++;
+      }
+      new_sch_ch_prob.preferences[i-1][k-1] = j;
+      j++;
+    }
+  }
+
+  new_sch_ch_prob.priority_threshold = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.priority_threshold[j-1] = 1;
+  }
+
+  new_sch_ch_prob.time_remaining = my_sch_ch_prob.time_remaining;
+
+  return new_sch_ch_prob;
+}
     
