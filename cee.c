@@ -13,10 +13,11 @@ struct int_cee make_toy_cee() {
   my_cee.quotas[1] = 2;
   my_cee.quotas[2] = 1;
   
-  my_cee.priority = malloc(12 * sizeof(int));
+  my_cee.priority = malloc(4 * sizeof(int*));
   for (i = 1; i <= my_cee.no_students; i++) {
+  my_cee.priority[i-1] = malloc(3 * sizeof(int));
     for (j = 1; j <= my_cee.no_schools; j++) {
-      my_cee.priority[(i - 1) * my_cee.no_schools + j - 1] = 1; 
+      my_cee.priority[i-1][j-1] = 1; 
     }
   }
   
@@ -24,12 +25,20 @@ struct int_cee make_toy_cee() {
 }
 
 void destroy_int_cee(struct int_cee my_cee) {
+  int i;
   free(my_cee.quotas);
+  for (i = 1; i <= my_cee.no_students; i++) {
+    free(my_cee.priority[i-1]);
+  }
   free(my_cee.priority);
 }
 
 void destroy_double_cee(struct double_cee my_cee) {
+  int i;
   free(my_cee.quotas);
+  for (i = 1; i <= my_cee.no_students; i++) {
+    free(my_cee.priority[i-1]);
+  }
   free(my_cee.priority);
 }
 
@@ -41,15 +50,16 @@ struct double_cee double_cee_from_int_cee(struct int_cee my_cee){
   my_new_cee.no_schools = my_cee.no_schools;
   
   my_new_cee.quotas = malloc(my_cee.no_schools * sizeof(double));
-  for (i = 1; i <= my_new_cee.no_students; i++) {
-    my_new_cee.quotas[i-1] = (double) my_cee.quotas[i-1];
+  for (j = 1; j <= my_new_cee.no_schools; j++) {
+    my_new_cee.quotas[j-1] = (double) my_cee.quotas[j-1];
   }
   
-  my_new_cee.priority = malloc(my_cee.no_students * my_cee.no_schools * sizeof(int));
+  my_new_cee.priority = malloc(my_cee.no_students * sizeof(int*));
   for (i = 1; i <= my_cee.no_students; i++) {
+  my_new_cee.priority[i-1] = malloc(my_cee.no_schools * sizeof(int));
     for (j = 1; j <= my_new_cee.no_schools; j++) {
-      my_new_cee.priority[(i - 1) * my_cee.no_schools + j - 1] =
-	my_cee.priority[(i - 1) * my_cee.no_schools + j - 1]; 
+      my_new_cee.priority[i-1][j-1] =
+	my_cee.priority[i-1][j-1]; 
     }
   }
   
@@ -80,7 +90,7 @@ void print_int_cee(struct int_cee my_cee) {
     for (i = 1; i <= my_cee.no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee.no_schools; j++) {
-      printf("     %d", my_cee.priority[(i - 1) * my_cee.no_schools + j - 1]);
+      printf("     %d", my_cee.priority[i-1][j-1]);
     }
   }
     printf("\n");
@@ -101,7 +111,7 @@ void print_double_cee(struct double_cee my_cee) {
     for (i = 1; i <= my_cee.no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee.no_schools; j++) {
-      printf("     %d", my_cee.priority[(i - 1) * my_cee.no_schools + j - 1]);
+      printf("     %d", my_cee.priority[i-1][j-1]);
     }
   }
     printf("\n");
@@ -118,7 +128,7 @@ int minimum_gmc_inequality(struct double_cee my_cee, struct subset school_subset
     student_subset.indicator[i-1] = 1;
     j = 1; 
     while (student_subset.indicator[i-1] == 1 && j <= my_cee.no_schools) {
-      if (school_subset.indicator[j]==0 && my_cee.priority[(i-1)*my_cee.no_schools+j-1]==1) {
+      if (school_subset.indicator[j] == 0 && my_cee.priority[i-1][j-1] == 1) {
       student_subset.indicator[i-1] = 0;
       }
       j++;      

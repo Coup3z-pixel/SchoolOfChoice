@@ -379,12 +379,12 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
   next = get_next(fp);
   check_is_second(fp,next);
    
-  my_sch_ch_prob.cee.priority = malloc(my_sch_ch_prob.cee.no_students *
-				       my_sch_ch_prob.cee.no_schools * sizeof(int));
+  my_sch_ch_prob.cee.priority = malloc(my_sch_ch_prob.cee.no_students * sizeof(int*));
   for (i = 1; i <= my_sch_ch_prob.cee.no_students; i++) {
+    my_sch_ch_prob.cee.priority[i-1] = malloc(my_sch_ch_prob.cee.no_schools * sizeof(int));
     for (j = 1; j <= my_sch_ch_prob.cee.no_schools; j++) {
       next = get_next(fp);
-      my_sch_ch_prob.cee.priority[(i-1)*my_sch_ch_prob.cee.no_schools+j-1] = get_number(fp,next);
+      my_sch_ch_prob.cee.priority[i-1][j-1] = get_number(fp,next);
     }
   } 
   
@@ -459,7 +459,7 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
   for (i = 1; i <= my_sch_ch_prob.cee.no_students; i++) {
     int count = 0;
     for (j = 1; j <= my_sch_ch_prob.cee.no_schools; j++) {
-      if (my_sch_ch_prob.cee.priority[(i-1)*my_sch_ch_prob.cee.no_schools + j - 1] > 0) {
+      if (my_sch_ch_prob.cee.priority[i-1][j-1] > 0) {
 	count++;
 	int found = 0;
 	for (int k = 1; k <= my_sch_ch_prob.no_eligible_schools[i-1]; k++) {

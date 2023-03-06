@@ -11,7 +11,7 @@ struct int_cee {
   int no_students;
   int no_schools;
   int* quotas;
-  int* priority; /* In the computer the no_students x no_schools matrix is a one dimensional
+  int** priority; /* In the computer the no_students x no_schools matrix is a one dimensional
                        array with no_students * no_schools entries. */
 };
 
@@ -19,7 +19,7 @@ struct double_cee {
   int no_students;
   int no_schools;
   double* quotas;
-  int* priority; /* In the computer the no_students x no_schools matrix is a one dimensional
+  int** priority; /* In the computer the no_students x no_schools matrix is a one dimensional
                        array with no_students * no_schools entries. */
 };
 

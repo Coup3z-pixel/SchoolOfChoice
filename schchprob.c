@@ -111,11 +111,11 @@ struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob my_sch_ch_pro
     new_sch_ch_prob.cee.quotas[j-1] = (double)my_sch_ch_prob.cee.quotas[j-1];
   }
 
-  new_sch_ch_prob.cee.priority = malloc(nst * nsc * sizeof(int));
+  new_sch_ch_prob.cee.priority = malloc(nst *sizeof(int*));
   for (i = 1; i <= nst; i++) {
+  new_sch_ch_prob.cee.priority[i-1] = malloc(nsc *sizeof(int));
     for (j = 1; j <= nsc; j++) {
-      new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] =
-	my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1];
+      new_sch_ch_prob.cee.priority[i-1][j-1] = my_sch_ch_prob.cee.priority[i-1][j-1];
     }
   }
 
@@ -157,16 +157,17 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob my_sch_ch_prob) {
     new_sch_ch_prob.cee.quotas[j-1] = my_sch_ch_prob.cee.quotas[j-1];
   }
 
-  new_sch_ch_prob.cee.priority = malloc(nst * nsc * sizeof(int));
+  new_sch_ch_prob.cee.priority = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.cee.priority[i-1] = malloc(nsc * sizeof(int));
     for (j = 1; j <= nsc; j++) {
-      if (my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] <
+      if (my_sch_ch_prob.cee.priority[i-1][j-1] <
 	  my_sch_ch_prob.priority_threshold[j-1] ||
-	  my_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 0) {
-	new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] = 0;
+	  my_sch_ch_prob.cee.priority[i-1][j-1] == 0) {
+	new_sch_ch_prob.cee.priority[i-1][j-1] = 0;
       }
       else {
-	new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] = 1;
+	new_sch_ch_prob.cee.priority[i-1][j-1] = 1;
       }
     }
   }
@@ -175,7 +176,7 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob my_sch_ch_prob) {
   for (i = 1; i <= nst; i++) {
     count = 0;
     for (j = 1; j <= nsc; j++) {
-      if (new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 1) {
+      if (new_sch_ch_prob.cee.priority[i-1][j-1] == 1) {
 	count++;
       }
       if (count == 0) {
@@ -191,7 +192,7 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob my_sch_ch_prob) {
     new_sch_ch_prob.preferences[i-1]=malloc(new_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
     j = 1;
     for (k = 1; k <= new_sch_ch_prob.no_eligible_schools[i-1]; k++) {
-      while (new_sch_ch_prob.cee.priority[(i - 1) * nsc + j - 1] == 0) {
+      while (new_sch_ch_prob.cee.priority[i-1][j-1] == 0) {
 	j++;
       }
       new_sch_ch_prob.preferences[i-1][k-1] = j;
