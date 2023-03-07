@@ -12,10 +12,12 @@ struct subset {
 
 struct subset nullset(int large_set_size);
 
-void print_subset(struct subset my_subset);
+struct subset fullset(int large_set_size);
 
-void destroy_subset(struct subset my_subset);
+void print_subset(struct subset* my_subset);
 
-void iterate(struct subset *my_subset); /* We go from smallest to largest */
+void destroy_subset(struct subset* my_subset);
+
+void iterate(struct subset* my_subset); /* We go from smallest to largest */
 
 #endif /* SUBSET_H */

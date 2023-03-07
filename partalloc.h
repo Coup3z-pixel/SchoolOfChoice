@@ -11,8 +11,7 @@
 struct partial_alloc {
   int no_students;
   int no_schools;
-  double* allocations; /* In the computer the no_students x no_schools matrix is a one dimensional
-                       array with no_students * no_schools entries. */
+  double** allocations; 
 };
 
 struct partial_alloc zero_partial_alloc(struct double_cee my_cee);
@@ -20,5 +19,7 @@ struct partial_alloc zero_partial_alloc(struct double_cee my_cee);
 void destroy_partial_alloc(struct partial_alloc my_partial_alloc);
 
 void print_partial_alloc(struct partial_alloc my_partial_alloc);
+
+void increment_partial_alloc(struct partial_alloc base, struct partial_alloc increment);
 
 #endif /* PARTALLOC_H */

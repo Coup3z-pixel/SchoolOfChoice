@@ -12,17 +12,29 @@ struct subset nullset(int large_set_size) {
   return my_subset;
 }
 
-void print_subset(struct subset my_subset) {
+struct subset fullset(int large_set_size) {
   int i;
-  printf("(");
-  for (i = 1; i < my_subset.large_set_size; i++) {
-    printf("%d,",my_subset.indicator[i-1]);
+  struct subset my_subset;
+  my_subset.large_set_size = large_set_size;
+  my_subset.subset_size = 0;
+  my_subset.indicator = malloc(large_set_size * sizeof(int));
+  for (i = 1; i <= large_set_size; i++) {
+    my_subset.indicator[i-1] = 1;
   }
-  printf("%d)",my_subset.indicator[my_subset.large_set_size-1]);
+  return my_subset;
 }
 
-void destroy_subset(struct subset my_subset) {
-  free(my_subset.indicator);
+void print_subset(struct subset* my_subset) {
+  int i;
+  printf("(");
+  for (i = 1; i < my_subset->large_set_size; i++) {
+    printf("%d,",my_subset->indicator[i-1]);
+  }
+  printf("%d)",my_subset->indicator[my_subset->large_set_size-1]);
+}
+
+void destroy_subset(struct subset* my_subset) {
+  free(my_subset->indicator);
 }
 
 

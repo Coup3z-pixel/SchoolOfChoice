@@ -124,20 +124,20 @@ int main(int argc, char const *argv[])
     
   /*  my_sch_ch_prob = make_toy_sch_ch_prob(); */
   my_sch_ch_prob = sch_ch_prob_from_file(); 
-  print_input_sch_ch_prob(my_sch_ch_prob);
-  new_sch_ch_prob = sch_ch_prob_from_input(my_sch_ch_prob);
-  destroy_input_sch_ch_prob(my_sch_ch_prob);
-  print_sch_ch_prob(new_sch_ch_prob);
-  red_sch_ch_prob = reduced_sch_ch_prob(new_sch_ch_prob);
-  destroy_sch_ch_prob(new_sch_ch_prob);
-  print_sch_ch_prob(red_sch_ch_prob);
-  destroy_sch_ch_prob(red_sch_ch_prob);
+  print_input_sch_ch_prob(&my_sch_ch_prob);
+  new_sch_ch_prob = sch_ch_prob_from_input(&my_sch_ch_prob);
+  destroy_input_sch_ch_prob(&my_sch_ch_prob);
+  print_sch_ch_prob(&new_sch_ch_prob);
+  red_sch_ch_prob = reduced_sch_ch_prob(&new_sch_ch_prob);
+  destroy_sch_ch_prob(&new_sch_ch_prob);
+  print_sch_ch_prob(&red_sch_ch_prob);
+  destroy_sch_ch_prob(&red_sch_ch_prob);
 
   exit(0);
   
   my_sch_ch_prob = make_toy_sch_ch_prob();
-  print_input_sch_ch_prob(my_sch_ch_prob);
-  destroy_input_sch_ch_prob(my_sch_ch_prob);
+  print_input_sch_ch_prob(&my_sch_ch_prob);
+  destroy_input_sch_ch_prob(&my_sch_ch_prob);
   
   exit(0);
   
