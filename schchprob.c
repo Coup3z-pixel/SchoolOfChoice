@@ -28,11 +28,14 @@ struct input_sch_ch_prob make_toy_sch_ch_prob() {
 
 void destroy_sch_ch_prob(struct sch_ch_prob* my_scp) {
   free(my_scp->priority_threshold);
+  
   for (int i = 1; i <= my_scp->cee.no_students; i++) {
     free(my_scp->preferences[i-1]);
   }
   free(my_scp->preferences);
+  
   free(my_scp->no_eligible_schools);
+  
   destroy_double_cee(&my_scp->cee);
 }
 
@@ -142,6 +145,106 @@ struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp) {
   return new_sch_ch_prob;
 }
 
+struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp, 
+		     struct subset* stu_subset, struct subset* sch_subset) {
+  int i, j, k;
+
+  int nst = stu_subset->subset_size;
+  int nsc = sch_subset->subset_size;
+  
+  struct sch_ch_prob new_sch_ch_prob;
+
+  new_sch_ch_prob.cee.no_students = nst;
+  new_sch_ch_prob.cee.no_schools = nsc;
+
+  struct index stu_index;
+  stu_index = index_of_subset(stu_subset);
+  struct index sch_index;
+  sch_index = index_of_subset(sch_subset);
+  
+  new_sch_ch_prob.cee.quotas = malloc(nsc * sizeof(double));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.cee.quotas[j-1] = my_scp->cee.quotas[sch_index.indices[j-1]-1];
+  }
+
+  new_sch_ch_prob.cee.priority = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.cee.priority[i-1] = malloc(nsc * sizeof(int));
+    for (j = 1; j <= nsc; j++) {
+      new_sch_ch_prob.cee.priority[i-1][j-1] =
+	my_scp->cee.priority[stu_index.indices[i-1]-1][sch_index.indices[j-1]-1];
+    }
+  }
+
+  new_sch_ch_prob.no_eligible_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    int count = 0;
+    for (j = 1; j <= nsc; j++) {
+      if (new_sch_ch_prob.cee.priority[i-1][j-1] > 0) {
+	count++;
+      }
+    }
+    if (count == 0) {
+      printf("ERROR: student %i has no eligible schools.\n",i);
+      exit(0);
+    }
+    new_sch_ch_prob.no_eligible_schools[i-1] = count;
+  }
+
+  int* inverse_sch_index = malloc(my_scp->cee.no_schools * sizeof(int));
+  k = 0;
+  for (j = 1; j <= my_scp->cee.no_schools; j++) {
+    if (sch_subset->indicator[j-1] == 1) {
+      k++;
+      inverse_sch_index[j-1] = k;
+    }
+    else {
+      inverse_sch_index[j-1] = 0;
+    }
+  }
+
+  /*
+  printf("inverse_sch_index = (");
+  for (j = 1; j <= my_scp->cee.no_schools - 1; j++) {
+    printf("%i,",inverse_sch_index[j-1]);
+  }
+  printf("%i)\n",inverse_sch_index[my_scp->cee.no_schools-1]);
+  */
+  
+  
+  new_sch_ch_prob.preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    new_sch_ch_prob.preferences[i-1]=malloc(new_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
+    j = 1;
+    for (k = 1; k <= my_scp->no_eligible_schools[i-1]; k++) {
+	
+      /*	printf("Upon entry we have i = %i, k = %i, and j = %i.\n",i,k,j); */
+	
+      if (sch_subset->indicator[my_scp->preferences[stu_index.indices[i-1]-1][k-1]-1] == 1) {
+	new_sch_ch_prob.preferences[i-1][j-1] =
+	  inverse_sch_index[my_scp->preferences[stu_index.indices[i-1]-1][k-1]-1];
+	
+	/*	printf("At assigment we have i = %i, k = %i, and j = %i.\n",i,k,j); */
+	
+	j++;
+      }
+    }
+  }
+  free(inverse_sch_index);
+
+  new_sch_ch_prob.priority_threshold = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    new_sch_ch_prob.priority_threshold[j-1] = my_scp->priority_threshold[sch_index.indices[j-1]-1];
+  }
+
+  new_sch_ch_prob.time_remaining = my_scp->time_remaining;
+
+  destroy_index(&stu_index);
+  destroy_index(&sch_index); 
+
+  return new_sch_ch_prob;
+}
+
 struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp) {
   int i, j, k, count;
   struct sch_ch_prob new_sch_ch_prob;
@@ -210,7 +313,8 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp) {
   return new_sch_ch_prob;
 }
 
-double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset){
+double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset,
+				                                  struct subset* captive_students){
   int i,j;
   struct subset student_subset; /* those who must eat school_subset */
   student_subset = fullset(my_scp->cee.no_students);
@@ -218,10 +322,13 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
     j = 1;
     while (j <= my_scp->cee.no_schools && student_subset.indicator[i-1] == 1) {
       if (school_subset->indicator[j-1] == 0 && my_scp->cee.priority[i-1][j-1] > 0) {
+	student_subset.subset_size--;
 	student_subset.indicator[i-1] = 0;
       }
+      j++;
     }
   }
+  copy_subset(&student_subset,captive_students);
 
   double total_quota = 0.0;
   for (j = 1; j <= my_scp->cee.no_schools; j++) {
@@ -230,15 +337,26 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
     }
   }
 
+  if (total_quota - student_subset.subset_size * my_scp->time_remaining < -0.000001) {
+    printf("The GMC inequality for school set ");
+    print_subset(school_subset);
+    printf(" and student subset ");
+    print_subset(&student_subset);
+    printf(" does not hold.\n");
+    printf("The total quota is %1.4f and the time remaining is %1.4f.\n", total_quota,
+	   my_scp->time_remaining);
+    exit(0);
+  }
+
   int no_eaters = 0;
   for (i = 1; i <= my_scp->cee.no_students; i++) {
-    if (school_subset->indicator[my_scp->preferences[i-1][0]] == 1) {
+    if (school_subset->indicator[my_scp->preferences[i-1][0] - 1] == 1) {
       no_eaters++;
     }
   }
 
   if (no_eaters == student_subset.subset_size) {
-    return -1.0;
+    return 0.0;
   }
   else {
     double delta_t = (total_quota - student_subset.subset_size * my_scp->time_remaining) /
@@ -248,8 +366,28 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
       return my_scp->time_remaining - delta_t;
     }
     else {
-      return -1.0;
+      return 0.0;
     }
   }
 }
     
+double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct subset* crit_stu_subset,
+				                            struct subset* crit_sch_subset) {
+  double scan_answer;
+  double answer = 0.0;
+  struct subset scan_subset = nullset(my_scp->cee.no_schools);
+  struct subset captive_students = nullset(my_scp->cee.no_students);
+
+  while (scan_subset.subset_size < my_scp->cee.no_schools) {    
+    iterate(&scan_subset);
+    
+    scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &captive_students);
+    if (scan_answer > answer) {
+      answer = scan_answer;
+      copy_subset(&scan_subset,crit_sch_subset);
+      copy_subset(&captive_students,crit_stu_subset);
+    }
+  }
+  
+  return answer;
+}

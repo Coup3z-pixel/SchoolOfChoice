@@ -37,6 +37,9 @@ void print_int_cee(struct int_cee* my_cee);
 
 void print_double_cee(struct double_cee* my_cee);
 
+void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
+		    int no_stu, int no_sch, int* stu_index, int* sch_index);
+
 int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset);
 
 int gmc_holds(struct double_cee* my_cee);

@@ -36,6 +36,7 @@ void destroy_int_cee(struct int_cee* my_cee) {
 void destroy_double_cee(struct double_cee* my_cee) {
   int i;
   free(my_cee->quotas);
+  
   for (i = 1; i <= my_cee->no_students; i++) {
     free(my_cee->priority[i-1]);
   }
@@ -115,6 +116,26 @@ void print_double_cee(struct double_cee* my_cee) {
     }
   }
     printf("\n");
+}
+
+void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
+		    int no_stu, int no_sch, int* stu_index, int* sch_index) {
+  int i,j;
+  sub_cee->no_students = no_stu;
+  sub_cee->no_schools = no_sch;
+  
+  sub_cee->quotas = malloc(no_sch * sizeof(double));
+  for (j = 1; j <= no_sch; j++) {
+    sub_cee->quotas[j-1] = given_cee->quotas[sch_index[j-1]-1];
+  }
+  
+  sub_cee->priority = malloc(no_stu * sizeof(int*));
+  for (i = 1; i <= no_stu; i++) {
+    sub_cee->priority[i-1] = malloc(no_sch * sizeof(int));
+      for (j = 1; j <= no_sch; j++) {
+	sub_cee->priority[i-1][j-1] = given_cee->priority[stu_index[i-1]-1][sch_index[j-1]-1];
+      }
+  }
 }
 
 

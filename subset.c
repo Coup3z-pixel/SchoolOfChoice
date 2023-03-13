@@ -16,7 +16,7 @@ struct subset fullset(int large_set_size) {
   int i;
   struct subset my_subset;
   my_subset.large_set_size = large_set_size;
-  my_subset.subset_size = 0;
+  my_subset.subset_size = large_set_size;
   my_subset.indicator = malloc(large_set_size * sizeof(int));
   for (i = 1; i <= large_set_size; i++) {
     my_subset.indicator[i-1] = 1;
@@ -37,6 +37,47 @@ void destroy_subset(struct subset* my_subset) {
   free(my_subset->indicator);
 }
 
+void copy_subset(struct subset* given_subset, struct subset* copy_subset) {
+  int i;
+  if (given_subset->large_set_size != copy_subset->large_set_size) {
+    printf("ERROR: attempt to copy subsets of different size sets.\n");
+    exit(0);
+  }
+  copy_subset->subset_size = given_subset->subset_size;
+  for (i = 1; i <= given_subset->large_set_size; i++) {
+    copy_subset->indicator[i-1] = given_subset->indicator[i-1];
+  }
+}
+
+
+void complement(struct subset* given_subset, struct subset* comp) {
+  int i;
+  comp->large_set_size = given_subset->large_set_size;
+  comp->subset_size = given_subset->large_set_size - given_subset->subset_size;
+  for (i = 1; i <= given_subset->large_set_size; i++) {
+    comp->indicator[i-1] = 1 - given_subset->indicator[i-1];
+  }
+}
+
+struct index index_of_subset(struct subset* my_subset) {
+  int i, k;
+  struct index my_index;
+  my_index.no_elements = my_subset->subset_size;
+  my_index.indices = malloc(my_subset->subset_size * sizeof(int));
+  k = 0;
+  for (i = 1; i <= my_subset->subset_size; i++) {
+    k++;
+    while (my_subset->indicator[k-1] == 0) {
+      k++;
+    }
+    my_index.indices[i-1] = k;
+  }
+  return my_index;
+}
+
+void destroy_index(struct index* my_index) {
+  free(my_index->indices);
+}
 
 void iterate(struct subset *my_subset) {
   int i,j,k;

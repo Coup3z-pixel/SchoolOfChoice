@@ -33,6 +33,9 @@ void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp);
 
 struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp);
 
+struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* given_scp, 
+		     struct subset* stu_subset, struct subset* sch_subset);
+
 /* The next function sets the priority of student i at school j to 0
    if the input priority is 0 or less than the school's priority
    threshold, and 1 otherwise.  It resets each school's priority
@@ -40,6 +43,10 @@ struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp);
 
 struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp);
 
-double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset);
+double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset,
+				                                  struct subset* captive_students);
+
+double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct subset* crit_stu_subset,
+				                            struct subset* crit_sch_subset);
 
 #endif /* SCHCHPROB_H */

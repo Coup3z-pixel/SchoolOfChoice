@@ -3,6 +3,13 @@
 
 #include <stdio.h>
 
+struct school
+{
+	int quota;
+	int position;
+	int reserve;
+};
+
 struct student {
 
   int requirement;

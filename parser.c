@@ -284,7 +284,7 @@ int get_number(FILE *fp, char next) {
     next = getc(fp);
   }
   if (!is_white_space(next)) {
-    printf("ERROR: must be surrounded by white space (\' \',\'\\n\',\'\\t\',\'(\',\')\',\',\').\n");
+    printf("ERROR: numbers must be surrounded by white space (\' \',\'\\n\',\'\\t\',\'(\',\')\',\',\').\n");
     exit(0);
   }
   return answer;
@@ -454,28 +454,35 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
       my_sch_ch_prob.priority_threshold[j-1] = get_number(fp,next);
   }
     
-  fclose(fp);
+  fclose(fp); 
 
   for (i = 1; i <= my_sch_ch_prob.cee.no_students; i++) {
     int count = 0;
     for (j = 1; j <= my_sch_ch_prob.cee.no_schools; j++) {
       if (my_sch_ch_prob.cee.priority[i-1][j-1] > 0) {
 	count++;
-	int found = 0;
-	for (int k = 1; k <= my_sch_ch_prob.no_eligible_schools[i-1]; k++) {
-	  if (my_sch_ch_prob.preferences[i-1][j-1] == j) {
-	    found = 1;
-	  }
-	  if (!found) {
-	    printf("Student %i\'s positive priority schools and ranked schools differ.\n",i);
-	    exit(0);
-	  }
-	}
       }
     }
     if (count != my_sch_ch_prob.no_eligible_schools[i-1]) {
-      printf("Student %i\'s positive priority schools and ranked schools differ.\n",i);
+      printf("Student %i\'s numbers of positive priority schools and ranked schools differ.\n",i);
       exit(0);
+    }
+  }
+
+  for (i = 1; i <= my_sch_ch_prob.cee.no_students; i++) {
+    for (j = 1; j <= my_sch_ch_prob.cee.no_schools; j++) {
+      if (my_sch_ch_prob.cee.priority[i-1][j-1] > 0) {
+	int found = 0;
+	for (int k = 1; k <= my_sch_ch_prob.no_eligible_schools[i-1]; k++) {
+	  if (my_sch_ch_prob.preferences[i-1][k-1] == j) {
+	    found = 1;
+	  }
+	}
+	if (!found) {
+	  printf("ERROR: we did not find school %i in student %i\'s preferences.\n",j,i);
+	  exit(0);
+	}
+      }
     }
   }
 
