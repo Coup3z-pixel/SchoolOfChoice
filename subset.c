@@ -33,6 +33,17 @@ void print_subset(struct subset* my_subset) {
   printf("%d)",my_subset->indicator[my_subset->large_set_size-1]);
 }
 
+
+
+void print_index(struct index* my_index) {
+  int i;
+  printf("(");
+  for (i = 1; i < my_index->no_elements; i++) {
+    printf("%d,",my_index->indices[i-1]);
+  }
+  printf("%d)",my_index->indices[my_index->no_elements-1]);
+}
+
 void destroy_subset(struct subset* my_subset) {
   free(my_subset->indicator);
 }

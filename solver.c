@@ -4,7 +4,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp) {
   if (my_scp->time_remaining == 0.0) {
     return zero_partial_alloc(my_scp);
   }
-  else {
+  else {    
     int nst = my_scp->cee.no_students;
     int nsc = my_scp->cee.no_schools;
     struct subset stu_subset = nullset(nst);
@@ -14,8 +14,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp) {
 
     struct partial_alloc first_allocation =  allocate_until_new_time(my_scp, end_time);
 
-    if (stu_subset.subset_size > 0) {
+    if (end_time > 0.000001) {
+
+    if (stu_subset.subset_size > 0) {      
       struct sch_ch_prob left_scp = sub_sch_ch_prob(my_scp, &stu_subset, &sch_subset);
+    
       struct partial_alloc left_alloc = GCPS_schools_solver(&left_scp);
       struct index left_stu_index = index_of_subset(&stu_subset);
       struct index left_sch_index = index_of_subset(&sch_subset); 
@@ -49,6 +52,8 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp) {
     destroy_subset(&sch_compl);
     destroy_sch_ch_prob(&right_scp);
     destroy_partial_alloc(&right_alloc);
+
+    }
 
     return first_allocation;
   }

@@ -56,6 +56,9 @@ void print_sch_ch_prob(struct sch_ch_prob* my_scp) {
   printf("The preferences of the students are\n");
   for (i = 1; i <= my_scp->cee.no_students; i++) {
     printf("%i:  ", i);
+    if (i < 10) {
+      printf(" ");
+    }
     for (j = 1; j <= my_scp->no_eligible_schools[i-1]; j++) {
       printf("%i  ",  my_scp->preferences[i-1][j-1]);
     }
@@ -149,7 +152,7 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
 		     struct subset* stu_subset, struct subset* sch_subset) {
   int i, j, k;
 
-  int nst = stu_subset->subset_size;
+  int nst = stu_subset->subset_size;  
   int nsc = sch_subset->subset_size;
   
   struct sch_ch_prob new_sch_ch_prob;
@@ -159,8 +162,26 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
 
   struct index stu_index;
   stu_index = index_of_subset(stu_subset);
+  
   struct index sch_index;
   sch_index = index_of_subset(sch_subset);
+
+  /*
+  printf("\nWe are now entering sub_sch_ch_prob with %i students and %i schools.\n",
+	 stu_subset->subset_size, sch_subset->subset_size);  
+  printf("The entry sch_ch_prob is\n");
+  print_sch_ch_prob(my_scp);
+  printf("The student subset is ");
+  print_subset(stu_subset);
+  printf(".\nThe school subset is ");
+  print_subset(sch_subset);
+  printf(".\n");
+  printf("The stu_index is ");
+  print_index(&stu_index);
+  printf("\nThe sch_index is ");
+  print_index(&sch_index);
+  printf("\n");
+  */
   
   new_sch_ch_prob.cee.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
@@ -204,33 +225,36 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
   }
 
   /*
+  printf("\nThe inverse_sch_index is ");
   printf("inverse_sch_index = (");
   for (j = 1; j <= my_scp->cee.no_schools - 1; j++) {
     printf("%i,",inverse_sch_index[j-1]);
   }
   printf("%i)\n",inverse_sch_index[my_scp->cee.no_schools-1]);
-  */
-  
+  */  
   
   new_sch_ch_prob.preferences = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
     new_sch_ch_prob.preferences[i-1]=malloc(new_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
-    j = 1;
-    for (k = 1; k <= my_scp->no_eligible_schools[i-1]; k++) {
-	
-      /*	printf("Upon entry we have i = %i, k = %i, and j = %i.\n",i,k,j); */
-	
+    int count = 0;
+    for (k = 1; k <= my_scp->no_eligible_schools[stu_index.indices[i-1]-1]; k++) {
       if (sch_subset->indicator[my_scp->preferences[stu_index.indices[i-1]-1][k-1]-1] == 1) {
-	new_sch_ch_prob.preferences[i-1][j-1] =
+	new_sch_ch_prob.preferences[i-1][count] =
 	  inverse_sch_index[my_scp->preferences[stu_index.indices[i-1]-1][k-1]-1];
-	
-	/*	printf("At assigment we have i = %i, k = %i, and j = %i.\n",i,k,j); */
-	
-	j++;
+	count++;
+      }
+    }
+  } 
+  free(inverse_sch_index);
+
+  for (i = 1; i <= nst; i++) {
+    for (k = 1; k <= new_sch_ch_prob.no_eligible_schools[i-1]; k++) {
+      if (new_sch_ch_prob.preferences[i-1][k-1] == 0) {
+	printf("We have a zero with i = %i and k = %i.\n",i,k);
+	exit(0);
       }
     }
   }
-  free(inverse_sch_index);
 
   new_sch_ch_prob.priority_threshold = malloc(nsc * sizeof(int));
   for (j = 1; j <= nsc; j++) {
@@ -240,7 +264,12 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
   new_sch_ch_prob.time_remaining = my_scp->time_remaining;
 
   destroy_index(&stu_index);
-  destroy_index(&sch_index); 
+  destroy_index(&sch_index);
+
+  /*
+  printf("We are leaving sub_sch_ch_prob with\n");
+  print_sch_ch_prob(&new_sch_ch_prob);
+  */
 
   return new_sch_ch_prob;
 }

@@ -55,6 +55,9 @@ void print_partial_alloc(struct partial_alloc my_partial_alloc) {
   }
   for (i = 1; i <= my_partial_alloc.no_students; i++) {
     printf("\n%i:",i);
+    if (i < 10) {
+      printf(" ");
+    }
     for (j = 1; j <= my_partial_alloc.no_schools; j++) {
       printf("     %2.2f", my_partial_alloc.allocations[i-1][j-1]);
     }

@@ -21,6 +21,8 @@ struct subset fullset(int large_set_size);
 
 void print_subset(struct subset* my_subset);
 
+void print_index(struct index* my_index);
+
 void destroy_subset(struct subset* my_subset);
 
 void copy_subset(struct subset* given_subset, struct subset* copy_subset);
