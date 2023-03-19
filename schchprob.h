@@ -46,7 +46,9 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp);
 double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset,
 				                                  struct subset* captive_students);
 
-double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct subset* crit_stu_subset,
-				                            struct subset* crit_sch_subset);
+double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
+				struct subset* crit_stu_subset, struct subset* crit_sch_subset);
+
+void edit_out_unpopular_schools(struct sch_ch_prob* my_scp, struct square_matrix* related);
 
 #endif /* SCHCHPROB_H */

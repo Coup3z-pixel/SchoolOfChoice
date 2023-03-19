@@ -100,7 +100,7 @@ void print_int_cee(struct int_cee* my_cee) {
 void print_double_cee(struct double_cee* my_cee) {
   int i,j;
   printf("/* This is a sample introductory comment. */\n");
-  printf("There are %d students and %d schools.\n", my_cee->no_students, my_cee->no_schools);
+  printf("There are %d students and %d schools\n", my_cee->no_students, my_cee->no_schools);
     
   printf("The vector of quotas is (");
   for (i = 1; i < my_cee->no_schools; i++) {

@@ -11,6 +11,7 @@
 
 int main(int argc, char const *argv[])
 {
+  int j, k;
   struct input_sch_ch_prob my_sch_ch_prob;
   struct sch_ch_prob new_sch_ch_prob;
   struct sch_ch_prob sub_prob;
@@ -22,7 +23,7 @@ int main(int argc, char const *argv[])
   print_sch_ch_prob(&new_sch_ch_prob);
   printf("\n");
 
-  struct partial_alloc solution = GCPS_schools_solver(&new_sch_ch_prob);
+  struct partial_alloc solution = GCPS_schools_solver_top_level(&new_sch_ch_prob);
 
   printf("The allocation is:\n");
   print_partial_alloc(solution);
