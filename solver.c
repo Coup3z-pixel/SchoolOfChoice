@@ -4,6 +4,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
   int i,j;
   
   struct square_matrix related;
+  int max_clique_size = 3;
 
   double* copy_quotas;
   copy_quotas = malloc(my_scp->cee.no_schools * sizeof(double));
@@ -13,7 +14,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 
   struct stat buffer;
   if (stat("related.mat",&buffer) == 0) {
-    related = related_matrix_from_file();
+    related = related_matrix_from_file(&max_clique_size);
     if (related.dimension != my_scp->cee.no_schools) {
       printf("ERROR: related.mat has the wrong number of schools.\n");
       exit(0);
@@ -23,9 +24,9 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
     related = matrix_of_ones(my_scp->cee.no_schools);
   }
 
-  edit_out_unpopular_schools(my_scp,&related); 
+  edit_out_unpopular_schools(my_scp,&related);
 
-  struct partial_alloc allocation = GCPS_schools_solver(my_scp,&related);
+  struct partial_alloc allocation = GCPS_schools_solver(my_scp,&related,max_clique_size);
 
   destroy_square_matrix(&related);
 
@@ -46,7 +47,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 }
 
 struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
-					 struct square_matrix* related) {
+					 struct square_matrix* related,int max_clique_size) {
   int j;
   if (my_scp->time_remaining == 0.0) {
     return zero_partial_alloc(my_scp);
@@ -57,7 +58,8 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
     struct subset stu_subset = nullset(nst);
     struct subset sch_subset = nullset(nsc);
 
-    double end_time = time_rem_of_first_gmc_eq(my_scp, related, &stu_subset, &sch_subset);
+    double end_time = time_rem_of_first_gmc_eq(my_scp, related, max_clique_size,
+					       &stu_subset, &sch_subset);
 
     struct partial_alloc first_allocation =  allocate_until_new_time(my_scp, end_time);
 
@@ -75,7 +77,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
       }
       */
     
-      struct partial_alloc left_alloc = GCPS_schools_solver(&left_scp,&subrelated);
+      struct partial_alloc left_alloc = GCPS_schools_solver(&left_scp,&subrelated,max_clique_size);
       struct index left_stu_index = index_of_subset(&stu_subset);
       struct index left_sch_index = index_of_subset(&sch_subset); 
 
@@ -104,7 +106,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
     }
     */
 
-    struct partial_alloc right_alloc = GCPS_schools_solver(&right_scp,&subrelated); 
+    struct partial_alloc right_alloc=GCPS_schools_solver(&right_scp,&subrelated,max_clique_size); 
     
     struct index right_stu_index = index_of_subset(&stu_compl);
     struct index right_sch_index = index_of_subset(&sch_compl);

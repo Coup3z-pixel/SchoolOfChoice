@@ -12,6 +12,6 @@
 struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp);
 
 struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
-					 struct square_matrix* related);
+					 struct square_matrix* related,int max_clique_size);
 
 #endif /* SOLVER_H */

@@ -48,9 +48,9 @@ struct index index_of_subset(struct subset* my_subset);
 
 struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* my_subset); 
 
-int iterate(struct subset* my_subset); /* We go from smallest to largest */
+/* int iterate(struct subset* my_subset); */ /* function has been taken over by next_subset */
 
-int next_subset(struct subset* my_subset, struct square_matrix* related);
+int next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size);
                                                           /* From smallest to largest */
 
 #endif /* SUBSET_H */

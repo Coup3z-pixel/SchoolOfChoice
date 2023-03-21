@@ -47,6 +47,7 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
 				                                  struct subset* captive_students);
 
 double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
+				int max_clique_size,
 				struct subset* crit_stu_subset, struct subset* crit_sch_subset);
 
 void edit_out_unpopular_schools(struct sch_ch_prob* my_scp, struct square_matrix* related);

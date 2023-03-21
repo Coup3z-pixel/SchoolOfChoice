@@ -155,6 +155,8 @@ struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* 
   return my_matrix;
 }
 
+/* This function has been replaced by next_subset
+
 int iterate(struct subset *my_subset) {
   int i,j,k;
   int lss = my_subset->large_set_size;
@@ -209,8 +211,9 @@ int iterate(struct subset *my_subset) {
   }
   return 1;
 }
+*/
 
-int next_subset(struct subset* my_subset, struct square_matrix* related) {
+int next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size) {
   int i;
   int have_leveled_up = 0;
   int no_needed = 0;
@@ -258,7 +261,7 @@ int next_subset(struct subset* my_subset, struct square_matrix* related) {
 	have_leveled_up = 1;
 	no_needed = my_subset->subset_size;
 	my_subset->subset_size++;
-	if (my_subset->subset_size > my_subset->large_set_size) {
+	if (my_subset->subset_size > max_clique_size) {
 	  return 0;
 	}
 	change_from = 1;

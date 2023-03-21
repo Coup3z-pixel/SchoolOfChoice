@@ -374,7 +374,7 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
     printf(" does not hold.\n");
     printf("The total quota is %1.4f and the time remaining is %1.4f.\n", total_quota,
 	   my_scp->time_remaining);
-    /* exit(0); */
+    exit(0); 
   }
 
   int no_eaters = 0;
@@ -401,12 +401,13 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
 }
     
 double time_rem_of_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
+				int max_clique_size,
 				struct subset* crit_stu_subset, struct subset* crit_sch_subset) {
   double scan_answer;
   double answer = 0.0;
   struct subset scan_subset = nullset(my_scp->cee.no_schools);
   struct subset captive_students = nullset(my_scp->cee.no_students);
-  while (next_subset(&scan_subset,related)) {
+  while (next_subset(&scan_subset,related,max_clique_size)) {
     scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &captive_students);
     if (scan_answer > answer) {
       answer = scan_answer;
@@ -433,10 +434,8 @@ void edit_out_unpopular_schools(struct sch_ch_prob* my_scp, struct square_matrix
     }
     if ((double)demand <= my_scp->cee.quotas[j-1]) {   
       for (k = 1; k <= my_scp->cee.no_schools; k++) {
-	if (k != j) {
-	  related->entries[j-1][k-1] = 0;
-	  related->entries[k-1][j-1] = 0;
-	}
+	related->entries[j-1][k-1] = 0;
+	related->entries[k-1][j-1] = 0;
       }
     }
   }

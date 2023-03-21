@@ -513,7 +513,24 @@ void check_schools_fifth(FILE *fp, char next) {
   }
 }
 
-struct square_matrix related_matrix_from_file() {
+void check_is_third(FILE *fp, char next) {
+  if (next != 'i' || getc(fp) != 's') {
+    printf("ERROR: the phrase \'max_clique_size is \' is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_max_clique_size(FILE *fp, char next) {
+  if (next != 'm' || getc(fp) != 'a' || getc(fp) != 'x' || getc(fp) != '_' || getc(fp) != 'c' ||
+      getc(fp) != 'l' || getc(fp) != 'i' || getc(fp) != 'q' || getc(fp) != 'u' ||
+      getc(fp) != 'e' || getc(fp) != '_' || getc(fp) != 's' || getc(fp) != 'i' ||
+      getc(fp) != 'z' || getc(fp) != 'e') {
+    printf("ERROR: the phrase \'max_clique_size is \' is incorrect.\n");
+    exit(0);
+  }
+}
+
+struct square_matrix related_matrix_from_file(int* max_clique_size) {
   struct square_matrix related;
 
   FILE *fp;
@@ -546,6 +563,13 @@ struct square_matrix related_matrix_from_file() {
   next = get_next(fp);
   check_schools_fifth(fp,next);
 
+  next = get_next(fp);
+  check_max_clique_size(fp,next);
+  next = get_next(fp);
+  check_is_third(fp,next);
+  next = get_next(fp);
+  *max_clique_size = get_number(fp,next);
+  
   int j, k;
   related.entries = malloc(related.dimension * sizeof(int*));
   for (j = 1; j <= related.dimension; j++) {

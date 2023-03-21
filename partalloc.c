@@ -49,9 +49,12 @@ void destroy_partial_alloc(struct partial_alloc* my_partial_alloc) {
 
 void print_partial_alloc(struct partial_alloc my_partial_alloc) {
   int i,j;
-  printf(" ");
+  printf("   ");
   for (j = 1; j <= my_partial_alloc.no_schools; j++) {
-    printf("       %i:", j);
+    if (j < 10) {
+      printf(" ");
+    }
+    printf("   %i:", j);
   }
   for (i = 1; i <= my_partial_alloc.no_students; i++) {
     printf("\n%i:",i);
@@ -59,7 +62,7 @@ void print_partial_alloc(struct partial_alloc my_partial_alloc) {
       printf(" ");
     }
     for (j = 1; j <= my_partial_alloc.no_schools; j++) {
-      printf("     %2.2f", my_partial_alloc.allocations[i-1][j-1]);
+      printf("  %2.2f", my_partial_alloc.allocations[i-1][j-1]);
     }
   }
   printf("\n");

@@ -12,6 +12,7 @@
 int main(int argc, char const *argv[])
 {
   int j, k;
+  
   struct input_sch_ch_prob my_sch_ch_prob;
   struct sch_ch_prob new_sch_ch_prob;
   struct sch_ch_prob sub_prob;

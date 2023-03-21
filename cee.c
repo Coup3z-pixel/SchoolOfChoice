@@ -91,7 +91,7 @@ void print_int_cee(struct int_cee* my_cee) {
     for (i = 1; i <= my_cee->no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee->no_schools; j++) {
-      printf("     %d", my_cee->priority[i-1][j-1]);
+      printf("  %d", my_cee->priority[i-1][j-1]);
     }
   }
     printf("\n");
@@ -112,7 +112,7 @@ void print_double_cee(struct double_cee* my_cee) {
     for (i = 1; i <= my_cee->no_students; i++) {
     printf("\n");
     for (j = 1; j <= my_cee->no_schools; j++) {
-      printf("     %d", my_cee->priority[i-1][j-1]);
+      printf("  %d", my_cee->priority[i-1][j-1]);
     }
   }
     printf("\n");
@@ -174,16 +174,21 @@ int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subs
 
 
 int gmc_holds(struct double_cee* my_cee) {
+  int j, k;
   int answer = 1;
   struct subset school_subset = nullset(my_cee->no_schools);
 
+  int max_clique_size = my_cee->no_schools;
+  struct square_matrix related = matrix_of_ones(my_cee->no_schools);
+
   while (answer == 1 && school_subset.subset_size < my_cee->no_schools) {
-    iterate(&school_subset);
+    next_subset(&school_subset,&related,max_clique_size);
     if (!minimum_gmc_inequality(my_cee,&school_subset)) {
       answer = 0;
     }
   }
 
+  destroy_square_matrix(&related);
   destroy_subset(&school_subset);
 
   return answer;
