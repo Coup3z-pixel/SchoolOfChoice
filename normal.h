@@ -7,6 +7,8 @@
 
 double min(double a, double b);
 
+int is_integer(double nmbr);
+
 int rand_int();
 
 double uniform();

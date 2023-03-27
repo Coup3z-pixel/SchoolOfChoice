@@ -50,7 +50,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
 					 struct square_matrix* related,int max_clique_size) {
   int j;
   if (my_scp->time_remaining == 0.0) {
-    return zero_partial_alloc(my_scp);
+    return zero_partial_alloc(&my_scp->cee);
   }
   else {    
     int nst = my_scp->cee.no_students;

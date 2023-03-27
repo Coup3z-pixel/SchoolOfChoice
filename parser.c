@@ -34,14 +34,14 @@ void check_are_first(FILE *fp, char next) {
 void check_students_first(FILE *fp, char next) {
   if (next != 's' || getc(fp) != 't' || getc(fp) != 'u' || getc(fp) != 'd' || getc(fp) != 'e' ||
                      getc(fp) != 'n' || getc(fp) != 't' || getc(fp) != 's') {
-    printf("ERROR: formatting for number of students and number of schools is incorrect.\n");
+    printf("ERROR: formatting for the numbers of students and schools is incorrect.\n");
     exit(0);
   }
 }
 
 void check_and(FILE *fp, char next) {
   if (next != 'a' || getc(fp) != 'n' || getc(fp) != 'd') {
-    printf("ERROR: formatting for number of students and number of schools is incorrect.\n");
+    printf("ERROR: formatting for the numbers of students and schools is incorrect.\n");
     exit(0);
   }
 }
@@ -49,7 +49,7 @@ void check_and(FILE *fp, char next) {
 void check_schools_first(FILE *fp, char next) {
   if (next != 's' || getc(fp) != 'c' || getc(fp) != 'h' || getc(fp) != 'o' || getc(fp) != 'o' ||
                      getc(fp) != 'l' || getc(fp) != 's') {
-    printf("ERROR: formatting for number of students and number of schools is incorrect.\n");
+    printf("ERROR: formatting for the numbers of students and schools is incorrect.\n");
     exit(0);
   }
 }
@@ -288,6 +288,28 @@ int get_number(FILE *fp, char next) {
     exit(0);
   }
   return answer;
+}
+
+double get_double(FILE *fp, char next) {
+  if (!isdigit(next) && next != '.') {
+    printf("ERROR: what should be a number begins with a nondigit other than \'.\'.\n");
+    exit(0);
+  }
+  char str[20];
+  int count = 0;
+  next = getc(fp);
+  while (isdigit(next) || next == '.') {
+    str[count] = next;
+    count++;
+    next = getc(fp);
+  }
+  if (!is_white_space(next)) {
+    printf("ERROR: numbers must be surrounded by white space (\' \',\'\\n\',\'\\t\',\'(\',\')\',\',\').\n");
+    exit(0);
+  }
+  str[count] = '\0';
+  
+  return atof(str);
 }
 
 void check_student_tag(FILE *fp, char next, int i) {
@@ -594,4 +616,87 @@ struct square_matrix related_matrix_from_file(int* max_clique_size) {
 
 
   return related;
+}
+
+
+void check_There_third(FILE *fp, char next) {
+  if (next != 'T' || getc(fp) != 'h' || getc(fp) != 'e' || getc(fp) != 'r' || getc(fp) != 'e') {
+    printf("ERROR: formatting for numbers of students and schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_are_sixth(FILE *fp, char next) {
+  if (next != 'a' || getc(fp) != 'r' || getc(fp) != 'e') {
+    printf("ERROR: formatting for the numbers of students and schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_students_fourth(FILE *fp, char next) {
+  if (next != 's' || getc(fp) != 't' || getc(fp) != 'u' || getc(fp) != 'd' || getc(fp) != 'e' ||
+                     getc(fp) != 'n' || getc(fp) != 't' || getc(fp) != 's') {
+    printf("ERROR: formatting for the numbers of students and schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+struct partial_alloc allocation_from_file() {
+  struct partial_alloc allocation;
+
+  FILE *fp;
+
+  fp = fopen("allocate.mat", "r");
+
+  if (getc(fp) != '/') {
+    printf("ERROR: the input file must begin with /*\n");
+    exit(0);
+  }
+
+  if (getc(fp) != '*') {
+    printf("ERROR: the input file must begin with /*\n");
+    exit(0);
+  }
+
+  while (getc(fp) != '*') {}
+
+  if (getc(fp) != '/') {
+    printf("ERROR: the initial comment must end with */\n");
+    exit(0);
+  }
+
+  char next = get_next(fp);
+  check_There_third(fp,next);
+  next = get_next(fp);
+  check_are_sixth(fp,next);
+  next = get_next(fp);
+  allocation.no_students = get_number(fp,next);
+  next = get_next(fp);
+  check_students_fourth(fp,next);
+  next = get_next(fp);
+  check_and(fp,next);
+  next = get_next(fp);
+  allocation.no_schools = get_number(fp,next);
+  next = get_next(fp);
+  check_schools_first(fp,next);
+  
+  int i, j;
+  for (j = 1; j <= allocation.no_schools; j++) {
+      next = get_next(fp);
+      check_student_tag(fp,next,j);
+  }
+  allocation.allocations = malloc(allocation.no_students * sizeof(double*));
+  for (i = 1; i <= allocation.no_students; i++) {
+    next = get_next(fp);
+    check_student_tag(fp,next,i);
+    allocation.allocations[i-1] = malloc(allocation.no_schools * sizeof(double));
+    for (j = 1; j <= allocation.no_schools; j++) {
+      next = get_next(fp);
+      allocation.allocations[i-1][j-1] = get_double(fp,next);
+    }
+  }
+    
+  fclose(fp);
+
+  return allocation;
 }

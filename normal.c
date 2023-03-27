@@ -9,6 +9,15 @@ double min(double a, double b) {
   }
 }
 
+int is_integer(double nmbr) {
+  if (nmbr - floor(nmbr) < 0.00001 || ceil(nmbr) - nmbr < 0.00001) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
 int rand_int() {
   return rand() % 10000;
 }

@@ -79,9 +79,7 @@
 \title{GCPS Schools: A User's Guide}
 
 \author{Andrew McLennan\footnote{School of Economics, University of
-    Queensland, {\tt a.mclennan@economics.uq.edu.au}} \and  Shino
-Takayama\footnote{School of Economics, University of
-  Queensland, {\tt s.takayama1@uq.edu.au}} \and Yuki Tamura\footnote{Center for Behavioral Institutional Design, NYU Abu Dhabi; {\tt yuki.tamura@nyu.edu}}}
+    Queensland, {\tt a.mclennan@economics.uq.edu.au}}}
 
 \date{\today}
 
@@ -95,34 +93,44 @@ This document provides a brief introduction to the software package GCPS Schools
 
 \section{Introduction}
 
-In our paper ``An Efficient School Choice Mechanism Based on a
-Generalization of Hall's Marriage Theorem'' we describe a new
-algorithm for school choice, along with its theoretical foundations.
-This algorithm has been implemented in the software package \emph{GCPS
-  Schools}.  This document describes this algorithm, from the point of
-view of a user.  It doesn't assume that the reader has already read
-our paper, but of course we are leaving out lots of relevant
-information.
+In the paper ``An Efficient School Choice Mechanism Based on a
+Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
+and Yuki Tamura) we describe a new algorithm for school choice, along
+with its theoretical foundations.  This algorithm has been implemented
+in the software package \emph{GCPS Schools}.  The software package
+also contains two other programs.  The first of these generates
+example school choice problems of the sort that might occur in large
+school districts.  The second program passes from a matrix of
+assignment probabilities to a random pure assignment with a
+distribution that averages to the given matrix of probabilities.
+These programs provide the basic computational resources required to
+apply our mechanism, and perhaps in some cases they will suffice.
+However, our primary hope is that the underlying code will be a useful
+starting point for further software development.
+
+This document describes these programs, from the point of view of a
+user.  It doesn't assume that the reader has already read our paper,
+but of course we are leaving out lots of relevant information.
 
 To begin with we describe a simple example of an input file, which the
-computer expects to find in a file called \texttt{schools.scp}, which
-the computer expects to find in the current directory.  (If there is
-no such file the computer simply complains and quits.)  Our input
-files begin with a comment between \texttt{/*} and \texttt{*/}.  This
-is purely for your convenience, and the comment can be of any length,
-and provide whatever information is useful to you, but it is mandatory
-insofar as the computer will insist that the first two characters are
-\texttt{/*} and will only start extracting information after it sees
-the \texttt{*/}.  The computer divides the remainder into
-``generalized white space'' (in addition to spaces, tabs, and new
-lines, `\texttt{(}', `\texttt{)}', and `\texttt{,}' are treated as
-white space) and ``tokens,'' which are sequences of characters without
-any of the generalized white space characters.  Tokens are either
-prescribed words, numbers, or student tags (a student number followed
-by `\texttt{:}') and everything must be more or less exactly as shown,
-modulo white space, so, for example, the first line must not be
-\texttt{There are 3 students and 1 school}, but it could be
-\texttt{There are 3 students and \ \ 1 schools}.
+computer expects to find in a file called \texttt{schools.scp} in the
+current directory.  (If there is no such file the computer simply
+complains and quits.)  Our input files begin with a comment between
+\texttt{/*} and \texttt{*/}.  This is purely for your convenience, and
+the comment can be of any length, and provide whatever information is
+useful to you, but it is mandatory insofar as the computer will insist
+that the first two characters of the file are \texttt{/*} and will
+only start extracting information after it sees the \texttt{*/}.  The
+computer divides the remainder into ``generalized white space'' (in
+addition to spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}',
+and `\texttt{,}' are treated as white space) and ``tokens,'' which are
+sequences of characters without any of the generalized white space
+characters.  Tokens are either prescribed words, numbers, or student
+tags (a student number followed by `\texttt{:}') and everything must
+be more or less exactly as shown below, modulo white space, so, for
+example, the first line must not be \texttt{There are 3 students and 1
+  school}, but it could be \texttt{There are 3 students and \ \ 1
+  schools}.
 
 \begin{obeylines}\texttt{
 /* This is a sample introductory comment. */
@@ -173,6 +181,8 @@ Finally, there are the schools' minimum priorities for admission,
 which in this context are all 1: a student is good enough to admit to
 a school if her priority for that school is 1 and not
 otherwise. (Again, we'll talk about more complex situations later.)
+The collection of information provided by an input file is a
+\emph{school choice problem}.
 
 What the software does (primarily) is compute a matrix of assignment
 probabilities.  Our particular example gives the following output:
@@ -193,12 +203,14 @@ not exceed that school's quota. An assignment of probabilities with
 these properties --- each student's total assignment is 1 and no
 school is overassigned --- is a \emph{feasible allocation}.  An
 important point \citep{bckm13aer} is that any feasible allocation can
-be written as a convex combination of matrices with entries in
-$\{0,1\}$, i.e., as a lottery over pure assignments.
+be written as a convex combination of feasible allocations with
+entries in $\{0,1\}$, i.e., as a lottery over pure assignments, and an
+important component of our package is the implementation of such a
+lottery.
 
 Our mechanism is based on the ``simultaneous eating'' algorithm of
 \cite{bm01} for probabilistic allocation of objects, as generalized by
-\cite{balbuzanov22jet}.  In this problem each student consumes
+\cite{balbuzanov22jet}.  In our example each student consumes
 probability of a seat in her favorite school (school 1) until that
 resource is exhausted at time 0.25, at which point each student
 switches to the next best thing.  This continues until school 2 is
@@ -207,15 +219,15 @@ a seat in school 3.
 
 This makes good sense if the schools simply fill up one by one, as in
 this example, but is that always what happens?  Actually, no.  To help
-understand this we introduce a new concept, the ``safe school.''  The
-idea is that each student has one school, say the closest school or
-the school that a sibling attends, to which she is guaranteed
+understand this we first introduce a new concept, the ``safe school.''
+The idea is that each student has one school, say the closest school
+or the school that a sibling attends, to which she is guaranteed
 admission if she insists.  (It is a major advantage of our mechanism
 that we can provide such a guarantee.)  Each student submits a ranking
 of schools that she (weakly) prefers to the safe school, and her
 priority is 1 at those schools and 0 at all others.
 
-Now suppose that there are two schools, say 1 and 2, that are pretty
+Now suppose that there are two schools, say 1 and 2, that are quite
 popular.  Some students have school 1 as their safe school, but prefer
 2, and some students have school 2 as their safe school, but prefer 1.
 There are also some students who have other safe schools, but prefer
@@ -246,12 +258,18 @@ allocation: if, for each set of schools $P$, the total capacity of the
 schools in $P$ is not less than the number of students in $J_P$, then
 a feasible allocation exists.  This is not an obvious or trivial
 result, and a somewhat more general version of it is one of the main
-points of our paper.
+points of our paper.  This result extends to situations where the
+resources have already been partially allocated: if, for each set of
+schools $P$, the total remaining capacity of the schools in $P$ is not
+less than the total remaining demand of students in $J_P$ (where this
+set is defined in relation to the current partial allocation) then
+there is an allocation of the remaining resources that gives a
+feasible allocation.
 
 We can now describe the algorithm in a bit more detail.  At each time
 each student is consuming probability of a seat at the favorite school
 among those that are still available to her.  This continues until the
-first time there is a set of schools $P$ such that the remaining
+first time that there is a set of schools $P$ such that the remaining
 capacity is just sufficient to meet the needs of the students in
 $J_P$.  At this point the problem divides into two subproblems, one
 corresponding to the sets $P$ and $J_P$ and the other corresponding to
@@ -276,19 +294,28 @@ done about this.
 
 When the software is invoked, the computer looks in the current
 directory to see if there is a file called \texttt{related.mat}.  If
-it is there, it reads it, expecting it to look as below.  As before
-there is an initial comment between the expected initial \texttt{/*}
-and the first occurrence of \texttt{*/}.  The next line declares the
-number of schools, which must agree with the number of schools of the
-given problem, and the line after that declares an integer called
-\texttt{max\_clique} which must be between 1 and the number of
-schools.  After that there are numbers, separated by generalized white
+it is there, it reads it, expecting it to look as below.
+\begin{obeylines}\texttt{
+/* This a sample introductory comment */
+There are 3 schools
+max\_clique\_size is 2
+1 0 1
+0 1 1
+1 1 1
+}
+\end{obeylines} \noindent
+As before there is an initial comment between the expected initial
+\texttt{/*} and the first occurrence of \texttt{*/}.  The next line
+declares the number of schools, which must agree with the number of
+schools of the given problem, and the line after that declares an
+integer called \texttt{max\_clique\_size} which must be a positive
+integer.  After that there are numbers, separated by generalized white
 space, each of which must be either 0 or 1, that are the entries of a
 square matrix called \texttt{related} with the number of rows and
-columns equal to the number of schools.  The diagonal entries that
-must all be 1, and the matrix must be symmetric: for all $j$ and $k$,
-the $(j,k)$ and $(k,j)$ entries must agree.  If the computer does not
-find \texttt{related.mat} it sets \texttt{max\_clique} equal to the
+columns equal to the number of schools.  The diagonal entries must all
+be 1, and the matrix must be symmetric: for all $j$ and $k$, the
+$(j,k)$ and $(k,j)$ entries must agree.  If the computer does not find
+\texttt{related.mat} it sets \texttt{max\_clique\_} equal to the
 number of schools and \texttt{related} is set to the square matrix
 with that number of rows and columns whose entries are all 1.
 
@@ -299,32 +326,162 @@ both 1. A \emph{clique} of such a graph is a set of schools $P$ such
 that there is an edge between any two of its elements.  In its search
 for the $P$ that first has to restrict access to students in $J_P$,
 the computer only considers cliques for the graph with
-\texttt{max\_clique} or fewer elements.  To help this along a bit, the
+\texttt{max\_clique\_} or fewer elements.  To help this along a bit, the
 computer looks for schools whose capacity will not be exceeded even if
 every student who ranks it ends up receiving a seat.  Such a school is
 never an element of a minimal set $P$ that needs to restrict access to
 $J_P$, and for such a school the computer changes all of the entries
 of the corresponding row and column of \texttt{related} to zero.
 
-The specification of \texttt{related} and \texttt{max\_clique}
+The specification of \texttt{related} and \texttt{max\_clique\_size}
 represents a guess that as the computer descends recursively to
 smaller and smaller subproblems, the only sets $P$ that ever require
 restricting access to $J_P$ are cliques of the graph represented by
-\texttt{related} with no more than \texttt{max\_clique} elements.  Two
-points should be emphasized: 1) if the computation succeeds, the
-choices of \texttt{related} and \texttt{max\_clique} have no effect on
-the final result; 2) when this guess is wrong, the computer will
-eventually notice that some set of schools has been overallocated, and
-it will quit with a message to that effect.  A natural next step would
-be the modify \texttt{related} by increasing the relatedness of these
-schools.
+\texttt{related} with no more than \texttt{max\_clique\_size}
+elements.  Two points should be emphasized: 1) if the computation
+succeeds, the choices of \texttt{related} and
+\texttt{max\_clique\_size} have no effect on the final result; 2) when
+this guess is wrong, the computer will eventually notice that some set
+of schools has been overallocated, and it will quit with a message to
+that effect.  A natural next step would be to modify \texttt{related}
+by increasing the relatedness of these schools.
 
 The specification of \texttt{related} is the responsibility of the
 user, and is a matter of judgment and intuition.  (In the longer run
 we hope that the user's judgment and intuition will be refined by
 experience.)  Perhaps the main intuition is that it is very unlikely
-that two schools will be in a $P$ that first requires restricting
-access to $J_P$ if they are far apart.  
+that two schools will be in the $P$ that first requires restricting
+access to $J_P$ if the two schools are far apart.  Thus, even for very
+large school choice problems, it may be practical to specify that $j$
+and $k$ are related if and only if the distance between them does not
+exceed some bound, perhaps with certain exceptions.  For example,
+schools on the same subway line might be closer in practice than their
+physical distance suggests, and selective schools may be closely
+related to each other even if they are quite distant.
+
+Intuitively, it seems quite unlikely that the first set of schools $P$
+that needs to restrict access to $J_P$ will have three or more
+elements, and such a $P$ has not yet been found in our computational
+experiments.  Note that in order to reduce the running time by orders
+of magnitude it is necessary that \texttt{max\_clique\_size} is
+significantly smaller than half the size of the largest cliques of the
+relatedness graph.  Current intuition and experience suggest that
+setting \texttt{max\_clique\_size} equal to 4 is erring on the side of
+caution, but should not result in excessive running times for
+realistic relatedness graphs.  As we explained above, the only
+consequence of a failed computation is that one needs to try again
+with a modified \texttt{related} and \texttt{max\_clique\_size}, so
+the real recommendation is to mess around until something works.
+
+\section{Finer Priorities}
+
+To appreciate the issue discussed in this section one needs to
+understand some of the history of alternative mechanisms.  Instead of
+matching students to seats in schools, it is perhaps more intuitive to
+consider matching finite sets of boys and girls.
+
+The boy-proposes version of the famous deferred acceptance algorithm
+begins with each boy proposing to his favorite girl, if there is one
+he prefers to being alone.  Each girl rejects all proposals that are
+less attractive than being alone, and if she has received more than
+one acceptable proposal she holds on to her favorite and rejects all
+the others.  In each subsequent round each boy who was rejected in the
+previous round proposes to his favorite among the girls who have not
+yet rejected him, if one of these is acceptable, and each girl retains
+her favorite among the new proposals, if any of these are acceptable,
+and the proposal she has brought forward, rejecting all others.  This
+continues until there are no more rejections, at which point each girl
+holding a proposal pairs up with the boy whose proposal she is
+holding. This mechanism was first proposed in the academic literature
+by \cite{GaSh62}, but it turned out that it had already been used for
+several years to match new graduates of medical schools with
+residencies.  For almost twenty years it has been used in school
+matching, with the students proposing and the seats in the various
+schools rejecting, and it is now in widespread use around the world.
+
+The key point for us is that this mechanism is not well defined unless
+both sides have strict preferences, so it is necessary to endow the
+schools with strict priorities.  If these priorities are not actual
+reflections of society's values, this can result in inefficiency.  For
+example, if Carol School's priorities rank Bob above Ted while Alice
+School's priorities rank Ted above Bob, then we could have an
+assignment in which Bob envies Ted's seat at Alice School while Ted
+envies Bob's seat at Carol School.  This sort of inefficiency can be
+quantitatively important, and a major advantage of our mechanism is
+that it is efficient, in an even stronger sense than not allowing
+outcomes in which improving trades are possible.
+
+However, there are cases in which the schools' priorities do reflect
+actual values.  In China, for example, each student's priority at all
+schools is the score on a standardized test.  A consequence of this
+under deferred acceptance is that, in effect, each school has an exam
+score cutoff, accepting all students above the cutoff, rejecting all
+students below the cutoff, and randomizing (in effect) over students
+right at the cutoff.  Our main concern in this section is to explain
+how our mechanism can achieve similar outcomes.
+
+The first point is that our input files have a richer structure than
+our original example suggests.  The priorities can be arbitrary
+nonnegative integers.  A student having a priority of 0 at a
+particular school is understood as indicating that the student cannot
+be assigned there, either because she is not qualified or because she
+prefers her safe school.  A student's safe school can be indicated by
+giving the student the highest possible priority at that school.  The
+computer passes from this input to a school choice problem in which
+the priority of a student at a school is 1 if her priority in the
+input is not less than the school's priority threshold, and it is 0
+otherwise, each school's priority threshold is set to 1, and each
+student's preference is truncated by eliminating schools she is not
+eligible for.  Applying this procedure to the input below gives our
+original example.
+
+\begin{obeylines}\texttt{
+/* This is a sample introductory comment. */
+There are 4 students and 3 schools
+The vector of quotas is (1,2,1)
+The priority matrix is
+     5     6     9
+     2     2     9
+     5     4     9
+     3     4     9
+The students numbers of ranked schools are (3,3,3,3)
+The preferences of the students are
+1:  1  2  3  
+2:  1  2  3  
+3:  1  2  3  
+4:  1  2  3  
+The priority thresholds of the schools are
+1   3   5   
+  }
+\end{obeylines}
+
+It is possible to repeatedly adjust the schools' priority thresholds
+to achieve a desired effect.  For example, suppose there are two
+selective schools, and the school district would like it to be the
+case that a well qualified student is almost certain to receive a seat
+in one of them if that is what she wants, and at the same time these
+schools do not have more than a small amount of unused capacity.  One
+may raise the priority threshold of a school if many students are
+receiving some probability of admission and lower the threshold if its
+seats are not filled.  Of course changing the priority threshold at
+one of the schools will effect demand for the other school, so there
+is, roughly speaking, a problem of two equations and two unknowns.
+More generally, achieving the Chinese outcome requires solving a high
+dimensional approximate fixed point problem.
+
+Whether it is a good idea to use priorities as the Chinese do is an
+extremely complex question.  On the one hand there is an obvious sense
+in which it is desirable to provide the best resources to those who
+can extract the greatest benefit.  On the other side, the Chinese
+system intensifies the intergenerational transmission of advantage,
+and there is some education research suggesting that average students
+benefit from having talented peers while talented students are not
+disadvantaged by having some peers who are ordinary. One could easily
+list numerous additional issues.  Balancing various concerns in
+practice requires information concerning what would actually happen
+under various policy alternatives.  Our mechanism provides a wide
+range of alternatives, for which outcomes from existing data can be
+easily computed.
 
 
 \section{Concluding Remarks} \label{sec:Conclusion}

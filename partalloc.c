@@ -1,14 +1,14 @@
 #include "partalloc.h"
 
-struct partial_alloc zero_partial_alloc(struct sch_ch_prob* my_scp) {
+struct partial_alloc zero_partial_alloc(struct double_cee* my_cee) {
   int i,j;
   struct partial_alloc my_partial_alloc;
-  my_partial_alloc.no_students = my_scp->cee.no_students;
-  my_partial_alloc.no_schools = my_scp->cee.no_schools;
+  my_partial_alloc.no_students = my_cee->no_students;
+  my_partial_alloc.no_schools = my_cee->no_schools;
   
-  my_partial_alloc.allocations = malloc(my_scp->cee.no_students * sizeof(double*));
+  my_partial_alloc.allocations = malloc(my_cee->no_students * sizeof(double*));
   for (i = 1; i <= my_partial_alloc.no_students; i++) {
-    my_partial_alloc.allocations[i-1] = malloc(my_scp->cee.no_schools * sizeof(double));
+    my_partial_alloc.allocations[i-1] = malloc(my_cee->no_schools * sizeof(double));
     for (j = 1; j <= my_partial_alloc.no_schools; j++) {
       my_partial_alloc.allocations[i-1][j-1] = 0.0; 
     }
@@ -47,8 +47,14 @@ void destroy_partial_alloc(struct partial_alloc* my_partial_alloc) {
   free(my_partial_alloc->allocations);
 }
 
+void destroy_pure_alloc(struct pure_alloc* my_pure_alloc) {
+  free(my_pure_alloc->allocations);
+}
+
 void print_partial_alloc(struct partial_alloc my_partial_alloc) {
   int i,j;
+  printf("/* This is a sample introductory comment. */\n");
+  
   printf("   ");
   for (j = 1; j <= my_partial_alloc.no_schools; j++) {
     if (j < 10) {
@@ -68,6 +74,29 @@ void print_partial_alloc(struct partial_alloc my_partial_alloc) {
   printf("\n");
 }
 
+void print_pure_alloc(struct pure_alloc my_pure_alloc) {
+  int i,j;
+  printf("/* This is a sample introductory comment. */\n");
+  
+  printf("   ");
+  for (j = 1; j <= my_pure_alloc.no_schools; j++) {
+    if (j < 10) {
+      printf(" ");
+    }
+    printf("   %i:", j);
+  }
+  for (i = 1; i <= my_pure_alloc.no_students; i++) {
+    printf("\n%i:",i);
+    if (i < 10) {
+      printf(" ");
+    }
+    for (j = 1; j <= my_pure_alloc.no_schools; j++) {
+      printf("  %i", my_pure_alloc.allocations[i-1][j-1]);
+    }
+  }
+  printf("\n");
+}
+
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
 			     struct index* stu_index,struct index* sch_index) {
   int i,j;
@@ -77,6 +106,99 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
 	increment->allocations[i-1][j-1]; 
     }
   }
-  
 }
 
+double* school_sums(struct partial_alloc* my_alloc) {
+  int i, j;
+  double* sums = malloc(my_alloc->no_schools * sizeof(double));
+  for (j = 1; j <= my_alloc->no_schools; j++) {
+    sums[j-1] = 0.0;
+    for (i = 1; i <= my_alloc->no_students; i++) {
+      sums[j-1] += my_alloc->allocations[i-1][j-1];
+    }
+  }
+  return sums;
+}
+
+double distance_to_gmc_equality(struct double_cee* my_cee, struct partial_alloc* my_alloc,
+				int my_stu, int first_sch, int second_sch,
+				struct subset* school_subset) {
+  int i,j;
+  int no_stu = my_cee->no_students;
+  int no_sch = my_cee->no_schools;
+  struct subset student_subset; /* those who must eat school_subset */
+  student_subset = fullset(no_stu);
+  for (i = 1; i <= no_stu; i++) {
+    j = 1;
+    while (j <= no_sch && student_subset.indicator[i-1] == 1) {
+      if (school_subset->indicator[j-1] == 0 && my_cee->priority[i-1][j-1] > 0) {
+	student_subset.subset_size--;
+	student_subset.indicator[i-1] = 0;
+      }
+      j++;
+    }
+  }
+
+  double total_quota = 0.0;
+  for (j = 1; j <= no_sch; j++) {
+    if (school_subset->indicator[j-1] == 1) {
+      total_quota += my_cee->quotas[j-1];
+    }
+  }
+
+  double excess = total_quota - (double)student_subset.subset_size;
+  for (j = 1; j <= no_sch; j++) {
+    if (school_subset->indicator[j-1] ==1) {
+      for (i = 1; i <= no_stu; i++) {
+	if (student_subset.indicator == 0) {
+	  excess -= my_alloc->allocations[i-1][j-1];
+	}
+      }
+    }
+  }
+
+  if (student_subset.indicator[my_stu-1] == 0 && school_subset->indicator[first_sch-1] == 1
+      && school_subset->indicator[second_sch-1] == 0
+      && excess < my_alloc->allocations[my_stu-1][second_sch-1]) {
+    destroy_subset(school_subset);
+    return excess;
+  }
+  else {
+    destroy_subset(school_subset);
+    return 2.0;
+  }
+}
+
+double distance_to_first_gmc_eq(struct double_cee* my_cee, struct partial_alloc* my_alloc,
+				int my_stu, int first_sch, int second_sch,
+				struct subset* school_subset) {
+  struct square_matrix related = matrix_of_ones(my_cee->no_schools);
+  int max_clique_size = my_cee->no_schools;
+
+  *school_subset = nullset(my_cee->no_schools);
+
+  /* complete */
+  
+  return 0.0;
+}
+
+struct partial_alloc sample_pure_assignment(struct partial_alloc* my_alloc,
+					    struct double_cee* my_cee) {
+  return zero_partial_alloc(my_cee);
+}
+
+/* In the intended application, the following can be made more efficient by keeping lists of 
+   variables that are potentially nonzero. */
+
+/*
+double partial_alloc_inner_product(struct partial_alloc* left, struct partial_alloc* right)  {
+  int i,j;
+  double answer = 0.0;
+  for (i = 1; i <= left->no_students; i++) {
+    for (j = 1; j <= left->no_schools; j++) {
+      answer +=	left->allocations[i-1][j-1] * right->allocations[i-1][j-1]; 
+    }
+  }
+  return answer;
+}
+*/

@@ -3,44 +3,44 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: gcps_sch.aux
 The style file: agsm.bst
 Database file #1: pa_ref.bib
-You've used 6 entries,
+You've used 7 entries,
             2909 wiz_defined-function locations,
-            681 strings with 5474 characters,
-and the built_in function-call counts, 21503 in all, are:
-= -- 3463
-> -- 280
+            689 strings with 5589 characters,
+and the built_in function-call counts, 24654 in all, are:
+= -- 3966
+> -- 327
 < -- 0
-+ -- 1611
-- -- 84
-* -- 1849
-:= -- 4380
-add.period$ -- 7
-call.type$ -- 6
-change.case$ -- 84
-chr.to.int$ -- 6
-cite$ -- 6
-duplicate$ -- 95
-empty$ -- 204
-format.name$ -- 109
-if$ -- 3842
++ -- 1841
+- -- 98
+* -- 2118
+:= -- 5029
+add.period$ -- 8
+call.type$ -- 7
+change.case$ -- 98
+chr.to.int$ -- 7
+cite$ -- 7
+duplicate$ -- 111
+empty$ -- 236
+format.name$ -- 129
+if$ -- 4406
 int.to.chr$ -- 5
 int.to.str$ -- 0
-missing$ -- 6
-newline$ -- 22
-num.names$ -- 61
-pop$ -- 16
+missing$ -- 7
+newline$ -- 25
+num.names$ -- 71
+pop$ -- 19
 preamble$ -- 1
-purify$ -- 90
+purify$ -- 105
 quote$ -- 0
-skip$ -- 81
+skip$ -- 94
 stack$ -- 0
-substring$ -- 4855
-swap$ -- 18
-text.length$ -- 84
+substring$ -- 5543
+swap$ -- 21
+text.length$ -- 98
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 24
+type$ -- 28
 warning$ -- 0
-while$ -- 136
+while$ -- 159
 width$ -- 0
-write$ -- 78
+write$ -- 90
