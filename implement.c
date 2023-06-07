@@ -34,6 +34,23 @@ void destroy_nonintegral_graph(struct nonintegral_graph* my_graph) {
   free(my_graph->stu_sch_edges);
 }
 
+void initialize_list_node(struct list_node my_node, int type, int index) {
+  my_node.is_student = 0;
+  my_node.is_school = 0;
+  my_node.is_sink = 0;
+  my_node.index = index;
+  my_node.next = NULL;
+  if (type == 1) {
+    my_node.is_student = 1;
+  }
+  if (type == 2) {
+    my_node.is_school = 1;
+  }
+  if (type == 3) {
+    my_node.is_sink = 1;
+  }
+}
+
 struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double* sch_sums) {
   int i, j;
   int no_stu = my_alloc->no_students;
@@ -76,21 +93,13 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double
    
   my_graph.stu_nbrs = malloc(no_stu * sizeof(struct list_node));
   for (i = 1; i <= no_stu; i++) {
-    my_graph.stu_nbrs[i].is_student = 1;
-    my_graph.stu_nbrs[i].is_school = 0;
-    my_graph.stu_nbrs[i].is_sink = 0;
-    my_graph.stu_nbrs[i].index = i;
-    my_graph.stu_nbrs[i].next = NULL;
+    initialize_list_node(my_graph.stu_nbrs[i-1],1,i);
 
-    struct list_node current = my_graph.stu_nbrs[i];
+    struct list_node current = my_graph.stu_nbrs[i-1];
     for (j = 1; j <= no_sch; j++) {
       if (my_graph.sch_sink_edges[j-1] == 1) {
 	current.next = malloc(sizeof(struct list_node));
-	current.next->is_student = 0;
-	current.next->is_school = 1;
-	current.next->is_sink = 0;
-	current.next->index = j;
-	current.next->next = NULL;
+	initialize_list_node(*(current.next),2,j);
 	current = *current.next;
       }
     }
@@ -98,49 +107,28 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double
    
   my_graph.sch_nbrs = malloc(no_sch * sizeof(struct list_node));
   for (j = 1; j <= no_sch; j++) {
-    my_graph.sch_nbrs[j].is_student = 0;
-    my_graph.sch_nbrs[j].is_student = 1;
-    my_graph.sch_nbrs[j].is_student = 0;
-    my_graph.sch_nbrs[j].index = j;
-    my_graph.sch_nbrs[j].next = NULL;
+    initialize_list_node(my_graph.sch_nbrs[j-1],2,j);
 
-    struct list_node current = my_graph.sch_nbrs[j];
+    struct list_node current = my_graph.sch_nbrs[j-1];
     for (i = 1; i <= no_stu; i++) {
       if (my_graph.stu_sch_edges[i-1][j-1] == 1) {
 	current.next = malloc(sizeof(struct list_node));
-	current.next->is_student = 1;
-	current.next->is_school = 0;
-	current.next->is_sink = 0;
-	current.next->index = i;
-	current.next->next = NULL;
+	initialize_list_node(*(current.next),1,i);
 	current = *current.next;
       }
     }
     if (my_graph.sch_sink_edges[j-1] == 1) {
       current.next = malloc(sizeof(struct list_node));
-      current.next->is_student = 0;
-      current.next->is_school = 0;
-      current.next->is_sink = 1;
-      current.next->index = 1;
-      current.next->next = NULL;
+      initialize_list_node(*(current.next),3,1);
     }
   }
 
-  
-  my_graph.sink_nbrs.is_student = 0;
-  my_graph.sink_nbrs.is_school = 1;
-  my_graph.sink_nbrs.is_sink = 0;
-  my_graph.sink_nbrs.index = j;
-  my_graph.sink_nbrs.next = NULL;
+  initialize_list_node(my_graph.sink_nbrs,3,1);
   struct list_node current = my_graph.sink_nbrs;
   for (j = 1; j <= no_sch; j++) {
     if (my_graph.sch_sink_edges[j-1] == 1) {
       current.next = malloc(sizeof(struct list_node));
-      current.next->is_student = 0;
-      current.next->is_school = 1;
-      current.next->is_sink = 0;
-      current.next->index = j;
-      current.next->next = NULL;
+      initialize_list_node(*(current.next),2,j);
       current = *current.next;
     }
   }
@@ -150,6 +138,9 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double
 
 void remove_student_edge(struct nonintegral_graph* my_graph, int i, int j) {
   my_graph->stu_sch_edges[i-1][j-1] = 0;
+
+  /* We now find j in the list of i's neighbors and remove it. */
+  
   struct list_node* probe = &my_graph->stu_nbrs[i-1];
   while ((probe->next)->index != j) {
     probe = probe->next;
@@ -157,16 +148,39 @@ void remove_student_edge(struct nonintegral_graph* my_graph, int i, int j) {
   struct list_node* target = probe->next;
   probe->next = target->next;
   free(target);
+
+  /* We now find j in the list of i's neighbors and remove it. */
+  
+  probe = &my_graph->sch_nbrs[j-1];
+  while ((probe->next)->index != i) {
+    probe = probe->next;
+  }
+  target = probe->next;
+  probe->next = target->next;
+  free(target);
 }
 
 void remove_sink_edge(struct nonintegral_graph* my_graph, int j) {
   my_graph->sch_sink_edges[j-1] = 0;
+
+  /* We now remove the sink from the list of j's neighbors. */
+  
   struct list_node* probe = &my_graph->sch_nbrs[j-1];
   while ((probe->next)->next != NULL) {
-    probe = probe->next;  /*               Ij j has a sink neighbor, it is last on the list */
+    probe = probe->next;  /* If j has a sink neighbor, it is last on the list */
   }
   free(probe->next);
   probe->next = NULL;
+
+  /* We now remove j from the list of the sink's neighbors. */
+  
+  probe = &my_graph->sink_nbrs;
+  while ((probe->next)->index != j) {
+    probe = probe->next;  
+  }
+  struct list_node* target = probe->next;
+  probe->next = target->next;
+  free(target);
 }
 
 void copy_list_node_data(struct list_node* copy,struct list_node* orig) {
@@ -221,10 +235,7 @@ int find_cycle(struct nonintegral_graph* my_graph, struct list_node* cycle_node)
       struct list_node* tmp_ptr;
       
       first_node = malloc(sizeof(struct list_node));
-      first_node->is_student = 1;
-      first_node->is_school = 0;
-      first_node->is_sink = 0;
-      first_node->index = i;
+      initialize_list_node(*first_node,1,i);
       
       new_node = malloc(sizeof(struct list_node));
       first_node->next = new_node;

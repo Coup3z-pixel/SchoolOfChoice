@@ -97,10 +97,11 @@ In the paper ``An Efficient School Choice Mechanism Based on a
 Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
 and Yuki Tamura) we describe a new algorithm for school choice, along
 with its theoretical foundations.  This algorithm has been implemented
-in the software package \emph{GCPS Schools}.  The software package
-also contains two other programs.  The first of these generates
-example school choice problems of the sort that might occur in large
-school districts.  The second program passes from a matrix of
+in the software package \emph{GCPS Schools} as an executable
+\texttt{gcps}.  The software package also contains two other
+executables \texttt{make\_ex} and \texttt{purify}.  The first of these
+generates example school choice problems of the sort that might occur
+in large school districts.  The second program passes from a matrix of
 assignment probabilities to a random pure assignment with a
 distribution that averages to the given matrix of probabilities.
 These programs provide the basic computational resources required to
@@ -112,25 +113,12 @@ This document describes these programs, from the point of view of a
 user.  It doesn't assume that the reader has already read our paper,
 but of course we are leaving out lots of relevant information.
 
+\section{\texttt{gcps}}
+
 To begin with we describe a simple example of an input file, which the
-computer expects to find in a file called \texttt{schools.scp} in the
-current directory.  (If there is no such file the computer simply
-complains and quits.)  Our input files begin with a comment between
-\texttt{/*} and \texttt{*/}.  This is purely for your convenience, and
-the comment can be of any length, and provide whatever information is
-useful to you, but it is mandatory insofar as the computer will insist
-that the first two characters of the file are \texttt{/*} and will
-only start extracting information after it sees the \texttt{*/}.  The
-computer divides the remainder into ``generalized white space'' (in
-addition to spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}',
-and `\texttt{,}' are treated as white space) and ``tokens,'' which are
-sequences of characters without any of the generalized white space
-characters.  Tokens are either prescribed words, numbers, or student
-tags (a student number followed by `\texttt{:}') and everything must
-be more or less exactly as shown below, modulo white space, so, for
-example, the first line must not be \texttt{There are 3 students and 1
-  school}, but it could be \texttt{There are 3 students and \ \ 1
-  schools}.
+application \texttt{gcps} expects to find in a file called
+\texttt{schools.scp} in the current directory.  (If there is no such
+file \texttt{gcps} simply complains and quits.)
 
 \begin{obeylines}\texttt{
 /* This is a sample introductory comment. */
@@ -152,6 +140,25 @@ The priority thresholds of the schools are
   }
 \end{obeylines}
 
+\medskip
+
+Our input files begin with a comment between \texttt{/*} and
+\texttt{*/}.  This is purely for your convenience, and the comment can
+be of any length, and provide whatever information is useful to you,
+but it is mandatory insofar as the computer will insist that the first
+two characters of the file are \texttt{/*} and will only start
+extracting information after it sees the \texttt{*/}.  The computer
+divides the remainder into ``generalized white space'' (in addition to
+spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}', and
+`\texttt{,}' are treated as white space) and ``tokens,'' which are
+sequences of characters without any of the generalized white space
+characters.  Tokens are either prescribed words, numbers, or student
+tags (a student number followed by `\texttt{:}') and everything must
+be more or less exactly as shown below, modulo white space, so, for
+example, the first line must not be \texttt{There are 3 students and 1
+  school}, but it could be \texttt{There are 3 students and \ \ 1
+  schools}.
+
 The next line gives the quotas (i.e., the capacities) of the schools,
 so school 2 has two seats, and the other two schools each have one
 seat.  Here we see the convenience of making `\texttt{(}',
@@ -160,15 +167,15 @@ would have had to write \texttt{The vector of quotas is 1 2 1}.
 
 Our treatment of priorities is somewhat different from what is typical
 in the school choice literature, where the priority is thought of as
-representing the ``utility'' of the school, and is often required to
-come from a strict ranking of the students.  At this stage a student's
-priority at a school is either 1 if she is allowed to attend the
-school, and may be assigned a seat there, and otherwise it is 0.
+the ``utility'' the school gets from a student, and is often required
+to come from a strict ranking of the students.  At this stage a
+student's priority at a school is either 1 if she is allowed to attend
+the school, and may be assigned a seat there, and otherwise it is 0.
 (We'll talk about more complicated priorities later.)  A student's
 priority at a school may be 0 because she is not qualified (it is a
 single sex school for boys, or her test scores are too low) or it may
-be 0 because the student prefers a seat at her ``safe school'' as we
-explain below, and can insist on receiving a seat at a school that is
+be 0 because the student prefers a seat at her ``safe school'' (as we
+explain below) and can insist on receiving a seat at a school that is
 no worse for her than that.
 
 The next line provides information (for each student, the number of
@@ -185,7 +192,9 @@ The collection of information provided by an input file is a
 \emph{school choice problem}.
 
 What the software does (primarily) is compute a matrix of assignment
-probabilities.  Our particular example gives the following output:
+probabilities.  For our particular example \texttt{gcps} gives the
+following output:
+\medskip
 \begin{obeylines}\texttt{
 The allocation is:
 \ \ \ \ \ 1:    \    2:  \      3:
@@ -195,18 +204,15 @@ The allocation is:
 4:      0.25     0.67     0.08
 }
 \end{obeylines} \noindent
+
+\smallskip
 Note that the sum of the entries in each row is 1 and the sum of the
 entries in each school's column is that school's quota.  In general
 the sum of the quotas may exceed the number of students, in which case
 we require that the sum of the entries in each school's column does
 not exceed that school's quota. An assignment of probabilities with
 these properties --- each student's total assignment is 1 and no
-school is overassigned --- is a \emph{feasible allocation}.  An
-important point \citep{bckm13aer} is that any feasible allocation can
-be written as a convex combination of feasible allocations with
-entries in $\{0,1\}$, i.e., as a lottery over pure assignments, and an
-important component of our package is the implementation of such a
-lottery.
+school is overassigned --- is a \emph{feasible allocation}.  
 
 Our mechanism is based on the ``simultaneous eating'' algorithm of
 \cite{bm01} for probabilistic allocation of objects, as generalized by
@@ -224,8 +230,8 @@ The idea is that each student has one school, say the closest school
 or the school that a sibling attends, to which she is guaranteed
 admission if she insists.  (It is a major advantage of our mechanism
 that we can provide such a guarantee.)  Each student submits a ranking
-of schools that she (weakly) prefers to the safe school, and her
-priority is 1 at those schools and 0 at all others.
+of schools that she is eligible for and (weakly) prefers to the safe
+school, and her priority is 1 at those schools and 0 at all others.
 
 Now suppose that there are two schools, say 1 and 2, that are quite
 popular.  Some students have school 1 as their safe school, but prefer
@@ -234,16 +240,19 @@ There are also some students who have other safe schools, but prefer
 either 1 or 2, or both.  As the students consume probability at their
 favorite schools, there can come a time at which schools 1 and 2
 together only have enough remaining capacity to serve the students who
-insist on going to one of the two schools, even though school 1 has
-excess capacity if it can ignore the students who have 1 as their safe
-school but prefer 2 and the students who have 2 as their safe school
-but prefer 1, and similarly for school 2.  At this time further
-consumption of capacity at schools 1 and 2 is restricted to those
-students who cannot be assigned to other schools, so further
-consumption of these schools is denied to students who do not have 1
-or 2 as their safe school, and also to students who have 1 or 2 as
-their safe school but prefer some third school that is still
-available.  For one of the latter students the least preferred of the
+can insist on going to one of these two schools, even though school 1
+still has excess capacity if it can ignore the students who have 1 as
+their safe school but prefer 2 and the students who have 2 as their
+safe school but prefer 1, and similarly for school 2.  When this
+happens we say that the set of schools $P = \{1,2\}$ has become
+\emph{critical}.
+
+At this time further consumption of capacity at schools 1 and 2 is
+restricted to those students who cannot be assigned to other schools,
+so further consumption of these schools is denied to students who do
+not have 1 or 2 as their safe school, and also to students who have 1
+or 2 as their safe school but prefer some third school that is still
+available.  For each of the latter students the least preferred of the
 schools she is willing to attend that is still available becomes the
 new safe school.
 
@@ -270,8 +279,9 @@ We can now describe the algorithm in a bit more detail.  At each time
 each student is consuming probability of a seat at the favorite school
 among those that are still available to her.  This continues until the
 first time that there is a set of schools $P$ such that the remaining
-capacity is just sufficient to meet the needs of the students in
-$J_P$.  At this point the problem divides into two subproblems, one
+capacity is just sufficient to meet the needs of the students in the
+set $J_P$ of students who no longer have access to any schools outside
+of $P$.  At this point the problem divides into two subproblems, one
 corresponding to the sets $P$ and $J_P$ and the other corresponding to
 the complements of these sets.  These problems have the same form as
 the original problem, and can be treated algorithmically in the same
@@ -279,118 +289,225 @@ way, so the algorithm can descend recursively to smaller and smaller
 subproblems until a feasible allocation has been fully computed.
 
 
-\section{What If There Are Many Schools?}
+\section{\texttt{purify}} \label{sec:Implementation}
 
-As the algorithm was described above, at each step it looked ahead,
-for each set of schools $P$, to determine the time at which it becomes
-necessary to restrict further consumption of schools in $P$ to
-students in $J_P$.  This is not unduly burdensome if there are a
-moderate number of schools.  (For a ``toy'' example with 20 schools,
-hence over one million sets of schools, the algorithm finishes in
-about 10 seconds.)  But some school choice problems have several dozen
-or even hundreds of schools, and will overwhelm the naive version of
-the algorithm described above.  There are several things that can be
-done about this.
+The output of \texttt{gcps} is a matrix of assignment probabilities, as shown in the example below.
 
-When the software is invoked, the computer looks in the current
-directory to see if there is a file called \texttt{related.mat}.  If
-it is there, it reads it, expecting it to look as below.
 \begin{obeylines}\texttt{
-/* This a sample introductory comment */
-There are 3 schools
-max\_clique\_size is 2
-1 0 1
-0 1 1
-1 1 1
+\ \ \ \ \ $A$:    \     $B$:  \      $C$:
+1:      0.25     0.67     0.08
+2:      0.25     0.00     0.75
+3:      0.25     0.67     0.08
+4:      0.25     0.67     0.08
 }
 \end{obeylines} \noindent
-As before there is an initial comment between the expected initial
-\texttt{/*} and the first occurrence of \texttt{*/}.  The next line
-declares the number of schools, which must agree with the number of
-schools of the given problem, and the line after that declares an
-integer called \texttt{max\_clique\_size} which must be a positive
-integer.  After that there are numbers, separated by generalized white
-space, each of which must be either 0 or 1, that are the entries of a
-square matrix called \texttt{related} with the number of rows and
-columns equal to the number of schools.  The diagonal entries must all
-be 1, and the matrix must be symmetric: for all $j$ and $k$, the
-$(j,k)$ and $(k,j)$ entries must agree.  If the computer does not find
-\texttt{related.mat} it sets \texttt{max\_clique\_} equal to the
-number of schools and \texttt{related} is set to the square matrix
-with that number of rows and columns whose entries are all 1.
+(Now, to avoid confusion, the schools are $A$, $B$, and
+$C$.)
 
-We think of \texttt{related} as encoding an undirected graph whose
-nodes are the schools: there is an edge between schools $j$ and $k$ if
-and only if the $(j,k)$ and $(k,j)$ entries of \texttt{related} are
-both 1. A \emph{clique} of such a graph is a set of schools $P$ such
-that there is an edge between any two of its elements.  In its search
-for the $P$ that first has to restrict access to students in $J_P$,
-the computer only considers cliques for the graph with
-\texttt{max\_clique\_} or fewer elements.  To help this along a bit, the
-computer looks for schools whose capacity will not be exceeded even if
-every student who ranks it ends up receiving a seat.  Such a school is
-never an element of a minimal set $P$ that needs to restrict access to
-$J_P$, and for such a school the computer changes all of the entries
-of the corresponding row and column of \texttt{related} to zero.
+\medskip
+Generating a random deterministic assignment with a probability
+distribution that averages to this matrix is called
+\emph{implementation} by \cite{bckm13aer}.  The executable
+\texttt{purify} reads a feasible matrix $m$ of assignment
+probabilities from a file \texttt{allocate.mat}, which must have the
+form of the output of \texttt{gcps}, and it produces a random
+deterministic allocation with a suitable distribution, using an
+algorithm of \cite{bckm13aer}, as it applies to our somewhat simpler
+framework.
 
-The specification of \texttt{related} and \texttt{max\_clique\_size}
-represents a guess that as the computer descends recursively to
-smaller and smaller subproblems, the only sets $P$ that ever require
-restricting access to $J_P$ are cliques of the graph represented by
-\texttt{related} with no more than \texttt{max\_clique\_size}
-elements.  Two points should be emphasized: 1) if the computation
-succeeds, the choices of \texttt{related} and
-\texttt{max\_clique\_size} have no effect on the final result; 2) when
-this guess is wrong, the computer will eventually notice that some set
-of schools has been overallocated, and it will quit with a message to
-that effect.  A natural next step would be to modify \texttt{related}
-by increasing the relatedness of these schools.
+We can illustrate the algorithm using the feasible allocation shown
+above.  We consider a cyclic path alternating between students and
+schools, say $1 \to C \to 3 \to A \to 1$, such that the entries of the
+matrix for $(1,C)$, $(3,C)$, $(3,A)$, and $(1,A)$ are all strictly
+between $0$ and $1$.  If we add $0.08$ to the entries for $(1,C)$ and
+$(3,A)$ while subtracting $0.08$ from the entries for $(3,C)$ and
+$(1,A)$, we obtain
+\begin{obeylines}\texttt{
+\ \ \ \ \ $A$:    \     $B$:  \  $C$:
+1:      0.17     0.67     0.17
+2:      0.25     0.00     0.75
+3:      0.33     0.67     0.00
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+(Recall that $0.08$, $0.17$, and $0.33$ are really $\tfrac{1}{12}$,
+$\tfrac16$ and $\tfrac13$.)  This is also a feasible allocation.  We
+could also subtract $0.08$ from the entries for $(1,C)$ and $(3,A)$
+while adding $0.08$ the entries for $(3,C)$ and $(1,A)$, thereby
+obtaining the feasible allocation
+\begin{obeylines}\texttt{
+\ \ \ \ \ $A$:    \     $B$:  \      $C$:
+1:      0.33     0.67     0.00
+2:      0.25     0.00     0.75
+3:      0.17     0.67     0.17
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+Supposing that we decide which of these to do by flipping a coin, we
+could then look for another cycle and repeat the process.  Each step
+reduces the number of entries that are strictly between $0$ and $1$,
+so we would eventually arrive at a deterministic assignment.
 
-The specification of \texttt{related} is the responsibility of the
-user, and is a matter of judgment and intuition.  (In the longer run
-we hope that the user's judgment and intuition will be refined by
-experience.)  Perhaps the main intuition is that it is very unlikely
-that two schools will be in the $P$ that first requires restricting
-access to $J_P$ if the two schools are far apart.  Thus, even for very
-large school choice problems, it may be practical to specify that $j$
-and $k$ are related if and only if the distance between them does not
-exceed some bound, perhaps with certain exceptions.  For example,
-schools on the same subway line might be closer in practice than their
-physical distance suggests, and selective schools may be closely
-related to each other even if they are quite distant.
+We now give a more formal explanation of the algorithm, as implemented
+in \texttt{implement.h}, \texttt{implement.c}, and \texttt{purify.c}.
+There is a directed graph whose nodes are the students, the schools,
+and a \emph{sink}.  The graph has an arc from each student to each
+school, and an arc from each school to the sink.  A \emph{flow} is an
+assignment of a positive number to each arc such that for each
+student, the sum of the flows to all schools is $1$, and for each
+school the sum of the flows from all students is equal to the flow
+from that school to the sink.  A matrix of assignment probabilities
+$m$ has an associated flow $f$ in which the flow from each student to
+each school is the probability that the student receives a seat in the
+school, and the flow from the school to the sink is the sum of the
+school's assignment probabilities.
 
-Intuitively, it seems quite unlikely that the first set of schools $P$
-that needs to restrict access to $J_P$ will have three or more
-elements, and such a $P$ has not yet been found in our computational
-experiments.  Note that in order to reduce the running time by orders
-of magnitude it is necessary that \texttt{max\_clique\_size} is
-significantly smaller than half the size of the largest cliques of the
-relatedness graph.  Current intuition and experience suggest that
-setting \texttt{max\_clique\_size} equal to 4 is erring on the side of
-caution, but should not result in excessive running times for
-realistic relatedness graphs.  As we explained above, the only
-consequence of a failed computation is that one needs to try again
-with a modified \texttt{related} and \texttt{max\_clique\_size}, so
-the real recommendation is to mess around until something works.
+There is a subgraph consisting of all arcs whose flows are not
+integers.  A key point is that for any node that is an endpoint of one
+of the arcs in the subgraph, there is another node in the subgraph
+that also has that node as an endpoint.  For each student, this is
+obvious because the sum of the student's assignment probabilities is
+one.  If the sum of the flows into a school is an integer, and one of
+these flows is not an integer, then there must be another flow into
+the school that is not an integer.  If the sum of the flows into a
+school is not an integer, then one of the flows into the school is not
+an integer, and the flow from the school to the sink is not an
+integer.  The sum of the flows into the sink is the sum of the flows
+out of the students, which is the number of students, hence an
+integer, so if the flow from one of the schools to the sink is not an
+integer, there must be another such school.
+
+Consequently the subgraph has a \emph{cycle}, which is a sequence of
+distinct nodes $n_1, \ldots, n_k$ such that $k > 2$ and, for each $i =
+1, \ldots, k$, $n_i$ and $n_{i+1}$ are the endpoints of an arc in the
+subgraph.  (We are treating the indices as integers mod $k$, so $k + 1
+= 1$.)  The algorithm for finding a cycle (whose correctness is the
+proof of the existence of a cycle) works in an obvious manner.
+Beginning with $n_1$ and $n_2$ that are the endpoints of an arc in the
+subgraph, it finds $n_3 \ne n_1$ such that $n_2$ and $n_3$ are the
+endpoints of an arc in the subgraph.  In general, after finding $n_i$
+such that $n_{i-1}$ and $n_i$ are the endpoints of an arc in the
+subgraph, the algorithm asks whether there is $j = 1, \ldots, i-2$
+such that $n_i = n_j$, in which case $n_j, \ldots, n_{i-1}$ is the
+desired cycle, and otherwise it finds $n_{i+1} \ne n_{i-1}$ such that
+$n_i$ and $n_{i+1}$ are the endpoints of an arc in the subgraph.
+Since there are finitely many nodes, the process must eventually halt.
+
+Given a cycle $n_1, \ldots, n_k$, for each $i = 1, \ldots, k$ we say
+that $n_in_{i+1}$ is a \emph{forward arc} if $n_i$ is a student and
+$n_{i+1}$ is a school, or if $n_i$ is a school and $n_{i+1}$ is the
+sink, and otherwise we say that $n_{i+1}n_i$ is a \emph{backward arc}.
+For any real number $\delta$, if we modify $f$ by adding a constant
+$\delta$ to the flow of each forward arc while subtracting $\delta$
+from the flow of each backward arc, the result $f^\delta$ is a new
+flow, because for each student the sum of outward flows is $1$, and
+for each school the sum of flows from students to the school is the
+flow from the school to the sink.
+
+Let $\alpha$ be the smallest positive number such that $f^\alpha$ has
+at least one more integer entry than $f$, and let $\beta$ be the
+smallest positive number such that $f^{-\beta}$ has at least one more
+integer entry than $f$.  Then $f = \tfrac{\beta}{\alpha +
+  \beta}f^\alpha + \tfrac{\alpha}{\alpha + \beta}f^{-\beta}$.  Let
+$m^\alpha$ and $m^{-\beta}$ be the restrictions of $f^\alpha$ and
+$f^{-\beta}$ to the arcs from students to schools.  It is easy to see
+that $m^\alpha$ and $m^{-\beta}$ are feasible allocations: their
+entries lie in $[0,1]$, and the sums of the entries for each student
+and each school are the corresponding sums for $m$.  The algorithm
+passes from $m$ and $f$ to $m^\alpha$ and $f^{\alpha}$ with
+probability $\tfrac{\beta}{\alpha + \beta}$, and to $m^{-\beta}$ and
+$f^{-\beta}$ with probability $\tfrac{\alpha}{\alpha + \beta}$.
+Whichever of $m^\alpha$ and $m^{-\beta}$ is chosen, if it is not a
+deterministic assignment, then the process is repeated.
+
+\section{\texttt{make\_ex}}
+
+Development of this sort of software requires testing under at least
+somewhat realistic conditions.  The utility \texttt{make\_ex} produces
+examples of input files for \texttt{gcps} that reflect the
+geographical dispersion of school districts with many schools, and the
+idiosyncratic nature of school quality and student preferences.
+
+One of the files produced by \texttt{make\_ex} begins as follows:
+\begin{obeylines}\texttt{
+    /* This file was generated by make\_ex with 20 schools,
+    4 students per school, capacity 5 for all schools,
+    school valence standard deviation 1.00,
+    and idiosyncratic standard deviation 1.00. */
+}
+\end{obeylines} \noindent
+In this example there are 20 schools that are spaced evenly around a
+circle of circumference 20.  Since there are 4 students per school,
+there are 80 students whose homes are spaced evenly around the circle.
+Each student's safe school is the school closest to her home.  A
+student's utility for a school is the sum of the school's valence and
+an idiosyncratic shock, minus the distance from the student's home to
+the school.  Each school's valence is a normally distributed random
+variable with mean 0.0 and standard deviation 1.0, and for each
+student-school pair the idiosyncratic shock is a normally distributed
+random variable with mean 0.0 and standard deviation 1.0.  All of
+these random variables are independent.  The program passes from the
+utilities to an input for \texttt{gcps} by finding the ranking, for
+each student, of the schools for which the student's utility is at
+least as large as the utility of the safe school.
+
+Near the beginning of the file \texttt{example.c} there are the following lines:
+\begin{obeylines}\texttt{
+  int no\_schools = 20;
+  int no\_students\_per\_school = 4;
+  int school\_capacity = 5;
+  double school\_valence\_std\_dev = 1.0;
+  double idiosyncratic\_std\_dev = 1.0;
+}
+\end{obeylines} \noindent
+Even for someone who knows nothing about the C programming language,
+this is pretty easy to understand.  The keywords \texttt{int} and
+\texttt{double} are data types for integers and floating point
+numbers.  Each line assigns a value to some variable.  If you would
+like to generate examples with different parameters, the way to do
+that is to change the parameters by editing \texttt{example.c}, run
+\texttt{make}, and then issue a command like \texttt{make\_ex >
+  my\_file.scp}.  For example, to diminish the relative importance of
+travel costs one can increase \texttt{school\_valence\_std\_dev} and
+\texttt{idiosyncratic\_std\_dev}.
+
+This illustrates an important point concerning the relationship
+between this software and its users.  Most softwares have interfaces
+with the user that neither require nor allow the user to edit the
+source code, but to create such an interface here would be
+counterproductive. It would add complexity to the source code that had
+nothing to do with the underlying algorithms.  More importantly, the
+main purpose of this software is to provide a starting point for the
+user's own programming effort in adapting it to the particular
+requirements and idiosyncratic features of the user's school choice
+setting.  Our algorithms are not very complicated, and someone
+familiar with C should hopefully not have a great deal of difficulty
+figuring out what is going on and then bending it to her purposes.
+Starting to look at and edit the source code as soon as possible is a
+first step down that road.
+
 
 \section{Finer Priorities}
 
 To appreciate the issue discussed in this section one needs to
-understand some of the history of alternative mechanisms.  Instead of
-matching students to seats in schools, it is perhaps more intuitive to
-consider matching finite sets of boys and girls.
+understand some of the history of other school choice mechanisms.
+Instead of matching students to seats in schools, it is perhaps more
+intuitive to consider matching a finite set of boys with a finite set
+of girls, who each have strict preferences over potential partners and
+remaining single.
 
 The boy-proposes version of the famous deferred acceptance algorithm
 begins with each boy proposing to his favorite girl, if there is one
 he prefers to being alone.  Each girl rejects all proposals that are
 less attractive than being alone, and if she has received more than
-one acceptable proposal she holds on to her favorite and rejects all
-the others.  In each subsequent round each boy who was rejected in the
-previous round proposes to his favorite among the girls who have not
-yet rejected him, if one of these is acceptable, and each girl retains
-her favorite among the new proposals, if any of these are acceptable,
-and the proposal she has brought forward, rejecting all others.  This
-continues until there are no more rejections, at which point each girl
+one acceptable proposal, she holds on to her favorite and rejects all
+the others.  In each subsequent round, each boy who was rejected in
+the previous round proposes to his favorite among the girls who have
+not yet rejected him, if one of these is acceptable. Each girl now has
+a number of new proposals, and possibly the proposal she brought
+forward from the previous round.  She retains her favorite of these,
+if it is acceptable, rejecting all others.  This procedure is repeated
+until there is a round with no rejections, at which point each girl
 holding a proposal pairs up with the boy whose proposal she is
 holding. This mechanism was first proposed in the academic literature
 by \cite{GaSh62}, but it turned out that it had already been used for
@@ -400,40 +517,57 @@ matching, with the students proposing and the seats in the various
 schools rejecting, and it is now in widespread use around the world.
 
 The key point for us is that this mechanism is not well defined unless
-both sides have strict preferences, so it is necessary to endow the
-schools with strict priorities.  If these priorities are not actual
-reflections of society's values, this can result in inefficiency.  For
-example, if Carol School's priorities rank Bob above Ted while Alice
-School's priorities rank Ted above Bob, then we could have an
-assignment in which Bob envies Ted's seat at Alice School while Ted
-envies Bob's seat at Carol School.  This sort of inefficiency can be
-quantitatively important, and a major advantage of our mechanism is
-that it is efficient, in an even stronger sense than not allowing
-outcomes in which improving trades are possible.
+both sides have strict preferences.  In the context of school
+matching, the schools' preferences are called \emph{priorities}.  If
+these priorities are not actual reflections of society's values, this
+can result in inefficiency.  For example, if Carol School's priorities
+rank Bob above Ted while Alice School's priorities rank Ted above Bob,
+then we could have an assignment in which Bob envies Ted's seat at
+Alice School while Ted envies Bob's seat at Carol School.  This sort
+of inefficiency can be quantitatively important, and a major advantage
+of our mechanism is that it is efficient, in an even stronger sense
+than not allowing outcomes in which improving trades are possible.
 
 However, there are cases in which the schools' priorities do reflect
 actual values.  In China, for example, each student's priority at all
-schools is the score on a standardized test.  A consequence of this
-under deferred acceptance is that, in effect, each school has an exam
+schools is the score on a standardized test.  A consequence of this,
+under deferred acceptance, is that, in effect, each school has an exam
 score cutoff, accepting all students above the cutoff, rejecting all
-students below the cutoff, and randomizing (in effect) over students
-right at the cutoff.  Our main concern in this section is to explain
-how our mechanism can achieve similar outcomes.
+students below the cutoff, and randomizing (roughly speaking) over
+students right at the cutoff.  Our main concern in this section is to
+explain how our mechanism can achieve similar outcomes.
 
-The first point is that our input files have a richer structure than
-our original example suggests.  The priorities can be arbitrary
-nonnegative integers.  A student having a priority of 0 at a
-particular school is understood as indicating that the student cannot
-be assigned there, either because she is not qualified or because she
-prefers her safe school.  A student's safe school can be indicated by
-giving the student the highest possible priority at that school.  The
-computer passes from this input to a school choice problem in which
-the priority of a student at a school is 1 if her priority in the
-input is not less than the school's priority threshold, and it is 0
-otherwise, each school's priority threshold is set to 1, and each
-student's preference is truncated by eliminating schools she is not
-eligible for.  Applying this procedure to the input below gives our
-original example.
+The first point is that our input files can have a richer structure
+than our original example suggests, as illustrated by the input on the
+next page.  The priorities can be arbitrary nonnegative integers.  A
+student having a priority of 0 at a particular school is understood as
+indicating that the student cannot be assigned there, either because
+she is not qualified or because she prefers her safe school.  A
+student's safe school can be indicated by giving the student the
+highest possible priority at that school.  The computer passes from
+this input to a school choice problem in which the priority of a
+student at a school is 1 if her priority in the input is not less than
+the school's priority threshold, and it is 0 otherwise, each school's
+priority threshold is set to 1, and each student's preference is
+truncated by eliminating schools she is not eligible for.  Applying
+this procedure to the input below gives our original example.
+
+It is possible to repeatedly adjust the schools' priority thresholds
+to achieve a desired effect.  For example, suppose there are two
+selective schools, and the school district would like it to be the
+case that a well qualified student is almost certain to receive a seat
+in one of them if that is what she wants, and at the same time these
+schools do not have more than a small amount of unused capacity.  One
+may raise the priority threshold of a school if many students are
+receiving some probability of admission and lower the threshold if its
+seats are not being filled.  Of course changing the priority threshold
+at one of the schools will effect demand for the other school, so
+repeated adjustment of the priority thresholds of all the schools may
+be required to achieve a desirable result.  (Automating this iterative
+adjustment process may require the development of a version of
+\texttt{gcps} that can accept parameter inputs, without editing the
+source code.  This should be a simple task for an experienced C
+programmer.)
 
 \begin{obeylines}\texttt{
 /* This is a sample introductory comment. */
@@ -455,20 +589,6 @@ The priority thresholds of the schools are
   }
 \end{obeylines}
 
-It is possible to repeatedly adjust the schools' priority thresholds
-to achieve a desired effect.  For example, suppose there are two
-selective schools, and the school district would like it to be the
-case that a well qualified student is almost certain to receive a seat
-in one of them if that is what she wants, and at the same time these
-schools do not have more than a small amount of unused capacity.  One
-may raise the priority threshold of a school if many students are
-receiving some probability of admission and lower the threshold if its
-seats are not filled.  Of course changing the priority threshold at
-one of the schools will effect demand for the other school, so there
-is, roughly speaking, a problem of two equations and two unknowns.
-More generally, achieving the Chinese outcome requires solving a high
-dimensional approximate fixed point problem.
-
 Whether it is a good idea to use priorities as the Chinese do is an
 extremely complex question.  On the one hand there is an obvious sense
 in which it is desirable to provide the best resources to those who
@@ -483,59 +603,107 @@ under various policy alternatives.  Our mechanism provides a wide
 range of alternatives, for which outcomes from existing data can be
 easily computed.
 
+\section{What If There Are Many Schools?}
 
-\section{Concluding Remarks} \label{sec:Conclusion}
+[The material below is inaccurate, and will be superceded as the software develops.]
 
-We have provided a school choice mechanism that is a specialization of
-the GCPS mechanism of \cite{balbuzanov22jet}, which is in turn a
-generalization of the PS mechanism of BM.  This mechanism guarantees
-each student a seat in a school that is at least as desirable as any
-of the schools she is legally entitled to attend.  When there are many
-students for each school, it is effectively strategy proof.  It is
-$sd$-efficient, which (as BM stress) is a stronger condition than ex
-post efficiency.  In contrast, bilateral matching mechanisms based on
-randomly generated priorities for the schools are (at least in their
-most basic forms) not even ex post efficient.  A result of
-\cite{bckm13aer} implies that it is implementable: the assignment
-probabilities it generates can be obtained from a randomization over
-pure assignments.  It satisfies anonymity, equal treatment of equals,
-and a natural generalization of the envy-freeness condition satisfied
-by the PS mechanism.  Using a novel generalization of Hall's marriage
-theorem, we have described a computational implementation of this
-mechanism that is tractable even for very large school choice
-problems.
+\norev
 
-Although we have emphasized the school choice application, the underlying idea of our procedure, the application of the GCPS mechanism to CEE, is potentially of interest in many other domains, with many variations.  A possibility stressed by BM, \cite{cho18scw}, and \cite{balbuzanov22jet} (perhaps among others) is that the mechanism can be varied by making the eating speeds depend on various things.  This seems unmotivated in school choice, but in other domains it may be quite interesting.
+As the algorithm was described above, it looked ahead, for each set of
+schools $P$, to determine the time at which it would become necessary
+to restrict further consumption of schools in $P$ to students in
+$J_P$.  This is not unduly burdensome if there are a moderate number
+of schools.  (For a ``toy'' example with 20 schools, hence over one
+million sets of schools, the algorithm finishes in about 10 seconds.)
+But some school choice problems have several dozen or even hundreds of
+schools, and will overwhelm the naive version of the algorithm
+described above.  There are several things that can be done about
+this.
 
-A possibility we intend to explore in subsequent research is that instead of consuming probability of desirable objects, the agents may discard probability of undesirable objects.  In the case of $n$ agents and $n$ objects, each agent is endowed with one unit of each object, and at each time during the interval $[0,n-1]$ she discards probability of the least desirable object that she has not fully discarded for which discarding is still allowed.  Discarding of an object is disallowed when the agents' total remaining endowment of it is one, but it may also be disallowed for some agents in the event that the process reaches a facet of $R$.  The characterization of the PS mechanism given by \cite{bh12} implies that the discarding mechanism is certainly different, but otherwise its properties await investigation.  It seems appropriate for problems, perhaps such as chore assignment, in which the agents' main concern is to avoid the objects that are most noxious for them.  Some agents may be unqualified to receive certain objects, and one may recognize this by taking away their endowments of such objects at the outset, but this seems unfair insofar it amounts to giving them a head start.  Giving such agents slower discarding speeds is one way this issue could be addressed.
+When the software is invoked, the computer looks in the current
+directory to see if there is a file called \texttt{related.mat}.  If
+it is there, it reads it, expecting it to look as below.  As before
+there is an initial comment between the expected initial \texttt{/*}
+and the first occurrence of \texttt{*/}.  The next line declares the
+number of schools, which must agree with the number of schools of the
+given problem, and the line after that declares an parameter called
+\texttt{max\_set\_size} which must be a positive integer.  The line
+after that declares a \emph{mode}, which may be \texttt{clique},
+\texttt{common\_school}, or \texttt{all\_sets}.  After that there are
+numbers, separated by generalized white space, each of which must be
+either 0 or 1, that are the entries of a square matrix called
+\texttt{related} with the number of rows and columns equal to the
+number of schools.  The diagonal entries must all be 1, and the matrix
+must be symmetric: for all $j$ and $k$, the entries for $(j,k)$ and
+$(k,j)$ must agree.
+\begin{obeylines}\texttt{
+/* This a sample introductory comment */
+There are 3 schools
+max\_set\_size is 2
+clique
+1 0 1
+0 1 1
+1 1 1
+}
+\end{obeylines} \noindent
 
+We think of \texttt{related} as encoding an undirected graph whose
+nodes are the schools: there is an edge between schools $j$ and $k$ if
+and only if the $(j,k)$ and $(k,j)$ entries of \texttt{related} are
+both 1. A \emph{clique} of such a graph is a set of schools $P$ such
+that there is an edge between any two of its elements.  The underlying
+assumption (or conjecture, actually) expressed by this file is that,
+as the computer descends recursively to smaller and smaller
+subproblems, any minimal critical set will be a clique of
+\texttt{related}, and will have \texttt{max\_set\_size} or fewer
+elements.  In this particular case the candidate critical sets are
+singletons and pairs of related nodes.  If the mode is
+\texttt{common\_school}, then a candidate critical set is a set of
+schools with \texttt{max\_set\_size} or fewer elements that has an
+element that is \texttt{related} to every other element of the set.
+If the mode is \texttt{all\_sets}, then a candidate critical set is
+any set of schools with \texttt{max\_set\_size} or fewer elements.
+
+To help things along a bit, the computer looks for schools whose
+capacity will not be exceeded even if every student who ranks it ends
+up receiving a seat.  Such a school is never an element of a minimal
+critical set, and for such a school the computer changes all of the
+entries of the corresponding row and column of \texttt{related} to
+zero.
+
+Perhaps the most important thing to say about this is that if the
+conjecture expressed by \texttt{related.mat} turns out to be false,
+the computer will eventually figure this out and let the user know.
+This isn't a disaster: the user simply has to try again with some
+different assumption.  Furthermore, if the assumption is correct, the
+result of the computation doesn't depend on it in any way.  Thus there
+is plenty of scope for trial and error when faced with a large
+problem.
+
+Our setup suggests that the specification of \texttt{related.mat} is
+the responsibility of the user, and we expect that for some school
+choice problems the specification will depend on special features of
+the problem, and the user's experience.  For example, schools on the
+same subway line might be closer in practice than their physical
+distance suggests, and selective or specialized schools may be closely
+related to each other even if they are quite distant.
+
+Nevertheless, there are default values that are used if the file
+\texttt{related.mat} is not present: a) two schools are
+\texttt{related} if there is at least one student who can receive a
+seat in either of them; b) \texttt{max\_set\_size} is 6; c) the mode
+is \texttt{common\_school}. (Actually, current intuition and
+experience suggest that setting \texttt{max\_clique\_size} equal to 4
+is already erring on the side of caution.)  As we explain in more
+detail later, these values can easily be modified by tweaking the
+source code, so a broad range of possibilities can be tried before
+resorting to a user prepared \texttt{related.mat}.
 
 \begin{appendix}
 
-\section{Proof of Lemma \ref{lem:cyclic}} \label{app:Cyclic}
+\section{Some Kind of Appendix, Maybe} \label{app:Cyclic}
 
- The argument below simply adapts the proof of Theorem 1 of \cite{cd16} to our setting.
- 
-Suppose that $m$ is wasteful, so there is an agent $i$ and a pair $o,o'$ of objects such that $o \succ_i o'$, $m_{io} < g_{io}$, $m_{io'} > 0$, and $\sum_j m_{jo} < q_o$. For sufficiently small $\delta > 0$, setting $m'_{io} = m_{io}+\delta$,  $m'_{io'} = m_{io'} - \delta$, and $m'_{jp} = m_{jp}$ for all other $(j,p)$ gives an allocation $m'$ such that $m'_i$ $e$-dominates $m_i$ for any $e \in \{sd,dl,ul\}$, $m_i' \ne m_i$, and $m'_j = m_j$ for all $j \ne i$, so $m'$ $e$-dominates $m$. 
-
-Suppose that there is a cycle $o_0 \lhd_m o_1 \lhd_m \cdots \lhd_m o_h \lhd_m o_0$.
-If $i_0, \ldots, i_k$ and $m(\delta)$ are as above, then, for sufficiently small $\delta >0$, $m(\delta)$ is an allocation, $m_i(\delta)$ $e$-dominates $m_i$  for each $i = 0, \ldots, k$ and $e \in \{sd,dl,ul\}$, and $m'_j = m_j$ for all other $j$, so $m'$ $e$-dominates $m$.
-
-Now suppose that allocation $m$ is not wasteful and is $e$-dominated by the allocation $m'$.   Fix an agent $i_0$ such that $m'_{i_0} \ne m_{i_0}$. 
-There are two cases, depending on whether $e = dl$ or $e = ul$.  (Either argument can handle the case $e = sd$.)
-
-First suppose that $e = dl$.  Since $m_i'$ $ul$-dominates $m_i$ there are objects $o_0$ and $o_1$  such that $o_1 \succ_{i_1} o_0$, $m'_{i_0o_0} < m_{i_0o_0}$, and $m'_{i_0o_1} > m_{i_0o_1}$.  These conditions imply that $m_{i_0o_0} > 0$ and $m_{i_0o_1} < g_{i_0o_1}$, so $o_0 \lhd_m o_1$. 
-If $m'_{jo_1} \ge m_{jo_1}$ for all $j \ne i_0$, then $\sum_j m_{jo_1} < \sum_j m'_{jo_1} \le q_{o_1}$ and $m_{i_0o_0} > 0$, contradicting nonwastefulness of $m$.  Therefore there is some $i_1 \ne i_0$ such that $m'_{i_1o_1} < m_{i_1o_1}$.  Since $m'_{i_1}$ $dl$-dominates $m_{i_1}$, there is some $o_2$ such that $o_2 \succ_{i_1} o_1$ and $m'_{i_1o_2} > m_{i_1o_2}$.  We have $m_{i_1o_1} > 0$ and $m_{i_1o_2} < g_{i_1o_2}$, so $o_1 \lhd o_2$.
-Since $O$ is finite, repeating this argument leads eventually to a cycle $o_0 \lhd_m o_1 \lhd_m \cdots \lhd_m o_h \lhd_m o_0$.
-
-Now suppose that $e = ul$. Since $m_i'$ $dl$-dominates $m_i$ there are objects $o_0$ and $o_1$  such that $o_0 \succ_{i_1} o_1$, $m'_{i_0o_0} > m_{i_0o_0}$, and $m'_{i_0o_1} < m_{i_0o_1}$, so that $m_{i_0o_1} > 0$ and $o_1 \lhd o_0$. 
-
-Aiming at a contradiction, suppose that $m_{jo_1} \ge m'_{jo_1}$ for all $j \ne i_0$, so that $q_{o_1} \ge \sum_j m_{jo_1} > \sum_j m'_{jo_1}$.  Since $\sum_{j,p} m_{jp} = \sum_{j,p} m'_{jp} = \sum_j r_j$, there is a $p_1$ such that $\sum_j m_{jp_1} < \sum_j m'_{jp_1}$ and a $j_1$ such that $m_{j_1p_1} < m'_{j_1p_1}$. Since $m'_{j_1} \ne m_{j_1}$ and $m'_{j_1}$ $ul$-dominates $m_{j_1}$, there is a $p_2$ such that $p_1 \succ_{j_1} p_2$ and $m_{j_1,p_2} > m'_{j_1,p_2}$.  
-In particular, $m_{j_1,p_2} > 0$.  Together with $q_{p_1} \ge \sum_j m'_{jp_1} > \sum_j m_{jp_1}$, this contradicts the assumption that $m$ is not wasteful.
-
-Therefore there is some $i_1 \ne i_0$ such that $m_{i_1o_1} < m'_{i_1o_1}$.  Since $m'_{i_1} \ne m_{i_1}$ and $m'_{i_1}$ $ul$-dominates $m_{i_1}$ there is some $o_2$ such that $o_1 \succ_{i_1} o_2$ and $m_{i_1o_2} > m'_{i_1o_2}$.  In particular, $m_{i_1o_2} > 0$, so $o_2 \lhd o_1$.  
-Since $O$ is finite, repeating this argument leads eventually to a cycle $o_0 \lhd_m o_h \lhd_m \cdots \lhd_m o_1 \lhd_m o_0$.
-
+This is just a place holder, in case we end up needing some sort of appendix. 
 
 
 

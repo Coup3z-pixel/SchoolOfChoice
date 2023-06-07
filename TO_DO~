@@ -1,0 +1,14 @@
+	TO DO List
+
+This is a file for sketching the likely course of further development.
+Currently the logical ordering of tasks seems to be as follows.
+
+1.  Remove related.mat, and the routine that reads this file.
+
+2.  Graceful exits in the event of input files not being found.
+
+3.  Detection and graceful exit in the event that some bound is exceeded.
+
+4.  Testing and debugging for all existing input files, at various maximum set sizes.
+
+5.  Development of code that defines and utilizes the related matrix.

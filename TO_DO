@@ -1,0 +1,12 @@
+	TO DO List
+
+This is a file for sketching the likely course of further development.
+Currently the logical ordering of tasks seems to be as follows.
+
+1.  Graceful exits in the event of input files not being found.
+
+2.  Detection and graceful exit in the event that some bound is exceeded.
+
+3.  Testing and debugging for all existing input files, at various maximum set sizes.
+
+4.  Development of code that defines and utilizes the related matrix.

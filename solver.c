@@ -11,18 +11,8 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
   for (j = 1; j <= my_scp->cee.no_schools; j++) {
     copy_quotas[j-1] = my_scp->cee.quotas[j-1];
   }
-
-  struct stat buffer;
-  if (stat("related.mat",&buffer) == 0) {
-    related = related_matrix_from_file(&max_clique_size);
-    if (related.dimension != my_scp->cee.no_schools) {
-      printf("ERROR: related.mat has the wrong number of schools.\n");
-      exit(0);
-    }
-  }
-  else {
-    related = matrix_of_ones(my_scp->cee.no_schools);
-  }
+  
+  related = matrix_of_ones(my_scp->cee.no_schools);
 
   edit_out_unpopular_schools(my_scp,&related);
 

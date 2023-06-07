@@ -16,29 +16,24 @@ int main() {
   double* location = malloc(no_students * sizeof(double));
   for (i = 1; i <= no_students; i++) {
     location[i-1] = (double)i/no_students_per_school;
-    /* printf("Student %i\'s location is %1.2f.\n",i,location[i-1]); */
   }
 
   double** distance = malloc(no_students * sizeof(double*));
   for (i = 1; i <= no_students; i++) {
     distance[i-1] = malloc(no_schools * sizeof(double));
-    /*    printf("\n%i  ",i); */
     for (j = 1; j <= no_schools; j++) {
       double a = location[i-1];
       double b = (double)j;
       double c = (double)no_schools;
       distance[i-1][j-1] = min(min(fabs(a - b), fabs(a - b - c)),fabs(a - b + c));
-      /*      printf("  %1.2f",distance[i-1][j-1]); */
     }
   }
   
   double* valence = malloc(no_schools * sizeof(double));
   for (j = 1; j <= no_schools; j++) {
     valence[j-1] = school_valence_std_dev * normal();
-    /* printf("The valence of school %i is %1.2f.\n",j,valence[j-1]); */
   }
 
-  
   double** utility = malloc(no_students * sizeof(double*));
   for (i = 1; i <= no_students; i++) {
     utility[i-1] = malloc(no_schools * sizeof(double));
@@ -64,11 +59,6 @@ int main() {
     i++;
     safe_school[i-1] = no_schools;
   }
-  /*
-  for (i = 1; i <= no_students; i++) {
-    printf(" %i",safe_school[i-1]);
-  }
-  */
 
   int** priority = malloc(no_students * sizeof(int*));
   int* no_ranked_schools = malloc(no_students * sizeof(int));
@@ -84,7 +74,6 @@ int main() {
 	priority[i-1][j-1] = 0;
       }
     }
-    /* printf("%i has  %i ranked schools\n",i,no_ranked_schools[i-1]); */
   }
 
   int** preferences = malloc(no_students * sizeof(int*));
@@ -147,9 +136,6 @@ int main() {
   }
   printf("\n");
 
-  
-  
-  
   
   return 0;
 }

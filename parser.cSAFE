@@ -513,6 +513,111 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
 }
 
 
+void check_There_second(FILE *fp, char next) {
+  if (next != 'T' || getc(fp) != 'h' || getc(fp) != 'e' || getc(fp) != 'r' || getc(fp) != 'e') {
+    printf("ERROR: formatting for number of schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_are_fifth(FILE *fp, char next) {
+  if (next != 'a' || getc(fp) != 'r' || getc(fp) != 'e') {
+    printf("ERROR: formatting for the number of schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_schools_fifth(FILE *fp, char next) {
+  if (next != 's' || getc(fp) != 'c' || getc(fp) != 'h' || getc(fp) != 'o' || getc(fp) != 'o' ||
+                     getc(fp) != 'l' || getc(fp) != 's') {
+    printf("ERROR: formatting for the number of schools is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_is_third(FILE *fp, char next) {
+  if (next != 'i' || getc(fp) != 's') {
+    printf("ERROR: the phrase \'max_clique_size is \' is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_max_clique_size(FILE *fp, char next) {
+  if (next != 'm' || getc(fp) != 'a' || getc(fp) != 'x' || getc(fp) != '_' || getc(fp) != 'c' ||
+      getc(fp) != 'l' || getc(fp) != 'i' || getc(fp) != 'q' || getc(fp) != 'u' ||
+      getc(fp) != 'e' || getc(fp) != '_' || getc(fp) != 's' || getc(fp) != 'i' ||
+      getc(fp) != 'z' || getc(fp) != 'e') {
+    printf("ERROR: the phrase \'max_clique_size is \' is incorrect.\n");
+    exit(0);
+  }
+}
+
+struct square_matrix related_matrix_from_file(int* max_clique_size) {
+  struct square_matrix related;
+
+  FILE *fp;
+
+  fp = fopen("related.mat", "r");
+
+  if (getc(fp) != '/') {
+    printf("ERROR: the input file must begin with /*\n");
+    exit(0);
+  }
+
+  if (getc(fp) != '*') {
+    printf("ERROR: the input file must begin with /*\n");
+    exit(0);
+  }
+
+  while (getc(fp) != '*') {}
+
+  if (getc(fp) != '/') {
+    printf("ERROR: the initial comment must end with */\n");
+    exit(0);
+  }
+
+  char next = get_next(fp);
+  check_There_second(fp,next);
+  next = get_next(fp);
+  check_are_fifth(fp,next);
+  next = get_next(fp);
+  related.dimension = get_number(fp,next);
+  next = get_next(fp);
+  check_schools_fifth(fp,next);
+
+  next = get_next(fp);
+  check_max_clique_size(fp,next);
+  next = get_next(fp);
+  check_is_third(fp,next);
+  next = get_next(fp);
+  *max_clique_size = get_number(fp,next);
+  
+  int j, k;
+  related.entries = malloc(related.dimension * sizeof(int*));
+  for (j = 1; j <= related.dimension; j++) {
+    related.entries[j-1] = malloc(related.dimension * sizeof(int));
+    for (k = 1; k <= related.dimension; k++) {
+      next = get_next(fp);
+      related.entries[j-1][k-1] = get_number(fp,next);
+    }
+  }
+    
+  fclose(fp);
+  
+  for (j = 1; j <= related.dimension; j++) {
+    for (k = 1; k <= related.dimension; k++) {
+      if (!(related.entries[j-1][k-1] == 0 || related.entries[j-1][k-1] == 1) ||
+	  related.entries[j-1][k-1] != related.entries[k-1][j-1]) {
+	printf("ERROR: The matrix in related.mat must be a symmetric 0,1-matrix.\n");
+	exit(0);
+      }
+    }
+  }
+
+
+  return related;
+}
+
 
 void check_There_third(FILE *fp, char next) {
   if (next != 'T' || getc(fp) != 'h' || getc(fp) != 'e' || getc(fp) != 'r' || getc(fp) != 'e') {
