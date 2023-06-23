@@ -20,12 +20,6 @@ struct square_matrix {
   int** entries;
 };
 
-struct subset nullset(int large_set_size);
-
-struct subset fullset(int large_set_size);
-
-struct square_matrix matrix_of_ones(int dim);
-
 void print_subset(struct subset* my_subset);
 
 void print_index(struct index* my_index);
@@ -38,6 +32,14 @@ void destroy_index(struct index* my_index);
 
 void destroy_square_matrix(struct square_matrix* my_matrix);
 
+struct subset nullset(int large_set_size);
+
+struct subset fullset(int large_set_size);
+
+struct square_matrix matrix_of_zeros(int dim);
+
+struct square_matrix matrix_of_ones(int dim);
+
 int subsets_are_same(struct subset* first, struct subset* second);
 
 void copy_subset(struct subset* given_subset, struct subset* copy_subset);
@@ -48,9 +50,10 @@ struct index index_of_subset(struct subset* my_subset);
 
 struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* my_subset); 
 
-/* int iterate(struct subset* my_subset); */ /* function has been taken over by next_subset */
-
-int next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size);
+int old_next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size);
                                                           /* From smallest to largest */
+
+int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
+		int* point_school);
 
 #endif /* SUBSET_H */

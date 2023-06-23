@@ -340,7 +340,10 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
 
   FILE *fp;
 
-  fp = fopen("schools.scp", "r");
+  if (!(fp = fopen("schools.scp", "r"))) {
+    printf("ERROR: the file schools.scp does not exist.\n");
+    exit(0);
+  }
 
   if (getc(fp) != '/') {
     printf("ERROR: the input file must begin with /*\n");
@@ -541,7 +544,10 @@ struct partial_alloc allocation_from_file() {
 
   FILE *fp;
 
-  fp = fopen("allocate.mat", "r");
+  if (!(fp = fopen("allocate.mat", "r"))) {
+    printf("ERROR: the file allocate.mat does not exist.\n");
+    exit(0);
+  }
 
   if (getc(fp) != '/') {
     printf("ERROR: the input file must begin with /*\n");

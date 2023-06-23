@@ -98,16 +98,19 @@ Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
 and Yuki Tamura) we describe a new algorithm for school choice, along
 with its theoretical foundations.  This algorithm has been implemented
 in the software package \emph{GCPS Schools} as an executable
-\texttt{gcps}.  The software package also contains two other
-executables \texttt{make\_ex} and \texttt{purify}.  The first of these
-generates example school choice problems of the sort that might occur
-in large school districts.  The second program passes from a matrix of
-assignment probabilities to a random pure assignment with a
-distribution that averages to the given matrix of probabilities.
-These programs provide the basic computational resources required to
-apply our mechanism, and perhaps in some cases they will suffice.
-However, our primary hope is that the underlying code will be a useful
-starting point for further software development.
+\texttt{gcps}, which passes from a school choice problem (as described
+below) to a matrix specifying, for each student-school pair, the
+probability that the student is assigned to the school.  The software
+package also contains two other executables \texttt{purify} and
+\texttt{make\_ex}.  The first of these passes from a matrix of
+assignment probabilities to a random pure assignment whose probability
+distribution averages to the given matrix of probabilities.  The
+second program generates example school choice problems of the sort
+that might occur in large school districts.  These programs provide
+the basic computational resources required to apply our mechanism, and
+perhaps in some cases they will suffice.  However, our primary hope is
+that the underlying code will be a useful starting point for further
+software development.
 
 This document describes these programs, from the point of view of a
 user.  It doesn't assume that the reader has already read our paper,
@@ -420,6 +423,11 @@ $f^{-\beta}$ with probability $\tfrac{\alpha}{\alpha + \beta}$.
 Whichever of $m^\alpha$ and $m^{-\beta}$ is chosen, if it is not a
 deterministic assignment, then the process is repeated.
 
+The code for the algorithm described above is in \texttt{implement.c},
+which has the associated header file \texttt{implement.h}.  The file
+\texttt{purify.c} contains a high level sequence of commands that
+execute the algorithm.
+
 \section{\texttt{make\_ex}}
 
 Development of this sort of software requires testing under at least
@@ -463,12 +471,16 @@ Near the beginning of the file \texttt{example.c} there are the following lines:
 Even for someone who knows nothing about the C programming language,
 this is pretty easy to understand.  The keywords \texttt{int} and
 \texttt{double} are data types for integers and floating point
-numbers.  Each line assigns a value to some variable.  If you would
-like to generate examples with different parameters, the way to do
-that is to change the parameters by editing \texttt{example.c}, run
-\texttt{make}, and then issue a command like \texttt{make\_ex >
-  my\_file.scp}.  For example, to diminish the relative importance of
-travel costs one can increase \texttt{school\_valence\_std\_dev} and
+numbers.  Thus \texttt{no\_schools},
+\texttt{no\_students\_per\_school}, and \texttt{school\_capacity} are
+integers, while \texttt{school\_valence\_std\_dev} and
+\texttt{idiosyncratic\_std\_dev} are floating point numbers.  Each
+line assigns a value to some variable.  If you would like to generate
+examples with different parameters, the way to do that is to change
+the parameters by editing \texttt{example.c}, run \texttt{make}, and
+then issue a command like \texttt{make\_ex > my\_file.scp}.  For
+example, to diminish the relative importance of travel costs one can
+increase \texttt{school\_valence\_std\_dev} and
 \texttt{idiosyncratic\_std\_dev}.
 
 This illustrates an important point concerning the relationship
@@ -605,20 +617,94 @@ easily computed.
 
 \section{What If There Are Many Schools?}
 
-[The material below is inaccurate, and will be superceded as the software develops.]
-
-\norev
-
 As the algorithm was described above, it looked ahead, for each set of
 schools $P$, to determine the time at which it would become necessary
 to restrict further consumption of schools in $P$ to students in
 $J_P$.  This is not unduly burdensome if there are a moderate number
 of schools.  (For a ``toy'' example with 20 schools, hence over one
-million sets of schools, the algorithm finishes in about 10 seconds.)
-But some school choice problems have several dozen or even hundreds of
-schools, and will overwhelm the naive version of the algorithm
-described above.  There are several things that can be done about
-this.
+million sets of schools, this form of the algorithm finishes in about
+10 seconds.)  But some school choice problems have several dozen or
+even hundreds of schools, and will overwhelm the naive version of the
+algorithm described above.  There are several things that can be done
+about this.
+
+To help things along a bit, the computer looks for schools whose
+capacity will not be exceeded even if every student who ranks it ends
+up receiving a seat.  Such a school is said to be \emph{unpopular}.
+An unpopular school will never be an element of a minimal critical set.
+
+Two schools are \emph{related} if there is a student who can attend
+either one.  The computer computes a square matrix \texttt{related}
+whose rows and columns are indexed by the schools, such that
+\texttt{related[j][k]} is one if $j$ and $k$ are both popular
+(formally, a school is \emph{popular} if it is not unpopular) and
+$\alpha_j \cap \alpha_k \ne \emptyset$, and otherwise
+\texttt{related[j][k]} is zero.  We think of \texttt{related} as
+encoding an undirected graph whose nodes are the schools, with an edge
+connecting $j$ and $k$ if and only if \texttt{related[j][k]} and
+\texttt{related[k][j]} are both one.  For any set of schools $P$ there
+is an induced subgraph whose set of nodes is $P$ and whose edges are
+the edges of the graph whose endpoints are both in $P$.
+
+An undirected graph is \emph{connected} if, for any pair of nodes $j$
+and $k$, there is a sequence of edges leading from $j$ to $k$.
+Suppose that $P$ is a set of schools such that the induced subgraph of
+\texttt{related} is not connected.  Then $P = P_1 \cup P_2$ where
+$P_1$ and $P_2$ are nonempty, $P_1 \cup P_2 = \emptyset$, and there is
+no path of edges leading from a school in $P_1$ to a school in $P_2$.
+If $P$ is critical, then both $P_1$ and $P_2$ are critical, so $P$
+cannot be a minimal critical set.
+
+At this point we have seen that it is only necessary to consider
+subsets $P$ of the set of popular schools such that the subgraph of
+\texttt{related} induced by $P$ is connected.  For large school choice
+problems the number of such sets can still be overwhelming.
+
+The trick is to let the computational process itself tell us which
+sets are relevant.  We maintain an assignment \texttt{subset\_sizes}
+of a nonnegative integer to each school.  At the beginning of the
+computation \texttt{subset\_sizes[j]} is zero if $j$ is unpopular and
+one if $j$ is popular.  This corresponds to simply allocating each
+school until it is exhausted, and (as in our initial example) it may
+be the case that this computes a feasible allocation.  If it does not,
+there will be a time prior to $1$ at which some student $i$ no longer
+has any schools she can consume.  For each school $j$ in $\alpha_i$ we
+increase \texttt{subset\_sizes[j]} from $1$ to $2$.  We now repeat the
+allocation processs, this time looking for criticality of sets of
+schools whose elements are a school in $\alpha_j$ and another school
+that is related to it.  In general, the allocation process looks for
+criticality of each connected set of schools $P$ such that there is a school
+$j$ such that $j \in P$ and the number of elements of $P$ is not
+greater than \texttt{subset\_sizes[j]}.  If the allocation process
+does not succeed there is a student $i$ who runs out of schools before
+time $1$, and we increase \texttt{subset\_sizes[j]} by $1$ if $j \in
+\alpha_i$ and \texttt{subset\_sizes[j]} is minimal for $j \in
+\alpha_i$.
+
+In this way there arises the need to efficiently enumerate all of the
+relevant $P$, which is provided by the function \texttt{next\_subset}
+in \texttt{subset.c}.  Fix a particular school $j$ and a number $r$
+that is not greater than \texttt{subset\_size[j]}.  For any
+\texttt{related}-connected $r$-element set $P$ containing $j$ there is
+a unique ordering $j_1, \ldots, j_r$ of the elements of $P$ such that
+$j_1 = j$ and, for each $h = 2, \ldots, r$, $j_h$ is the smallest
+number among $j_h, \ldots, j_r$ that is \texttt{related} to one of the
+schools $j_1, \ldots, j_{h-1}$.  We want to list these sets in
+lexicographic order; think of a car's odometer.  Clearly $\{j_1,
+\ldots, j_{r-1},j_r'\}$ is the next set in this ordering if and only
+if $j_r'$ is the smallest number such that $j_r'$ is \texttt{related}
+to one of $j_1, \ldots, j_{r-1}$ and $j_r' > \max \{j_{h+1}, \ldots,
+j_r\}$, where $h$ is the smallest index such that $j_h$ and $j_r'$ are
+\texttt{related}.  If there is no such $j_r'$, then we look for the
+smallest number $j_{r-1}'$ such that $j_{r-1}'$ is \texttt{related} to
+one of $j_1, \ldots, j_{r-2}$ and $j_{r-1}' > \max \{j_{h+1}, \ldots,
+j_{r-1}\}$, where $h$ is the smallest index such that $j_h$ and
+$j_{r-1}'$ are \texttt{related}, and once we find it we look for a
+suitable $j_r'$, and so forth.
+
+
+
+\norev
 
 When the software is invoked, the computer looks in the current
 directory to see if there is a file called \texttt{related.mat}.  If

@@ -13,65 +13,65 @@
    over the two possible adjustments of the allocation that give
    additional integral entries. */
 
-/* A cycle in the graph of nonintegral assignments is a linked list. */
-
-struct list_node {
-  int is_student;
-  int is_school;
-  int is_sink;
-  int index; /* student index, school index, or 1 for sink */
-  struct list_node* next;
-};
-
-/* We create and maintain a graph whose edges are nonintegral entries
-   of the allocation, and the edges from schools to the sink whose
-   total flow is not integral. The lists of neighbors of each node is
-   a convenience in applying the graph that has a maintenance cost. */
-
 struct nonintegral_graph {
   int no_students;
   int no_schools;
   int no_edges;
   int** stu_sch_edges;
   int* sch_sink_edges;
-  struct list_node* stu_nbrs; /* list of neighbors of student, starting with the node itself */
-  struct list_node* sch_nbrs; /* ditto for school */
-  struct list_node sink_nbrs; /* ditto for sink */
+};
+
+struct neighbor_lists {
+  int no_students;
+  int no_schools;
+  int* stu_no_nbrs;
+  int* sch_no_nbrs; /* only student neighbors here */
+  int sink_no_nbrs;
+  int** stu_sch_nbrs;
+  int** sch_stu_nbrs;
+  int* sch_sink_nbrs; /* sch_sink_nbrs[j-1] = 1 is j and sink are neighbors, 0 otherwise. */
+  int* sink_sch_nbrs;
+};
+
+struct path_node {
+  int type; /* 1 = student, 2 = school, 3 = sink */
+  int index;
+  struct path_node* next;
 };
 
 void destroy_nonintegral_graph(struct nonintegral_graph* my_graph);
 
+void destroy_neighbor_lists(struct neighbor_lists* my_lists);
+
+void destroy_cycle(struct path_node* cycle);
+
 struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double* sch_sums);
 
-/* While maintaining the graph, we need to remove edges that become integral. */
+struct neighbor_lists neighbor_lists_from_graph(struct nonintegral_graph* my_graph);
 
-void remove_student_edge(struct nonintegral_graph* my_graph, int i, int j);
+int graph_is_nonempty(struct neighbor_lists* my_lists);
 
-void remove_sink_edge(struct nonintegral_graph* my_graph, int j);
+struct path_node* find_cyclic_path(struct neighbor_lists* my_lists);
 
-/* To find a cycle we start at a node and go to a neighbor, a neighbor of that neighbor, etc. */
+double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
+		      struct path_node* my_cycle);
 
-int find_cycle(struct nonintegral_graph* my_graph, struct list_node* cycle_node);
+void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
+		      struct neighbor_lists* my_lists, int up,
+		      double adjustment, struct path_node* my_cycle);
 
-/* We compute the maximum adjustment of the nonintegral entries, in
-   either of the two directions, that keeps all entries in [0,1]. */
+void student_edge_removal(struct neighbor_lists* my_lists, int i, int j);
 
-double cycle_bound(struct partial_alloc* my_alloc, double* sch_sums, int up,
-		   struct list_node* my_cycle);
+void sink_edge_removal(struct neighbor_lists* my_lists, int j);
 
-/* We adjust the allocation and the nonintegral graph. */
+/* The following is the master function that puts everything together. */
 
-void adjust_cycle(struct nonintegral_graph* my_graph, struct partial_alloc* my_alloc,
-		  double* sch_sums, int up, double adjustment, struct list_node* my_cycle);
+struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
 
 /* At the end we need to pass from a partial_alloc whose values (which
    are doubles) are all close to 0 and 1, to the corresponding pure
    allocation, whose values are in {0,1}. */
 
 struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
-
-/* The following is the master function that puts everything together. */
-
-struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
 
 #endif /* IMPLEMENT_H */

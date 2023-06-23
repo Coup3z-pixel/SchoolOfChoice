@@ -24,18 +24,34 @@ struct subset fullset(int large_set_size) {
   return my_subset;
 }
 
-struct square_matrix matrix_of_ones(int dim) {
+struct square_matrix matrix_of_zeros(int dim) {  
   int j, k;
-  struct square_matrix my_matrix;
-  my_matrix.dimension = dim;
-  my_matrix.entries = malloc(dim * sizeof(int*));
+  struct square_matrix zero_matrix;
+  
+  zero_matrix.dimension = dim;
+  zero_matrix.entries = malloc(dim * sizeof(int*));
   for (j = 1; j <= dim; j++) {
-    my_matrix.entries[j-1] = malloc(dim * sizeof(int));
+    zero_matrix.entries[j-1] = malloc(dim * sizeof(int));
     for (k = 1; k <= dim; k++) {
-      my_matrix.entries[j-1][k-1] = 1;
+      zero_matrix.entries[j-1][k-1] = 0;
     }
   }
-  return my_matrix;
+  
+  return zero_matrix;
+}
+
+struct square_matrix matrix_of_ones(int dim) {
+  int j, k;
+  struct square_matrix one_matrix;
+  one_matrix.dimension = dim;
+  one_matrix.entries = malloc(dim * sizeof(int*));
+  for (j = 1; j <= dim; j++) {
+    one_matrix.entries[j-1] = malloc(dim * sizeof(int));
+    for (k = 1; k <= dim; k++) {
+      one_matrix.entries[j-1][k-1] = 1;
+    }
+  }
+  return one_matrix;
 }
 
 void print_subset(struct subset* my_subset) {
@@ -121,7 +137,14 @@ void complement(struct subset* given_subset, struct subset* comp) {
 struct index index_of_subset(struct subset* my_subset) {
   int i, k;
   struct index my_index;
+
+  if (my_subset->subset_size == 0) {
+    printf("Taking the index of an emptyset is not permitted.\n");
+    exit(0);	    
+  }
+  
   my_index.no_elements = my_subset->subset_size;
+  
   my_index.indices = malloc(my_subset->subset_size * sizeof(int));
   k = 0;
   for (i = 1; i <= my_subset->subset_size; i++) {
@@ -131,6 +154,7 @@ struct index index_of_subset(struct subset* my_subset) {
     }
     my_index.indices[i-1] = k;
   }
+  
   return my_index;
 }
 
@@ -213,7 +237,7 @@ int iterate(struct subset *my_subset) {
 }
 */
 
-int next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size) {
+int old_next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size) {
   int i;
   int have_leveled_up = 0;
   int no_needed = 0;
@@ -344,5 +368,215 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int max
       }
     }
   }
+  return 0;
+}
+
+int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
+		int* point_school) {
+  int j,k;
+  int nsc = my_subset->large_set_size;
+  int set_size = my_subset->subset_size;
+  
+  if (subset_sizes[*point_school - 1] <= 1) { /* If subset_sizes <= 1, go to next school. */
+    if (my_subset->indicator[*point_school - 1] == 0) {
+      my_subset->subset_size++;
+      my_subset->indicator[*point_school - 1] = 1;
+      return 1;
+    }
+    if (*point_school == nsc) {
+      return 0;
+    }
+    else {
+      (*point_school)++;
+      for (j = 1; j <= nsc; j++) {
+	my_subset->indicator[j-1] = 0;
+      }
+      my_subset->indicator[*point_school - 1] = 1;
+      return 1;
+    }
+  }
+
+  printf("We got past subset_sizes == 1.\n");
+
+  int probe;
+  int swap_school;
+  int max;
+  int qualified;
+
+  /* To begin with we get the subset as the point_school + candidate_list. */
+    
+  int* candidate_list = malloc((set_size - 1) * sizeof(int)); 
+  int list_index = 0;
+  for (j = 1; j <= nsc; j++) {
+    if (my_subset->indicator[j-1] == 1 && j != *point_school) {
+      list_index++;
+      candidate_list[list_index - 1] = j;
+    }
+  }
+
+  /* We need to reorder the candidate_list according to order to join,
+     where a school is not allowed to join the list prior to the time
+     that it is connected to some member of the list. */
+
+  int fill_number = 1;
+  while (fill_number < set_size) {
+    int connected = 0;
+    probe = fill_number-1;
+    while (!connected) {
+      probe++;
+      if (related->entries[*point_school-1][candidate_list[probe-1]]) {
+	connected = 1;
+      }
+      for (k = 1; k < fill_number; k++) {
+	if (related->entries[candidate_list[k-1]][candidate_list[probe-1]]) {
+	  connected = 1;
+	}
+      }
+    }
+    swap_school = candidate_list[probe-1];
+    for (k = probe; k > fill_number; k--) {
+      candidate_list[k-2] = candidate_list[k-1];
+    }
+    candidate_list[fill_number-1] = swap_school;
+    fill_number++;
+  }
+
+    /* We now try to turn the dial on the odometer. */
+      
+  fill_number = set_size - 1;
+  probe = fill_number;
+  while (fill_number > 0 && probe < set_size) {
+    j = candidate_list[probe-1]+1;
+    qualified = 0;
+    while (!qualified && j <= nsc && j != *point_school &&
+	   (j > *point_school || set_size > subset_sizes[j-1])) {  /* If j < *point_school */
+      k = 1;   /* and set_size <= subset_sizes[j-1], then what we would construct was */
+      while (!qualified && k < probe) { /* already seen when *point_school == j. */
+	if (related->entries[j-1][*point_school-1]) {
+	  qualified = 1;
+	}
+	if (j != candidate_list[k-1] && related->entries[j-1][candidate_list[k-1]-1]) {
+	  qualified = 1;
+	}
+	k++;
+      }
+      while (qualified && k < probe) {
+	if (candidate_list[k-1] >= j) {
+	  qualified = 0;
+	}
+	k++;
+      }
+      if (!qualified) {
+	j++;
+      }
+    }
+
+    if (qualified) {
+      candidate_list[probe-1] = j;
+      probe++;
+    }
+    else {
+      if (probe == fill_number) {
+	fill_number--;
+      }
+      candidate_list[probe-1] = 0;
+      probe--;
+    }
+  }
+
+  if (probe > set_size) {
+    for (j = 1; j <= nsc; j++) {
+      my_subset->indicator[j-1] = 0;
+    }
+    my_subset->indicator[(*point_school)-1] = 1;      
+    for (k = 1; k <= set_size-1; k++) {
+      my_subset->indicator[candidate_list[k-1]-1] = 1;      
+    }
+    return 1;
+  }
+  
+  /* The next thing to try is increasing the size of the subset. */
+
+  if (set_size < subset_sizes[*point_school-1]) {
+    set_size++;
+    my_subset->subset_size++;
+    free(candidate_list);
+    candidate_list = malloc((set_size-1) * sizeof(int));
+    for (k = 1; k < set_size; k++) {
+      candidate_list[k-1] = 0;
+    }
+
+    /* We try again to turn the dial on the odometer. */
+    /* This is basically the same code as above. */
+      
+    fill_number = 1;
+    probe = fill_number;
+    while (fill_number > 0 && probe < set_size) {
+      j = candidate_list[probe-1]+1;
+      qualified = 0;
+      while (!qualified && j <= nsc && j != *point_school &&
+	   (j > *point_school || set_size > subset_sizes[j-1])) {
+	k = 1;
+	while (!qualified && k < probe) {
+	  if (related->entries[j-1][*point_school-1]) {
+	    qualified = 1;
+	  }
+	  if (j != candidate_list[k-1] && related->entries[j-1][candidate_list[k-1]-1]) {
+	    qualified = 1;
+	  }
+	  k++;
+	}
+	while (qualified && k < probe) {
+	  if (candidate_list[k-1] >= j) {
+	    qualified = 0;
+	  }
+	  k++;
+	}
+	if (!qualified) {
+	  j++;
+	}
+      }
+
+      if (qualified) {
+	candidate_list[probe-1] = j;
+	probe++;
+      }
+      else {
+	if (probe == fill_number) {
+	  fill_number--;
+	}
+	candidate_list[probe-1] = 0;
+	probe--;
+      }
+    }
+
+    if (probe > set_size) {
+      for (j = 1; j <= nsc; j++) {
+	my_subset->indicator[j-1] = 0;
+      }
+      my_subset->indicator[(*point_school)-1] = 1;            
+      for (k = 1; k <= set_size-1; k++) {
+	my_subset->indicator[candidate_list[k-1]-1] = 1;      
+      }
+      return 1;
+    }
+  }
+
+  /* The final thing to try is to increase the point_school. */
+
+  if (*point_school < nsc) {
+    (*point_school)++;
+    my_subset->subset_size = 1;
+    for (j = 1; j <= nsc; j++) {
+      if (j == *point_school) {
+	my_subset->indicator[j-1] = 1;
+      }
+      else {
+	my_subset->indicator[j-1] = 0;
+      }
+    }
+    return 1;
+  }
+
   return 0;
 }

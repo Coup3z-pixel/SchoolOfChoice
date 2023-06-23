@@ -138,6 +138,50 @@ void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
   }
 }
 
+int* popular_schools(struct double_cee* my_cee) {
+  int i,j;
+  int demand;
+  
+  int* pop = malloc(my_cee->no_schools * sizeof(int));
+
+  for (j = 1; j <= my_cee->no_schools; j++) {
+    demand = 0;
+    for (i = 1; i <= my_cee->no_students; i++) {
+      if (my_cee->priority[i-1][j-1] > 0) {
+	demand++;
+      }
+    }
+    
+    if ((double)demand <= my_cee->quotas[j-1]) {
+      pop[j-1] = 0;
+    }
+    else {
+      pop[j-1] = 1;
+    }
+  }
+
+  return pop;
+}
+
+void relatedness_matrix(struct double_cee* my_cee, int* popular, struct square_matrix* rel_mat) {
+  int i,j,k;
+  int nst = my_cee->no_students;
+  int nsc = my_cee->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      rel_mat->entries[j-1][j-1] = 1;
+      if (my_cee->priority[i-1][j-1] > 0 && popular[j-1] == 1) {
+	for (k = j+1; k <= nsc; k++) {
+	  if (my_cee->priority[i-1][k-1] > 0 && popular[k-1] == 1) {
+	    rel_mat->entries[j-1][k-1] = 1;
+	    rel_mat->entries[k-1][j-1] = 1;
+	  }
+	}
+      }
+    }
+  }
+}
 
 int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset) {
   int i,j;
@@ -182,7 +226,7 @@ int gmc_holds(struct double_cee* my_cee) {
   struct square_matrix related = matrix_of_ones(my_cee->no_schools);
 
   while (answer == 1 && school_subset.subset_size < my_cee->no_schools) {
-    next_subset(&school_subset,&related,max_clique_size);
+    old_next_subset(&school_subset,&related,max_clique_size);
     if (!minimum_gmc_inequality(my_cee,&school_subset)) {
       answer = 0;
     }
