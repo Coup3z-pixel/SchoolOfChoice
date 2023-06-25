@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "partalloc.h"
+#include "normal.h"
 
 /* We are given a partalloc that assigns total probability one to each
    student.  Our goal is to generate a random pure allocation whose
@@ -29,7 +30,7 @@ struct neighbor_lists {
   int sink_no_nbrs;
   int** stu_sch_nbrs;
   int** sch_stu_nbrs;
-  int* sch_sink_nbrs; /* sch_sink_nbrs[j-1] = 1 is j and sink are neighbors, 0 otherwise. */
+  int* sch_sink_nbrs; /* sch_sink_nbrs[j-1] = 1 if j and sink are neighbors, 0 otherwise. */
   int* sink_sch_nbrs;
 };
 
@@ -56,22 +57,22 @@ struct path_node* find_cyclic_path(struct neighbor_lists* my_lists);
 double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
 		      struct path_node* my_cycle);
 
-void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
-		      struct neighbor_lists* my_lists, int up,
-		      double adjustment, struct path_node* my_cycle);
-
 void student_edge_removal(struct neighbor_lists* my_lists, int i, int j);
 
 void sink_edge_removal(struct neighbor_lists* my_lists, int j);
 
-/* The following is the master function that puts everything together. */
-
-struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
+void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
+		      struct neighbor_lists* my_lists, int up,
+		      double adjustment, struct path_node* my_cycle);
 
 /* At the end we need to pass from a partial_alloc whose values (which
    are doubles) are all close to 0 and 1, to the corresponding pure
    allocation, whose values are in {0,1}. */
 
 struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
+
+/* The following is the master function that puts everything together. */
+
+struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
 
 #endif /* IMPLEMENT_H */

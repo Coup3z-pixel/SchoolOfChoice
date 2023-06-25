@@ -28,7 +28,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 
   while (*underallocated_student != 0) {
     destroy_partial_alloc(&allocation);
-    increase_subset_sizes(subset_sizes,my_scp,underallocated_student);
+    increase_subset_sizes(subset_sizes,&(my_scp->cee),underallocated_student);
     *underallocated_student = 0;
     copy_sch_ch_prob(my_scp,copy);
     allocation = GCPS_schools_solver(copy,related,subset_sizes,underallocated_student);
@@ -74,7 +74,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
 
   stu_subset = nullset(nst);
   sch_subset = nullset(nsc);
-
+      
   double end_time = time_rem_after_first_gmc_eq(my_scp, related, subset_sizes,
 					       &stu_subset, &sch_subset);
 
@@ -118,7 +118,8 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
     }
 
     if (stu_subset.subset_size > 0) {      
-      left_related = submatrix(related,&sch_subset);    
+      left_related = submatrix(related,&sch_subset);
+      
       left_alloc = GCPS_schools_solver(&left_scp,&left_related,subset_sizes,
 							    underallocated_student);
       if (*underallocated_student != 0) {
@@ -133,6 +134,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
     
     if (stu_compl.subset_size > 0) {      
       struct square_matrix right_related = submatrix(related,&sch_compl);
+      
       struct partial_alloc right_alloc=GCPS_schools_solver(&right_scp,&right_related,subset_sizes,
 							   underallocated_student); 
       if (*underallocated_student != 0) {

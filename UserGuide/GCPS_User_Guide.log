@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=latex 2019.11.23)  22 JUN 2023 10:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=latex 2019.11.23)  25 JUN 2023 19:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**gcps_sch.tex
-(./gcps_sch.tex
+**GCPS_User_Guide.tex
+(./GCPS_User_Guide.tex
 LaTeX2e <2018-12-01>
 (/usr/local/texlive/2019/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2018/09/03 v1.4i Standard LaTeX document class
@@ -315,8 +315,9 @@ Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 \c@ex=\count121
 \c@fact=\count122
 \c@remark=\count123
- (./gcps_sch.aux)
-\openout1 = `gcps_sch.aux'.
+
+(./GCPS_User_Guide.aux)
+\openout1 = `GCPS_User_Guide.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 77.
 LaTeX Font Info:    ... okay on input line 77.
@@ -333,7 +334,8 @@ LaTeX Font Info:    ... okay on input line 77.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 77.
 LaTeX Font Info:    ... okay on input line 77.
 LaTeX Font Info:    Try loading font information for OT1+ptm on input line 77.
- (/usr/local/texlive/2019/texmf-dist/tex/latex/psnfss/ot1ptm.fd
+
+(/usr/local/texlive/2019/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 \AtBeginShipoutBox=\box33
@@ -363,9 +365,9 @@ LaTeX Info: Redefining \ref on input line 77.
 LaTeX Info: Redefining \pageref on input line 77.
 LaTeX Info: Redefining \nameref on input line 77.
 
-(./gcps_sch.out) (./gcps_sch.out)
+(./GCPS_User_Guide.out) (./GCPS_User_Guide.out)
 \@outlinefile=\write3
-\openout3 = `gcps_sch.out'.
+\openout3 = `GCPS_User_Guide.out'.
 
 LaTeX Font Info:    Try loading font information for U+msa on input line 87.
 
@@ -400,28 +402,55 @@ LaTeX Font Info:    Font shape `OT1/pcr/bx/n' in size <17.28> not available
  [1
 
 ] [2]
-[3] [4] [5] [6] [7] [8] [9] [10] [11] [12]
+[3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] (./GCPS_User_Guide.bbl
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 707.
- [13] [14] (./gcps_sch.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 802.
- [15]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 802.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 5.
+)
+[14]
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 783.
+LaTeX Font Info:    Font shape `OT1/pcr/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/pcr/b/n' tried instead on input line 783.
+ [15] [16] [17]
+Overfull \hbox (7.29312pt too wide) in paragraph at lines 921--934
+\OT1/ptm/m/n/12 tion pro-cess con-tin-ues un-til the GMC in-equal-ity for \OT1/
+pcr/m/n/12 school[]subset \OT1/ptm/m/n/12 and \OT1/pcr/m/n/12 captive[]students
 
-(./gcps_sch.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 802.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 802.
-Package rerunfilecheck Info: File `gcps_sch.out' has not changed.
-(rerunfilecheck)             Checksum: 8AE2FE4DE167BDB9FC1F0E143816C895;353.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 802.
+ []
+
+[18]
+Overfull \hbox (7.39096pt too wide) in paragraph at lines 971--987
+\OT1/ptm/m/n/12 which may be ei-ther \OT1/pcr/m/n/12 GCPS[]schools[]solver \OT1
+/ptm/m/n/12 it-self or \OT1/pcr/m/n/12 GCPS[]schools[]solver[]top[]level\OT1/pt
+m/m/n/12 . 
+ []
+
+[19]
+Overfull \hbox (5.89151pt too wide) in paragraph at lines 1033--1051
+\OT1/ptm/m/n/12 tions \OT1/pcr/m/n/12 student[]edge[]removal \OT1/ptm/m/n/12 an
+d \OT1/pcr/m/n/12 sink[]edge[]removal \OT1/ptm/m/n/12 to up-date the \OT1/pcr/m
+/n/12 neighbor[]lists\OT1/ptm/m/n/12 .
+ []
+
+[20]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1080.
+ [21]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1080.
+ (./GCPS_User_Guide.aux)
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 1080.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1080.
+
+Package rerunfilecheck Info: File `GCPS_User_Guide.out' has not changed.
+(rerunfilecheck)             Checksum: B3EF69AF320B2D0D0BDE08A4C3017CB1;1008.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1080.
  ) 
 Here is how much of TeX's memory you used:
- 6590 strings out of 492617
- 92548 string characters out of 6129506
- 192146 words of memory out of 5000000
- 10406 multiletter control sequences out of 15000+600000
- 24277 words of font info for 81 fonts, out of 8000000 for 9000
+ 6609 strings out of 492617
+ 92946 string characters out of 6129506
+ 194144 words of memory out of 5000000
+ 10425 multiletter control sequences out of 15000+600000
+ 26458 words of font info for 87 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 29i,11n,28p,224b,353s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 29i,11n,28p,231b,400s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on gcps_sch.dvi (15 pages, 62868 bytes).
+Output written on GCPS_User_Guide.dvi (21 pages, 91212 bytes).

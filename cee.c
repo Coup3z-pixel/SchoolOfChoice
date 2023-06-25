@@ -183,6 +183,34 @@ void relatedness_matrix(struct double_cee* my_cee, int* popular, struct square_m
   }
 }
 
+void increase_subset_sizes(int* subset_sizes, struct double_cee* my_cee,
+			   int* underallocated_student) {
+  int i = *underallocated_student;
+  int j;
+  
+  int nsc = my_cee->no_schools;
+
+  int min_subset_size = 0;
+  for (j = 1; j <= nsc; j++) {
+    if (my_cee->priority[i-1][j-1] && subset_sizes[j-1] > 0) {
+      if (min_subset_size == 0) {
+	min_subset_size = subset_sizes[j-1];
+      }
+      if (subset_sizes[j-1] < min_subset_size) {
+	min_subset_size = subset_sizes[j-1];
+      }
+    }
+  }
+
+  if (min_subset_size > 0) {
+    for (j = 1; j <= nsc; j++) {
+      if (my_cee->priority[i-1][j-1] && subset_sizes[j-1] == min_subset_size) {
+	subset_sizes[j-1]++;
+      }
+    }
+  }
+}
+
 int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset) {
   int i,j;
   double school_sum = 0;
@@ -219,19 +247,31 @@ int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subs
 
 int gmc_holds(struct double_cee* my_cee) {
   int j, k;
+  int nsc = my_cee->no_schools;
+  
   int answer = 1;
+
+  
+  int* max_clique_sizes = malloc(my_cee->no_schools);
+  for (j = 1; j <= my_cee->no_schools; j++) {
+    max_clique_sizes[j-1] = nsc;
+  }
+  
+  struct square_matrix related = matrix_of_ones(nsc);
+			       
+  int* point_school = malloc(sizeof(int));
+  *point_school = 1;
+    
   struct subset school_subset = nullset(my_cee->no_schools);
-
-  int max_clique_size = my_cee->no_schools;
-  struct square_matrix related = matrix_of_ones(my_cee->no_schools);
-
-  while (answer == 1 && school_subset.subset_size < my_cee->no_schools) {
-    old_next_subset(&school_subset,&related,max_clique_size);
+  while (answer == 1 && school_subset.subset_size <= nsc) {
+    next_subset(&school_subset,&related,max_clique_sizes,point_school);
     if (!minimum_gmc_inequality(my_cee,&school_subset)) {
       answer = 0;
     }
   }
 
+  free(point_school);
+  free(max_clique_sizes);
   destroy_square_matrix(&related);
   destroy_subset(&school_subset);
 

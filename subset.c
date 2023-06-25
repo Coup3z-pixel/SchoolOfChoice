@@ -179,224 +179,26 @@ struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* 
   return my_matrix;
 }
 
-/* This function has been replaced by next_subset
-
-int iterate(struct subset *my_subset) {
-  int i,j,k;
-  int lss = my_subset->large_set_size;
-  int ss = my_subset->subset_size;
-
-  if (ss == lss) {
-    return 0;
-  }
-  
-  int enlarge = 1;    
-  for (i = 1; i <= ss; i++) {
-    if (my_subset->indicator[i - 1] == 0) {
-      enlarge = 0;    
-    }
-  }
-  if (enlarge) {
-    ss++;
-    my_subset->subset_size++;
-    for (i = 1; i <= lss - ss; i++) {
-      my_subset->indicator[i-1] = 0;
-    }
-    for (i = lss - ss + 1; i <= lss; i++) {
-      my_subset->indicator[i-1] = 1;
-    }
-  }
-  else {
-    if (my_subset->indicator[lss - 1] == 1) {
-      i = lss;
-      while (my_subset->indicator[i - 1] == 1) {
-	i--;
-      }
-      my_subset->indicator[i-1] = 1;
-      my_subset->indicator[i] = 0;
-    }
-    else {
-      i = lss - 1;
-      while (my_subset->indicator[i - 1] == 0) {
-	i--;
-      }
-      j = i;
-      while (my_subset->indicator[j - 1] == 1) {
-	j--;
-      }
-      my_subset->indicator[j - 1] = 1;
-      for (k = j+1; k <= lss - i + j + 1; k++) {
-	my_subset->indicator[k - 1] = 0;
-      }
-      for (k = lss - i + j + 2; k <= lss; k++) {
-	my_subset->indicator[k - 1] = 1;
-      }
-    }
-  }
-  return 1;
-}
-*/
-
-int old_next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size) {
-  int i;
-  int have_leveled_up = 0;
-  int no_needed = 0;
-  int change_from;
-
-  /* Sometimes we may want to look at particular cases.
-  int debug = 0;
-  if (my_subset->large_set_size == 4 && my_subset->indicator[0] == 1
-                                     && my_subset->indicator[1] == 0
-                                     && my_subset->indicator[2] == 0
-                                     && my_subset->indicator[3] == 1) {
-    debug = 1;
-  }
-  */
-
-  /* Get rid of trivial special case */  
-  if (my_subset->subset_size == 0) {
-    my_subset->subset_size = 1;
-    my_subset->indicator[0] = 1;
-    return 1;
-  }
-
-  /* Set initial state */
-  change_from = my_subset->large_set_size;
-  while (my_subset->indicator[change_from - 1] == 0) {
-    change_from--;
-  }
-  
-  if (change_from < my_subset->large_set_size) {
-    my_subset->indicator[change_from-1] = 0;
-    my_subset->indicator[change_from] = 1;
-    change_from++;
-  }
-  else {
-    while (my_subset->indicator[change_from-1] == 1 && no_needed < my_subset->subset_size) {
-      my_subset->indicator[change_from-1] = 0;
-      change_from--;
-      no_needed++;
-    }
-    if (no_needed == my_subset->subset_size) {
-      if (have_leveled_up) {
-	return 0;
-      }
-      else {
-	have_leveled_up = 1;
-	no_needed = my_subset->subset_size;
-	my_subset->subset_size++;
-	if (my_subset->subset_size > max_clique_size) {
-	  return 0;
-	}
-	change_from = 1;
-	my_subset->indicator[0] = 1;
-	for (i = 2; i <= my_subset->large_set_size; i++) {
-	  my_subset->indicator[i-1] = 0;
-	}
-      }
-    }
-    else {
-      while (my_subset->indicator[change_from-1] == 0) {
-	change_from--;
-      }
-      my_subset->indicator[change_from-1] = 0;
-      change_from++;
-      my_subset->indicator[change_from-1] = 1;
-    }
-  }
-
-  /* We cycle through states until exiting.  At a state my_subset->indicator[change_from-1] is 
-     one, all subsequent indicators are zero, and the set given by the prior indicators is 
-     a clique for the related matrix.  We first determine whether the union with change_from
-     is also a clique, and then move to the appropriate new state, exiting if we find the next
-     subset or determine that there isn't one. */
-  
-  int done = 0;
-  while (!done) {
-    int related_fail = 0;
-    for (i = 1; i < change_from; i++) {
-      if (my_subset->indicator[i-1] == 1 && related->entries[i-1][change_from-1] == 0) {
-	related_fail = 1;
-      }
-    }
-
-    if (!related_fail) {
-      if (no_needed == 0) {
-	return 1;
-      }
-      else {
-	change_from++;
-	no_needed--;
-	my_subset->indicator[change_from-1] = 1;
-      }
-    }
-    else {
-      if (change_from + no_needed < my_subset->large_set_size) {
-	my_subset->indicator[change_from-1] = 0;
-	change_from++;
-	my_subset->indicator[change_from-1] = 1;
-      }
-      else {
-	while (my_subset->indicator[change_from-1] == 1 && no_needed < my_subset->subset_size) {
-	  my_subset->indicator[change_from-1] = 0;
-	  change_from--;
-	  no_needed++;
-	}
-	if (no_needed < my_subset->subset_size) {
-	  while (my_subset->indicator[change_from-1] == 0) {
-	    change_from--;
-	  }
-	  my_subset->indicator[change_from-1] = 0;
-	  change_from++;
-	  my_subset->indicator[change_from-1] = 1;
-	}
-	else {
-	  if (have_leveled_up) {
-	    return 0;
-	  }
-	  else  {
-	    have_leveled_up = 1;
-	    no_needed = my_subset->subset_size;
-	    my_subset->subset_size++;
-	    change_from = 1;
-	    my_subset->indicator[0] = 1;
-	    for (i = 2; i <= my_subset->large_set_size; i++) {
-	      my_subset->indicator[i-1] = 0;
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return 0;
-}
-
 int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
 		int* point_school) {
-  int j,k;
+  int j,k,l;
   int nsc = my_subset->large_set_size;
   int set_size = my_subset->subset_size;
-  
-  if (subset_sizes[*point_school - 1] <= 1) { /* If subset_sizes <= 1, go to next school. */
-    if (my_subset->indicator[*point_school - 1] == 0) {
-      my_subset->subset_size++;
-      my_subset->indicator[*point_school - 1] = 1;
-      return 1;
+
+  if (set_size == 0) {
+    *point_school = 1;
+    while (subset_sizes[*point_school - 1] == 0) {
+      (*point_school)++;
     }
-    if (*point_school == nsc) {
-      return 0;
+    if (*point_school <= nsc) {
+      my_subset->indicator[*point_school - 1] = 1;
+      my_subset->subset_size = 1;
+      return 1;
     }
     else {
-      (*point_school)++;
-      for (j = 1; j <= nsc; j++) {
-	my_subset->indicator[j-1] = 0;
-      }
-      my_subset->indicator[*point_school - 1] = 1;
-      return 1;
+      return 0;
     }
   }
-
-  printf("We got past subset_sizes == 1.\n");
 
   int probe;
   int swap_school;
@@ -434,6 +236,7 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
       }
     }
     swap_school = candidate_list[probe-1];
+
     for (k = probe; k > fill_number; k--) {
       candidate_list[k-2] = candidate_list[k-1];
     }
@@ -441,35 +244,39 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
     fill_number++;
   }
 
-    /* We now try to turn the dial on the odometer. */
+   /* We now try to turn the dial on the odometer. */
       
   fill_number = set_size - 1;
   probe = fill_number;
+  
   while (fill_number > 0 && probe < set_size) {
     j = candidate_list[probe-1]+1;
     qualified = 0;
-    while (!qualified && j <= nsc && j != *point_school &&
-	   (j > *point_school || set_size > subset_sizes[j-1])) {  /* If j < *point_school */
-      k = 1;   /* and set_size <= subset_sizes[j-1], then what we would construct was */
-      while (!qualified && k < probe) { /* already seen when *point_school == j. */
-	if (related->entries[j-1][*point_school-1]) {
-	  qualified = 1;
-	}
-	if (j != candidate_list[k-1] && related->entries[j-1][candidate_list[k-1]-1]) {
-	  qualified = 1;
-	}
+    
+    while (!qualified && j <= nsc && j != *point_school && subset_sizes[j-1] > 0 &&
+	   (j > *point_school || set_size > subset_sizes[j-1])) {  
+      k = 1;   
+      while (!qualified && k < probe) { 
+	if (related->entries[j-1][*point_school-1] == 1 ||
+	    (j != candidate_list[k-1] && related->entries[j-1][candidate_list[k-1]-1]) ) {
+	      qualified = 1;
+	    }
+      
 	k++;
+      } /* If qualified, j is connected to candidate_list[k-2] for k between 2 and probe */
+      l = k;
+      while (qualified && l < probe) {
+	if (candidate_list[l-1] >= j) {
+	  qualified = 0; /* In the proper ordering of a set containing j, candidate_list[l-1], 
+			    and candidate_list[0], ... , candidate_list[k-2], j comes 
+			    before candidate_list[l-1]. */
       }
-      while (qualified && k < probe) {
-	if (candidate_list[k-1] >= j) {
-	  qualified = 0;
-	}
-	k++;
+	l++;
       }
       if (!qualified) {
 	j++;
       }
-    }
+    } /* while (!qualified && ... */
 
     if (qualified) {
       candidate_list[probe-1] = j;
@@ -482,7 +289,7 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
       candidate_list[probe-1] = 0;
       probe--;
     }
-  }
+  } /* while (fill_number > 0 && probe < set_size) { */
 
   if (probe > set_size) {
     for (j = 1; j <= nsc; j++) {
@@ -514,7 +321,7 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
     while (fill_number > 0 && probe < set_size) {
       j = candidate_list[probe-1]+1;
       qualified = 0;
-      while (!qualified && j <= nsc && j != *point_school &&
+      while (!qualified && j <= nsc && j != *point_school && subset_sizes[j-1] > 0 &&
 	   (j > *point_school || set_size > subset_sizes[j-1])) {
 	k = 1;
 	while (!qualified && k < probe) {

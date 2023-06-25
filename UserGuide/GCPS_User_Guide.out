@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{gcps}{}% 2
+\BOOKMARK [1][-]{section.3}{purify}{}% 3
+\BOOKMARK [1][-]{section.4}{make\137ex}{}% 4
+\BOOKMARK [1][-]{section.5}{Finer Priorities}{}% 5
+\BOOKMARK [1][-]{section.6}{What If There Are Many Schools?}{}% 6
+\BOOKMARK [1][-]{appendix.A}{About the Code}{}% 7
+\BOOKMARK [2][-]{subsection.A.1}{normal.h and normal.c}{appendix.A}% 8
+\BOOKMARK [2][-]{subsection.A.2}{parser.h and parser.c}{appendix.A}% 9
+\BOOKMARK [2][-]{subsection.A.3}{subset.h and subset.c}{appendix.A}% 10
+\BOOKMARK [2][-]{subsection.A.4}{cee.h and cee.c}{appendix.A}% 11
+\BOOKMARK [2][-]{subsection.A.5}{schchprob.h and schchprob.c}{appendix.A}% 12
+\BOOKMARK [2][-]{subsection.A.6}{partalloc.h and partalloc.c}{appendix.A}% 13
+\BOOKMARK [2][-]{subsection.A.7}{solver.h and solver.c}{appendix.A}% 14
+\BOOKMARK [2][-]{subsection.A.8}{implement.h and implement.c}{appendix.A}% 15
+\BOOKMARK [2][-]{subsection.A.9}{solve.c, purify.c, and example.c}{appendix.A}% 16

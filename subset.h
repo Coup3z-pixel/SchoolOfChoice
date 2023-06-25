@@ -20,25 +20,9 @@ struct square_matrix {
   int** entries;
 };
 
-void print_subset(struct subset* my_subset);
-
-void print_index(struct index* my_index);
-
-void print_square_matrix(struct square_matrix* my_matrix);
-
-void destroy_subset(struct subset* my_subset);
-
-void destroy_index(struct index* my_index);
-
-void destroy_square_matrix(struct square_matrix* my_matrix);
-
 struct subset nullset(int large_set_size);
 
 struct subset fullset(int large_set_size);
-
-struct square_matrix matrix_of_zeros(int dim);
-
-struct square_matrix matrix_of_ones(int dim);
 
 int subsets_are_same(struct subset* first, struct subset* second);
 
@@ -48,12 +32,26 @@ void complement(struct subset* given_subset, struct subset* comp);
 
 struct index index_of_subset(struct subset* my_subset);
 
+void print_subset(struct subset* my_subset);
+
+void print_index(struct index* my_index);
+
+void destroy_subset(struct subset* my_subset);
+
+void destroy_index(struct index* my_index);
+
+
+struct square_matrix matrix_of_zeros(int dim);
+
+struct square_matrix matrix_of_ones(int dim);
+
 struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* my_subset); 
 
-int old_next_subset(struct subset* my_subset, struct square_matrix* related, int max_clique_size);
-                                                          /* From smallest to largest */
-
 int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
-		int* point_school);
+ 		int* point_school);
+
+void print_square_matrix(struct square_matrix* my_matrix);
+
+void destroy_square_matrix(struct square_matrix* my_matrix);
 
 #endif /* SUBSET_H */
