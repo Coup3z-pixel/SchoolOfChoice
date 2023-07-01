@@ -36,9 +36,11 @@ void print_subset(struct subset* my_subset);
 
 void print_index(struct index* my_index);
 
-void destroy_subset(struct subset* my_subset);
+void destroy_subset(struct subset my_subset);
 
-void destroy_index(struct index* my_index);
+void destroy_index(struct index my_index);
+
+void augment_subset_sizes(int* subset_sizes, struct subset* overallocated_schools);
 
 
 struct square_matrix matrix_of_zeros(int dim);
@@ -52,6 +54,6 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
 
 void print_square_matrix(struct square_matrix* my_matrix);
 
-void destroy_square_matrix(struct square_matrix* my_matrix);
+void destroy_square_matrix(struct square_matrix my_matrix);
 
 #endif /* SUBSET_H */

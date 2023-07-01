@@ -24,23 +24,23 @@ struct int_cee make_toy_cee() {
   return my_cee;
 }
 
-void destroy_int_cee(struct int_cee* my_cee) {
+void destroy_int_cee(struct int_cee my_cee) {
   int i;
-  free(my_cee->quotas);
-  for (i = 1; i <= my_cee->no_students; i++) {
-    free(my_cee->priority[i-1]);
+  free(my_cee.quotas);
+  for (i = 1; i <= my_cee.no_students; i++) {
+    free(my_cee.priority[i-1]);
   }
-  free(my_cee->priority);
+  free(my_cee.priority);
 }
 
-void destroy_double_cee(struct double_cee* my_cee) {
+void destroy_double_cee(struct double_cee my_cee) {
   int i;
-  free(my_cee->quotas);
+  free(my_cee.quotas);
   
-  for (i = 1; i <= my_cee->no_students; i++) {
-    free(my_cee->priority[i-1]);
+  for (i = 1; i <= my_cee.no_students; i++) {
+    free(my_cee.priority[i-1]);
   }
-  free(my_cee->priority);
+  free(my_cee.priority);
 }
 
 struct double_cee double_cee_from_int_cee(struct int_cee* my_cee){
@@ -70,7 +70,7 @@ struct double_cee double_cee_from_int_cee(struct int_cee* my_cee){
 struct double_cee make_toy_double_cee() {
   struct int_cee my_new_int_cee = make_toy_cee();
   struct double_cee my_new_double_cee = double_cee_from_int_cee(&my_new_int_cee);
-  destroy_int_cee(&my_new_int_cee);
+  destroy_int_cee(my_new_int_cee);
   return my_new_double_cee;
 }
 
@@ -104,9 +104,9 @@ void print_double_cee(struct double_cee* my_cee) {
     
   printf("The vector of quotas is (");
   for (i = 1; i < my_cee->no_schools; i++) {
-    printf("%1.2f,",my_cee->quotas[i-1]);
+    printf("%1.8f,",my_cee->quotas[i-1]);
   }
-  printf("%1.2f)\n",my_cee->quotas[my_cee->no_schools-1]);
+  printf("%1.8f)\n",my_cee->quotas[my_cee->no_schools-1]);
   
   printf("The priority matrix is");
     for (i = 1; i <= my_cee->no_students; i++) {
@@ -163,24 +163,28 @@ int* popular_schools(struct double_cee* my_cee) {
   return pop;
 }
 
-void relatedness_matrix(struct double_cee* my_cee, int* popular, struct square_matrix* rel_mat) {
+struct square_matrix related_matrix(struct double_cee* my_cee, int* popular) {
   int i,j,k;
   int nst = my_cee->no_students;
   int nsc = my_cee->no_schools;
 
+  struct square_matrix relatedness = matrix_of_zeros(nsc);
+  
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
-      rel_mat->entries[j-1][j-1] = 1;
+      relatedness.entries[j-1][j-1] = 1;
       if (my_cee->priority[i-1][j-1] > 0 && popular[j-1] == 1) {
 	for (k = j+1; k <= nsc; k++) {
 	  if (my_cee->priority[i-1][k-1] > 0 && popular[k-1] == 1) {
-	    rel_mat->entries[j-1][k-1] = 1;
-	    rel_mat->entries[k-1][j-1] = 1;
+	    relatedness.entries[j-1][k-1] = 1;
+	    relatedness.entries[k-1][j-1] = 1;
 	  }
 	}
       }
     }
   }
+  
+  return relatedness;
 }
 
 void increase_subset_sizes(int* subset_sizes, struct double_cee* my_cee,
@@ -234,7 +238,7 @@ int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subs
     }
   }
 
-  destroy_subset(&student_subset);
+  destroy_subset(student_subset);
 
   if (student_sum <= school_sum) {
     return 1;
@@ -272,8 +276,8 @@ int gmc_holds(struct double_cee* my_cee) {
 
   free(point_school);
   free(max_clique_sizes);
-  destroy_square_matrix(&related);
-  destroy_subset(&school_subset);
+  destroy_square_matrix(related);
+  destroy_subset(school_subset);
 
   return answer;
 }

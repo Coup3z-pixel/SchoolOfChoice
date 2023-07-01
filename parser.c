@@ -296,19 +296,21 @@ double get_double(FILE *fp, char next) {
     exit(0);
   }
   char str[20];
+  str[0] = next;
   int count = 0;
   next = getc(fp);
   while (isdigit(next) || next == '.') {
-    str[count] = next;
     count++;
+    str[count] = next;
     next = getc(fp);
   }
   if (!is_white_space(next)) {
     printf("ERROR: numbers must be surrounded by white space (\' \',\'\\n\',\'\\t\',\'(\',\')\',\',\').\n");
     exit(0);
   }
+  count++; 
   str[count] = '\0';
-  
+
   return atof(str);
 }
 

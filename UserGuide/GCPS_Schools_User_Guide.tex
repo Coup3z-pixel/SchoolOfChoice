@@ -97,24 +97,26 @@ In the paper ``An Efficient School Choice Mechanism Based on a
 Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
 and Yuki Tamura) we describe a new algorithm for school choice, along
 with its theoretical foundations.  This algorithm has been implemented
-in the software package \emph{GCPS Schools} as an executable
-\texttt{gcps}, which passes from a school choice problem (as described
-below) to a matrix specifying, for each student-school pair, the
-probability that the student is assigned to the school.  The software
-package also contains two other executables \texttt{purify} and
-\texttt{make\_ex}.  The first of these passes from a matrix of
-assignment probabilities to a random pure assignment whose probability
-distribution averages to the given matrix of probabilities.  The
-second program generates example school choice problems of the sort
-that might occur in large school districts.  These programs provide
-the basic computational resources required to apply our mechanism, and
-perhaps in some cases they will suffice.  However, our primary hope is
-that the underlying code will be a useful starting point for further
-software development.
+(using the C programming language) in the software package \emph{GCPS
+  Schools} as an executable \texttt{gcps}, which passes from a school
+choice problem (as described below) to a matrix specifying, for each
+student-school pair, the probability that the student is assigned to
+the school.  The software package also contains two other executables
+\texttt{purify} and \texttt{make\_ex}.  The first of these passes from
+a matrix of assignment probabilities to a random pure assignment whose
+probability distribution averages to the given matrix of
+probabilities.  The second program generates example school choice
+problems of the sort that might occur in large school districts.
+These programs provide the basic computational resources required to
+apply our mechanism, and perhaps in some cases they will suffice.
+However, our primary hope is that the underlying code will be a useful
+starting point for further software development.
 
 This document describes these programs, from the point of view of a
 user.  It doesn't assume that the reader has already read our paper,
-but of course we are leaving out lots of relevant information.
+but of course we are leaving out lots of relevant information.  The
+body also does not assume that the reader knows the C programming
+language, but some language features become relevant in Appendix A.
 
 \section{\texttt{gcps}}
 
@@ -231,9 +233,8 @@ this example, but is that always what happens?  Actually, no.  To help
 understand this we first introduce a new concept, the ``safe school.''
 The idea is that each student has one school, say the closest school
 or the school that a sibling attends, to which she is guaranteed
-admission if she insists.  (It is a major advantage of our mechanism
-that we can provide such a guarantee.)  Each student submits a ranking
-of schools that she is eligible for and (weakly) prefers to the safe
+admission if she insists.  Each student submits a ranking of the
+schools that she is eligible for and (weakly) prefers to her safe
 school, and her priority is 1 at those schools and 0 at all others.
 
 Now suppose that there are two schools, say 1 and 2, that are quite
@@ -266,17 +267,17 @@ to student $i$ receiving a seat in $P$, so a necessary condition for
 the existence of a feasible allocation is that the total capacity of
 the schools in $P$ is not less than the number of students in $J_P$.
 In fact this condition is sufficient for the existence of a feasible
-allocation: if, for each set of schools $P$, the total capacity of the
-schools in $P$ is not less than the number of students in $J_P$, then
-a feasible allocation exists.  This is not an obvious or trivial
-result, and a somewhat more general version of it is one of the main
-points of our paper.  This result extends to situations where the
-resources have already been partially allocated: if, for each set of
-schools $P$, the total remaining capacity of the schools in $P$ is not
-less than the total remaining demand of students in $J_P$ (where this
-set is defined in relation to the current partial allocation) then
-there is an allocation of the remaining resources that gives a
-feasible allocation.
+allocation: \emph{if, for each set of schools $P$, the total capacity
+  of the schools in $P$ is not less than the number of students in
+  $J_P$, then a feasible allocation exists.}  This is not an obvious
+or trivial result, and a somewhat more general version of it is one of
+the main points of our paper.  This result extends to situations where
+the resources have already been partially allocated: \emph{if, for
+  each set of schools $P$, the total remaining capacity of the schools
+  in $P$ is not less than the total remaining demand of students in
+  $J_P$} (where this set is defined in relation to the students'
+current safe schools) \emph{then there is an allocation of the
+  remaining resources that gives a feasible allocation.}
 
 We can now describe the algorithm in a bit more detail.  At each time
 each student is consuming probability of a seat at the favorite school
@@ -294,7 +295,9 @@ subproblems until a feasible allocation has been fully computed.
 
 \section{\texttt{purify}} \label{sec:Implementation}
 
-The output of \texttt{gcps} is a matrix of assignment probabilities, as shown in the example below.
+Leaving out the initial comment, the output of \texttt{gcps} is a
+matrix of assignment probabilities, as shown in the example below.
+(Now, to minimize confusion, the schools are $A$, $B$, and $C$.)
 
 \begin{obeylines}\texttt{
 \ \ \ \ \ $A$:    \     $B$:  \      $C$:
@@ -304,8 +307,6 @@ The output of \texttt{gcps} is a matrix of assignment probabilities, as shown in
 4:      0.25     0.67     0.08
 }
 \end{obeylines} \noindent
-(Now, to avoid confusion, the schools are $A$, $B$, and
-$C$.)
 
 \medskip
 Generating a random deterministic assignment with a probability
@@ -346,16 +347,19 @@ obtaining the feasible allocation
 4:      0.25     0.67     0.08
 }
 \end{obeylines} \noindent
-Supposing that we decide which of these to do by flipping a coin, we
-could then look for another cycle and repeat the process.  Each step
-reduces the number of entries that are strictly between $0$ and $1$,
-so we would eventually arrive at a deterministic assignment.
+Note that each of these matrices has one more zero than the original matrix.
 
-We now give a more formal explanation of the algorithm, as implemented
-in \texttt{implement.h}, \texttt{implement.c}, and \texttt{purify.c}.
-There is a directed graph whose nodes are the students, the schools,
-and a \emph{sink}.  The graph has an arc from each student to each
-school, and an arc from each school to the sink.  A \emph{flow} is an
+The computer chooses between these two matrices by flipping a coin.
+If heads, it then generates a random pure allocation that averages to
+the first matrix, and if tails, then it produces a random pure
+allocation that averages to the second matrix.  The average of the
+overall distribution of pure allocations is the matrix we started
+with.
+
+We now give a more formal explanation of the algorithm.  There is a
+directed graph whose nodes are the students, the schools, and a
+\emph{sink}.  The graph has an arc from each student to each school,
+and an arc from each school to the sink.  A \emph{flow} is an
 assignment of a positive number to each arc such that for each
 student, the sum of the flows to all schools is $1$, and for each
 school the sum of the flows from all students is equal to the flow
@@ -416,12 +420,18 @@ $m^\alpha$ and $m^{-\beta}$ be the restrictions of $f^\alpha$ and
 $f^{-\beta}$ to the arcs from students to schools.  It is easy to see
 that $m^\alpha$ and $m^{-\beta}$ are feasible allocations: their
 entries lie in $[0,1]$, and the sums of the entries for each student
-and each school are the corresponding sums for $m$.  The algorithm
-passes from $m$ and $f$ to $m^\alpha$ and $f^{\alpha}$ with
-probability $\tfrac{\beta}{\alpha + \beta}$, and to $m^{-\beta}$ and
-$f^{-\beta}$ with probability $\tfrac{\alpha}{\alpha + \beta}$.
+and each school are the corresponding sums for $m$.
+
+The algorithm passes from $m$ and $f$ to $m^\alpha$ and $f^{\alpha}$
+with probability $\tfrac{\beta}{\alpha + \beta}$, and to $m^{-\beta}$
+and $f^{-\beta}$ with probability $\tfrac{\alpha}{\alpha + \beta}$.
 Whichever of $m^\alpha$ and $m^{-\beta}$ is chosen, if it is not a
-deterministic assignment, then the process is repeated.
+deterministic assignment, then the process is repeated.  We claim that
+the the average of the resulting distribution of pure allocations is
+$m$.  Since $m = \tfrac{\beta}{\alpha + \beta}m^\alpha +
+\tfrac{\alpha}{\alpha + \beta}m^{-\beta}$, this is clear if $m^\alpha$
+and $m^{-\beta}$ are pure allocations, and in general it follows from
+induction on the number of nonintegral entries of $m$.
 
 The code for the algorithm described above is in \texttt{implement.c},
 which has the associated header file \texttt{implement.h}.  The file
@@ -433,8 +443,9 @@ execute the algorithm.
 Development of this sort of software requires testing under at least
 somewhat realistic conditions.  The utility \texttt{make\_ex} produces
 examples of input files for \texttt{gcps} that reflect the
-geographical dispersion of school districts with many schools, and the
-idiosyncratic nature of school quality and student preferences.
+geographical dispersion of schools within school districts with many
+schools, and the idiosyncratic nature of school quality and student
+preferences.
 
 One of the files produced by \texttt{make\_ex} begins as follows:
 \begin{obeylines}\texttt{
@@ -446,11 +457,11 @@ One of the files produced by \texttt{make\_ex} begins as follows:
 \end{obeylines} \noindent
 In this example there are 20 schools that are spaced evenly around a
 circle of circumference 20.  Since there are 4 students per school,
-there are 80 students whose homes are spaced evenly around the circle.
-Each student's safe school is the school closest to her home.  A
-student's utility for a school is the sum of the school's valence and
-an idiosyncratic shock, minus the distance from the student's home to
-the school.  Each school's valence is a normally distributed random
+there are 80 students.  Their homes are also spaced evenly around the
+circle.  Each student's safe school is the school closest to her home.
+A student's utility for a school is the sum of the school's valence
+and an idiosyncratic shock, minus the distance from the student's home
+to the school.  Each school's valence is a normally distributed random
 variable with mean 0.0 and standard deviation 1.0, and for each
 student-school pair the idiosyncratic shock is a normally distributed
 random variable with mean 0.0 and standard deviation 1.0.  All of
@@ -476,11 +487,14 @@ numbers.  Thus \texttt{no\_schools},
 integers, while \texttt{school\_valence\_std\_dev} and
 \texttt{idiosyncratic\_std\_dev} are floating point numbers.  Each
 line assigns a value to some variable.  If you would like to generate
-examples with different parameters, the way to do that is to change
-the parameters by editing \texttt{example.c}, run \texttt{make}, and
-then issue a command like \texttt{make\_ex > my\_file.scp}.  For
-example, to diminish the relative importance of travel costs one can
-increase \texttt{school\_valence\_std\_dev} and
+examples with different parameters, the way to do that is to first
+change the parameters by editing \texttt{example.c}, then run
+\texttt{make} to compile \texttt{make\_ex} with the new parameters,
+and finally issue a command like \texttt{make\_ex > my\_file.scp}
+which runs \texttt{make\_ex} and redirects the output to the file
+\texttt{my\_file.scp}.  For example, to diminish the relative
+importance of travel costs one can increase
+\texttt{school\_valence\_std\_dev} and
 \texttt{idiosyncratic\_std\_dev}.
 
 This illustrates an important point concerning the relationship
@@ -564,23 +578,6 @@ priority threshold is set to 1, and each student's preference is
 truncated by eliminating schools she is not eligible for.  Applying
 this procedure to the input below gives our original example.
 
-It is possible to repeatedly adjust the schools' priority thresholds
-to achieve a desired effect.  For example, suppose there are two
-selective schools, and the school district would like it to be the
-case that a well qualified student is almost certain to receive a seat
-in one of them if that is what she wants, and at the same time these
-schools do not have more than a small amount of unused capacity.  One
-may raise the priority threshold of a school if many students are
-receiving some probability of admission and lower the threshold if its
-seats are not being filled.  Of course changing the priority threshold
-at one of the schools will effect demand for the other school, so
-repeated adjustment of the priority thresholds of all the schools may
-be required to achieve a desirable result.  (Automating this iterative
-adjustment process may require the development of a version of
-\texttt{gcps} that can accept parameter inputs, without editing the
-source code.  This should be a simple task for an experienced C
-programmer.)
-
 \begin{obeylines}\texttt{
 /* This is a sample introductory comment. */
 There are 4 students and 3 schools
@@ -600,6 +597,23 @@ The priority thresholds of the schools are
 1   3   5   
   }
 \end{obeylines}
+
+It is possible to repeatedly adjust the schools' priority thresholds
+to achieve a desired effect.  For example, suppose there are two
+selective schools, and the school district would like it to be the
+case that a well qualified student is almost certain to receive a seat
+in one of them if that is what she wants, and at the same time these
+schools do not have more than a small amount of unused capacity.  One
+may raise the priority threshold of a school if many students are
+receiving some probability of admission and lower the threshold if its
+seats are not being filled.  Of course changing the priority threshold
+at one of the schools will effect demand for the other school, so
+repeated adjustment of the priority thresholds of all the schools may
+be required to achieve a desirable result.  (Automating this iterative
+adjustment process may require the development of a version of
+\texttt{gcps} that can accept parameter inputs, without editing the
+source code.  This should be a simple task for an experienced C
+programmer.)
 
 Whether it is a good idea to use priorities as the Chinese do is an
 extremely complex question.  On the one hand there is an obvious sense
@@ -628,17 +642,21 @@ several dozen or even hundreds of schools, and will overwhelm the
 naive version of the algorithm described above.  There are several
 things that can be done about this.
 
-To help things along a bit, the computer looks for schools whose
-capacity will not be exceeded even if every student who ranks it ends
-up receiving a seat.  Such a school is said to be \emph{unpopular}.
-An unpopular school will never be an element of a minimal critical
-set. A school is \emph{popular} if it is not unpopular
+First, to help things along a bit, the computer looks for schools
+whose capacity will not be exceeded even if every student who ranks it
+ends up receiving a seat.  Such a school is said to be
+\emph{unpopular}.  An unpopular school will never be an element of a
+minimal critical set. A school is \emph{popular} if it is not
+unpopular
 
 Two schools are \emph{related} if there is a student who can attend
-either one.  The computer computes a square matrix \texttt{related}
+either one.  For each student $i$ let $\alpha_i$ be the set of schools
+at which $i$ has priority one.  Formally, two schools are related if
+there is an $i$ such that both of the schools are elements of
+$\alpha_i$.  The computer computes a square matrix \texttt{related}
 whose rows and columns are indexed by the schools, such that
-\texttt{related[j][k]} is one if either $j = k$ or $j$ and $k$ are
-both popular and $\alpha_j \cap \alpha_k \ne \emptyset$, and otherwise
+\texttt{related[j][k]} is one if $j$ and $k$ are both popular and
+$\alpha_j \cap \alpha_k \ne \emptyset$, or if $j = k$, and otherwise
 \texttt{related[j][k]} is zero.  We think of \texttt{related} as
 encoding an undirected graph whose nodes are the schools, with an edge
 connecting $j$ and $k$ if and only if \texttt{related[j][k]} and
@@ -652,84 +670,150 @@ Suppose that $P$ is a set of schools such that the induced subgraph of
 \texttt{related} is not connected.  Then $P = P_1 \cup P_2$ where
 $P_1$ and $P_2$ are nonempty, $P_1 \cup P_2 = \emptyset$, and there is
 no path of edges leading from a school in $P_1$ to a school in $P_2$.
-If $P$ is critical, then both $P_1$ and $P_2$ are critical, so $P$
-cannot be a minimal critical set.
+In particular, there is no school in $P_1$ that is \texttt{related} to
+a school in $P_2$.  If $P$ is critical, then both $P_1$ and $P_2$ are
+critical, because every student in $J_P$ is either in $J_{P_1}$ or in
+$J_{P_2}$, so there are just enough remaining seats in $P_1$ to meet
+the remaining needs of students in $J_{P_1}$, and similarly for $P_2$.
+Therefore $P$ cannot be a \emph{minimal} critical set.
 
-At this point we have seen that it is only necessary to consider
-subsets $P$ of the set of popular schools such that the subgraph of
-\texttt{related} induced by $P$ is connected.  For large school choice
+At this point we have seen that in a search for a minimal critical
+set, it is only necessary to consider subsets $P$ of the set of
+popular schools such that the graph obtained by restricting
+\texttt{related} to $P$ is connected.  For large school choice
 problems the number of such sets can still be overwhelming.
 
-The trick is to let the computational process itself tell us which
-sets are relevant.  We maintain an assignment \texttt{subset\_sizes}
-of a nonnegative integer to each school.  At the beginning of the
-computation \texttt{subset\_sizes[j]} is zero if $j$ is unpopular and
-one if $j$ is popular.  This corresponds to simply allocating each
-school until it is exhausted, and (as in our initial example) it may
-be the case that this computes a feasible allocation.  If it does not,
-there will be a time prior to $1$ at which some student $i$ no longer
-has any schools she can consume.  For each school $j$ in $\alpha_i$ we
-increase \texttt{subset\_sizes[j]} from $1$ to $2$.  We now repeat the
-allocation processs, this time looking for criticality of sets of
-schools whose elements are a school in $\alpha_j$ and another school
-that is related to it.  In general, the allocation process looks for
-criticality of each connected set of schools $P$ such that there is a school
-$j$ such that $j \in P$ and the number of elements of $P$ is not
-greater than \texttt{subset\_sizes[j]}.  If the allocation process
-does not succeed there is a student $i$ who runs out of schools before
-time $1$, and we increase \texttt{subset\_sizes[j]} by $1$ if $j \in
-\alpha_i$ and \texttt{subset\_sizes[j]} is minimal for $j \in
-\alpha_i$.
+The key trick is to let the computational process itself tell us which
+sets are relevant.  We maintain an array \texttt{subset\_sizes}
+assigning a nonnegative integer to each school.  This array is
+initialized by setting $\texttt{subset\_sizes[j] = 0}$ or
+$\texttt{subset\_sizes[j] = 1}$ according to whether \texttt{j} is
+unpopolar or popular.
 
-In this way there arises the need to efficiently enumerate all of the
-relevant $P$, which is provided by the function \texttt{next\_subset}
-in \texttt{subset.c}. For any \texttt{related}-connected $r$-element
-set $P$ and any $j \in P$ there is a unique ordering $j_1, \ldots,
-j_r$ of the elements of $P$ such that $j_1 = j$ and, for each $h = 2,
-\ldots, r$, $j_h$ is the smallest number among $j_h, \ldots, j_r$ that
-is \texttt{related} to one of the schools $j_1, \ldots, j_{h-1}$.  We
-endow these sets with a particular kind of lexicograpical order,
-namely that $\{j_1, \ldots, j_r\} < \{j_1', \ldots, j_{r'}'\}$ if any
-of the following hold:
+We now run the process as we described at the beginning, letting the
+schools fill up one at at time.  If this succeeds we are done, and
+otherwise it can fail in two ways.
+
+First, the process may arrive at a time prior to $1$ at which some
+student $i$ no longer has any schools she can consume.  We can infer
+that there must have been a set of schools $P$ containing some element
+of $\alpha_i$ that became critical, but this went unnoticed, and the
+allocation of seats in $P$ to students outside of $J_P$ continued,
+leading eventually to an insufficiency.  For each school $j$ in
+$\alpha_i$ we now increase \texttt{subset\_sizes[j]} from $1$ to $2$.
+
+The second way that the process may fail is that we arrive at a point
+when there is no longer as many seats at some school \texttt{j} as is
+required by the students who, at that point, have no other school they
+can attend.  We can infer that some set of schools $P$ containing
+\texttt{j} became critical, but the allocation of seats in $P$ to
+students who had alternatives outside of $P$ continued, again
+resulting in eventual insufficiency.  We now increase
+\texttt{subset\_sizes[j]} from $1$ to $2$.
+
+We now restart the allocation process, this time watching out for
+criticality of sets of popular schools that are either singletons or
+have two elements \texttt{j} and \texttt{k}, that are
+\texttt{related}, with \texttt{subset\_sizes[j] = 2} or
+\texttt{subset\_sizes[k] = 2}.  Again, this may succeed. There may be
+a time prior of $1$ when there is a student $h$ who no longer has any
+schools she can consume, in which case we increase
+\texttt{subset\_sizes[j]} for those $j \in \alpha_h$ for which the
+value is currently minimal.  There may be a time at which one of sets
+of schools $P$ we are watching no longer has enough seats to serve the
+students who have no alternatives outside $P$, in which case we
+increase \texttt{subset\_sizes[j]} for those $j \in P$ for which the
+value is currently minimal.
+
+In general, after adjusting \texttt{subset\_sizes}, we run the
+allocation process again from the beginning, looking for criticality
+of sets $P$ of popular schools such that $|P| \le
+\text{\texttt{subset\_sizes[j]}}$ for some $j \in P$ and the induced
+subgraph of \texttt{related} is connected.  If, at some time prior to
+the end, there is a student $i$ who has no available schools, then we
+increase \texttt{subset\_sizes[j]} by $1$ for every school $j \in
+\alpha_i$ such that $\text{\texttt{subset\_sizes[j]}} = \min_{k \in
+  \alpha_i} \text{\texttt{subset\_sizes[k]}}.$ If, at some time prior
+to $1$, there is a set $P$ that we are watching that no longer has
+enough seats, then we increase \texttt{subset\_sizes[j]} for those $j
+\in P$ for which the value is currently minimal.
+
+In the implementation of this program there is the following
+computational problem.  For a given \texttt{subset\_sizes}, we say
+that a set $P$ of popular schools is
+\texttt{subset\_sizes}-\emph{relevant} if $|P| \le
+\text{\texttt{subset\_sizes[j]}}$ for some $j \in P$ and the subgraph
+of \texttt{related} induced by $P$ is connected.  We would like to
+enumerate the \texttt{subset\_sizes}-relevant sets efficiently,
+ideally without repetition.  The function that does this is
+\texttt{next\_subset} in \texttt{subset.c}. It is the most complex
+part of the code, and may be virtually impenetrable without guidance,
+so we now give a detailed description of how it works.
+
+We identify the set of schools with the set of integers between $1$
+and the number of schools, so the schools are linearly ordered.  Fix
+an integer $r$ and a \texttt{subset\_sizes}-relevant set of popular
+schools $P$ with $r$ elements.  There is a unique ordering $j_1,
+\ldots, j_r$ of the elements of $P$ such that $j_1$ is the smallest $j
+\in P$ such that $|P| \le \text{\texttt{subset\_sizes[j]}}$ and for
+each $h = 2, \ldots, r$, $j_h$ is the smallest element of $\{j_h,
+\ldots, j_r\}$ that is \texttt{related} to $j_g$ for some $g = 1,
+\ldots, h-1$.  Conversely, suppose that $j_1, \ldots, j_r$ is a list
+of distinct popular schools such that $j_1$ is the smallest element
+\texttt{j} of the list such that $r \le
+\text{\texttt{subset\_sizes[j]}}$, and for each $h = 2, \ldots, r$,
+$j_h$ is \texttt{related} to one of $j_1, \ldots, j_{h-1}$ and is the
+smallest element of $\{j_h, \ldots, j_r\}$ with this property.  Then,
+by induction, for each $h$ the subgraph of \texttt{related} induced by
+$P = \{j_1, \ldots, j_h\}$ is connected, so the subgraph of
+\texttt{related} induced by $P = \{j_1, \ldots, j_r\}$ is connected,
+and thus $P$ is \texttt{subset\_sizes}-relevant.
+
+We order the \texttt{subset\_sizes}-relevant sets lexicograpically,
+according to the following criteria: $P = \{j_1, \ldots, j_r\} < P' =
+\{j_1', \ldots, j_r'\}$ if one of the following hold:
 \begin{enumerate}
-  \item[(a)] $\{j_1, \ldots, j_r\} = \emptyset$.
-  \item[(b)] $j_1 < j_1'$.
-  \item[(c)] $j_1 = j_1'$ and $r < r'$.
-  \item[(d)] $j_1 = j_1'$, $r = r'$, and there is $h$ such that $2 \le
-    h \le r$, $j_1 = j_1', \ldots, j_{h-1} = j_{h-1}'$, and $j_h <
+  \item[(a)] $j_1 < j_1'$;
+  \item[(b)] $j_1 = j_1'$ and $r < r'$
+  \item[(c)] $j_1 = j_1'$, $r = r'$, and there is an $h = 1, \ldots,
+    r$ such that $j_1 = j_1', \ldots, j_{h-1} = j_{h-1}'$ and $j_h <
     j_h'$.
 \end{enumerate}
 
-For a given set $\{j_1, \ldots, j_r\}$ with the elements ordered as
-above, the function \texttt{next\_subset} finds the next set in the
-ordering.  If $\{j_1, \ldots, j_{r-1},j_r'\}$ is the next set, then
-$j_r' > j_r$, and if $h$ is the smallest index such that $j_h$ and
-$j_r'$ are \texttt{related}, then $j_{h+1}, \ldots, j_{r-1}$ are all
-smaller than $j_r'$, because if $h+1 \le g \le r$ and $j_g \ge j_r'$,
-then $j_g > j_r$ and $j_g$ is not the smallest element of $j_g,
-\ldots, j_r$ that is \text{related} to some element of $j_1, \ldots
-j_h$.  Conversely, if $j_r'$ is the smallest number such that $j_r'$
-is related to one of $j_1, \ldots, j_{r-1}$ and $j_r' > \max
-\{j_{h+1}, \ldots, j_r\}$, where $h$ is the smallest index such that
-$j_h$ and $j_r'$ \texttt{related}, then $\{j_1, \ldots,
-j_{r-1},j_r'\}$ is the next set in the ordering, and
-\texttt{next\_subset} tests the numbers greater than $j_r$, in order,
-for these conditions.
+For a given $P = \{j_1, \ldots, j_r\}$ with the elements ordered as
+above, the function \texttt{next\_subset} finds the next set in this
+ordering.  For $h = 1, \ldots, r$ we say that $j$ is
+$(j_1, \ldots, j_{h-1})$-\emph{unqualified} if one of the following holds:
+\begin{enumerate}
+  \item[(a)] $j$ is unpopular;
+  \item[(b)] $j = j_g$ for some $g = 1, \ldots, h-1$;
+  \item[(c)] $j < j_1$ and $r \le \text{\texttt{subset\_sizes[j]}}$;
+  \item[(d)] $j$ is not \texttt{related} to one of $j_1, \ldots, j_{h-1}$;
+  \item[(e)] $g = 1, \ldots, h-1$ is the smallest index such that $j$
+    is \texttt{related} to $j_g$, and $j$ is less than one of $j_{g+1},
+    \ldots, j_{h-1}$.
+    
+\end{enumerate}
+We say that $j$ is $(j_1, \ldots, j_{h-1})$-\emph{qualified} if it is not
+$(j_1, \ldots, j_{h-1})$-unqualified.
 
-If there is no such $j_r'$, then \texttt{next\_subset} tests the
-numbers $j_{r-1}' > j_{r-1}$, in order, for being \texttt{related} to
-some $j_h$ with $1 \le h \le r-2$ and satisfying $j_{r-1}' > j_{h+1},
-\ldots, j_{r-1}$, where $h$ is the smallest such index.  Having found
-such a $j_{r-1}'$, it looks for the smallest $j_r'$ such that $\{j_1,
-\ldots, j_{r-2},j_{r-1}', j_r'\}$ is satisfactory, either finding such
-a $j_r'$ or moving on to the next $j_{r-1}'$.  If there is no
-satisfactory $j_{r-1}'$, then \texttt{next\_subset} considers possible
-$j_{r-2}' > j_{r-2}$, and so forth.  If there is no successor of
-$\{j_1, \ldots, j_r\}$ of the form $\{j_1, \ldots, j_r\}$, then
-\texttt{next\_subset} looks for the first successor of the form
-$\{j_1,j_2', \ldots, j_{r'}'\}$ where $r' > r$, and if there is no
-such successor, then it moves on to the enumeration of subsets
-containing $j_r+1$.
+In its search for the next \texttt{subset\_sizes}-relevant $P$,
+\texttt{next\_subset} checks the $j_r' > j_r$, in order, looking for
+one that is $(j_1, \ldots, j_{r-1})$-qualified.  If $j_r'$ is the
+first such number, then $P' = \{j_1, \ldots, j_{r-1},j_r'\}$ is the
+next \texttt{subset\_sizes}-relevant set.  If there is no such $j_r'$,
+then \texttt{next\_subset} checks the $j_{r-1}' > j_{r-1}$, in order,
+looking for one that is $(j_1, \ldots, j_{r-2})$-qualified.  When it
+finds one it checks the possible values of $j_r'$ in order, looking
+for one that is $(j_1, \ldots, j_{r-2},j_{r-1}')$-qualified, and for
+the first $j_{r-1}'$ such that it finds a $(j_1, \ldots,
+j_{r-2},j_{r-1}')$-qualified $j_r'$, and the first such $j_r'$, $P' =
+\{j_1, \ldots, j_{r-2},j_{r-1}',j_r'\}$ is the next
+\texttt{subset\_sizes}-relevant set.  The process continues in this
+manner, except that instead of immediately replacing $j_1$ with $j_1'$
+in the search for $r$-element sets, \texttt{next\_subset} first looks
+for $(r+1)$-element sets for the given $j_1$ if $r$ is small enough,
+and when it does move on to larger $j_1'$, it begins with singletons.
 
 %%%------------------------------------------------------------------------------------
 %%%------------------------------------------------------------------------------------
@@ -756,6 +840,9 @@ case describing those features that might not be so obvious.  Our hope
 is to ease the process of learning about the code by providing a level
 of explanation in which the objects in the code are described in human
 terms, and in relation to the earlier descriptions of the algorithms.
+While reading the descriptions of the files below, the reader should
+also be looking at the files themselves, and especially the header
+(\texttt{*.h}) files.
 
 Before diving into details, here are some general remarks.  First,
 although we have used C rather than C++ (for a project as small as
@@ -763,13 +850,13 @@ this, the various advantages of C++ seem not worth the additional
 complexity of that language) the code is object oriented in spirit,
 being organized as interactions of objects given by \texttt{struct}s.
 With perhaps one or two exceptions, each object has a destroyer, which
-deallocates the memory that stores the object's data, and for many
-objects there is a way of printing the object, primarily for
+frees the memory that stores the object's data, and for many objects
+there is a way of printing the object, which is primarily useful for
 debugging.  In all cases the code for these functions is simple and
 straightforward, and printing and destroyer functions will not be
-mentioned below.  When studying the code, the reader should ignore
-calls to destroyers, trusting that the allocation and freeing of
-memory is being handled correctly.
+mentioned below.  When studying the code, the reader can ignore calls
+to destroyers, trusting that the allocation and freeing of memory is
+being handled correctly.
 
 In the C programming language, an $n$ element array is indexed by the
 integers $0, \ldots, n-1$.  We always think of it as indexed by the
@@ -805,7 +892,8 @@ A valid input file has an opening comment, which begins with
 addition to the usual white space characters (space, tab, and newline)
 the characters `\texttt{(}', `\texttt{)}', and `\texttt{,}' are
 treated as white space.  The body is divided into whitespace and
-tokens, which are sequences of characters without any white space.
+tokens, which are sequences of adjacent characters without any white
+space that are preceeded and followed by white space.
 
 Everything in \texttt{parser.c} is easy to understand.  There are
 numerous functions checking that the verbal tokens are the ones that
@@ -867,18 +955,17 @@ in Section \ref{sec:ManySchools}.  The function
 \texttt{underallocated\_student} is eligible for and for which the
 current value is minimal.
 
-The function \texttt{minimum\_gmc\_inequality} takes a
-\texttt{double\_cee} and a (pointer to) a set \texttt{school\_subset}
-as arguments, computes the set of students that cannot attend any
-school outside \texttt{school\_subset}, returns 1 (true) if the GMC
-inequality for \texttt{school\_subset} and this set of students holds,
-and returns 0 (false) otherwise. The function \texttt{gmc\_holds}
-decides whether the argument satisfies
-\texttt{minimum\_gmc\_inequality} for every subset of the set of
-schools.  The running time is proportional to 2 raised to the power of
-the number of schools, which can be practical when the number of
-schools is moderate, say around 20, but of course it blows up rapidly
-after that.
+The function \texttt{minimum\_gmc\_inequality} takes (pointers to) a
+\texttt{double\_cee} and a set \texttt{school\_subset} as arguments,
+computes the set of students that cannot attend any school outside
+\texttt{school\_subset}, returns 1 (true) if the GMC inequality for
+\texttt{school\_subset} and this set of students holds, and returns 0
+(false) otherwise. The function \texttt{gmc\_holds} decides whether
+the argument satisfies \texttt{minimum\_gmc\_inequality} for every
+subset of the set of schools.  The running time is proportional to 2
+raised to the power of the number of schools, which can be practical
+when the number of schools is moderate, say around 20, but of course
+it blows up rapidly after that.
 
 \subsection{\texttt{schchprob.h} and \texttt{schchprob.c}}
 
@@ -956,17 +1043,17 @@ the total amount of it that has been allocated in \texttt{my\_alloc}.
 
 \subsection{\texttt{solver.h} and \texttt{solver.c}}
 
-The function \texttt{GCPS\_schools\_solver\_top\_level} creates a
-\texttt{copy} of the input \texttt{my\_scp}, the vector
-\texttt{subset\_sizes}, which is initially just the indicator function
-of the set of popular schools, the matrix \texttt{related}, and the
-integer pointer \texttt{underallocated\_student}.  It then asks
+The function \texttt{GCPS\_schools\_solver\_top\_level} creates the
+array \texttt{subset\_sizes}, which is initially just the indicator
+function of the set of popular schools, the matrix \texttt{related},
+and the integer pointer \texttt{underallocated\_student}.  It also
+creates a \texttt{copy} of the input \texttt{my\_scp} and then asks
 \texttt{GCPS\_schools\_solver} to try to find the GCPS allocation.  If
-\texttt{GCPS\_schools\_solver} comes back with
-\texttt{underallocated\_student != 0}, then \texttt{subset\_sizes} is
-increased by applying \texttt{increase\_subset\_sizes} and the process
-is repeated, again and again, until \texttt{underallocated\_student ==
-  0} and the computation is complete.
+the attempt comes back with \texttt{underallocated\_student != 0},
+then \texttt{subset\_sizes} is increased by applying
+\texttt{increase\_subset\_sizes} and the process is repeated, again
+and again, until \texttt{underallocated\_student == 0} and the
+computation is complete.
 
 The function \texttt{GCPS\_schools\_solver} begins by computing the
 time that will remain after the allocation has proceeded to the first
@@ -988,7 +1075,7 @@ the \texttt{underallocated\_student} back to the function that called
 If the construction of the subproblems does not turn up an
 \texttt{underallocated\_student}, then \texttt{GCPS\_schools\_solver}
 is called on each of them. (In this sense the algorithm is recursive.)
-Of course these calls my find an \texttt{underallocated\_student},
+Of course these calls may find an \texttt{underallocated\_student},
 whose number in the smaller problem must be translated into a number
 in the current problem.  The calls for the two problems produce
 \texttt{left\_alloc} and \texttt{right\_alloc}, which are
@@ -1004,10 +1091,10 @@ its average follows the description in Section
 \ref{sec:Implementation}.  The \texttt{nonintegral\_graph} derived
 from the given allocation is an undirected graph with an edge between
 a student and a school if the student's allocation of the school is
-between zero and one, and an edge between a school and the sink if the
-total allocation of the school is not an integer.  The function
-\texttt{graph\_from\_alloc} has the given allocation as its input, and
-its output is the derived \texttt{nonintegral\_graph}.
+strictly between zero and one, and an edge between a school and the
+sink if the total allocation of the school is not an integer.  The
+function \texttt{graph\_from\_alloc} has the given allocation as its
+input, and its output is the derived \texttt{nonintegral\_graph}.
 
 Especially for large school choice problems, we expect the
 \texttt{nonintegral\_graph} to be quite sparse, so it can be
@@ -1041,7 +1128,7 @@ allocation, or some total allocation of a school, into an integer.
 For such an \texttt{adjustment} the function
 \texttt{cyclic\_adjustment} updates the allocation, and it calls the
 functions \texttt{student\_edge\_removal} and
-\texttt{sink\_edge\_removal} to update the \texttt{neighbor\_lists}.
+\texttt{sink\_edge\_removal} to update \texttt{neighbor\_lists}.
 When \texttt{graph\_is\_nonempty(my\_lists) = 0} (false) the entries
 of \texttt{my\_alloc} are doubles that are all very close to integers,
 and the function \texttt{pure\_allocation\_from\_partial} passes to

@@ -17,37 +17,37 @@ struct partial_alloc zero_partial_alloc(struct double_cee* my_cee) {
   return my_partial_alloc;
 }
 
-void destroy_pure_alloc(struct pure_alloc* my_pure_alloc) {
+void destroy_pure_alloc(struct pure_alloc my_pure_alloc) {
   int i;
 
-  for (i = 1; i <= my_pure_alloc->no_students; i++) {
-    free(my_pure_alloc->allocations[i-1]);
+  for (i = 1; i <= my_pure_alloc.no_students; i++) {
+    free(my_pure_alloc.allocations[i-1]);
   }
-  free(my_pure_alloc->allocations);
+  free(my_pure_alloc.allocations);
 }
 
-void print_partial_alloc(struct partial_alloc my_partial_alloc) {
+void print_partial_alloc(struct partial_alloc* my_partial_alloc) {
   int i,j;
-  int nst = my_partial_alloc.no_students;
-  int nsc = my_partial_alloc.no_schools;
+  int nst = my_partial_alloc->no_students;
+  int nsc = my_partial_alloc->no_schools;
   
   printf("/* This is a sample introductory comment. */\n");
 
   printf("There are %d students and %d schools\n",nst,nsc);
   
-  for (j = 1; j <= my_partial_alloc.no_schools; j++) {
+  for (j = 1; j <= my_partial_alloc->no_schools; j++) {
     if (j < 10) {
       printf(" ");
     }
     printf("         %i:", j);
   }
-  for (i = 1; i <= my_partial_alloc.no_students; i++) {
+  for (i = 1; i <= my_partial_alloc->no_students; i++) {
     printf("\n%i:",i);
     if (i < 10) {
       printf(" ");
     }
-    for (j = 1; j <= my_partial_alloc.no_schools; j++) {
-      printf("  %2.8f", my_partial_alloc.allocations[i-1][j-1]);
+    for (j = 1; j <= my_partial_alloc->no_schools; j++) {
+      printf("  %2.8f", my_partial_alloc->allocations[i-1][j-1]);
     }
   }
   printf("\n");
@@ -86,12 +86,12 @@ void print_pure_alloc(struct pure_alloc my_pure_alloc) {
   printf("\n");
 }
 
-void destroy_partial_alloc(struct partial_alloc* my_partial_alloc) {
+void destroy_partial_alloc(struct partial_alloc my_partial_alloc) {
   int i;
-  for (i = 1; i <= my_partial_alloc->no_students; i++) {
-    free(my_partial_alloc->allocations[i-1]);
+  for (i = 1; i <= my_partial_alloc.no_students; i++) {
+    free(my_partial_alloc.allocations[i-1]);
   }
-  free(my_partial_alloc->allocations);
+  free(my_partial_alloc.allocations);
 }
 
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
@@ -109,6 +109,7 @@ struct partial_alloc allocate_until_new_time(struct sch_ch_prob* my_scp,
 					     double new_time_remaining) {
   int i,j;
   struct partial_alloc my_partial_alloc;
+  
   my_partial_alloc.no_students = my_scp->cee.no_students;
   my_partial_alloc.no_schools = my_scp->cee.no_schools;
   

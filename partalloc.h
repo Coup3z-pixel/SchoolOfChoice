@@ -21,11 +21,11 @@ struct pure_alloc {
 
 struct partial_alloc zero_partial_alloc(struct double_cee* my_cee);
 
-void destroy_partial_alloc(struct partial_alloc* my_partial_alloc);
+void destroy_partial_alloc(struct partial_alloc my_partial_alloc);
 
-void destroy_pure_alloc(struct pure_alloc* my_pure_alloc);
+void destroy_pure_alloc(struct pure_alloc my_pure_alloc);
 
-void print_partial_alloc(struct partial_alloc my_partial_alloc);
+void print_partial_alloc(struct partial_alloc* my_partial_alloc);
 
 void print_pure_alloc(struct pure_alloc my_pure_alloc);
 

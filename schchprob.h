@@ -22,9 +22,9 @@ struct input_sch_ch_prob make_toy_sch_ch_prob();
 
 void copy_sch_ch_prob(struct sch_ch_prob* my_scp, struct sch_ch_prob* copy);
 
-void destroy_sch_ch_prob(struct sch_ch_prob* my_scp);
+void destroy_sch_ch_prob(struct sch_ch_prob my_scp);
 
-void destroy_input_sch_ch_prob(struct input_sch_ch_prob* my_scp);
+void destroy_input_sch_ch_prob(struct input_sch_ch_prob my_scp);
 
 void print_sch_ch_prob(struct sch_ch_prob* my_scp);
 
@@ -47,11 +47,13 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* given_scp,
 				   int* underallocated_student);
 
 double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset,
-				                                  struct subset* captive_students);
+				                                  struct subset* captive_students,
+				   struct subset* overallocated_schools);
 
 double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
 				   int* subset_sizes, struct subset* crit_stu_subset,
-				   struct subset* crit_sch_subset);
+				   struct subset* crit_sch_subset,
+				   struct subset* overallocated_schools);
 
 
 #endif /* SCHCHPROB_H */

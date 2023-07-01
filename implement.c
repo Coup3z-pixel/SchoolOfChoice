@@ -493,7 +493,7 @@ struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
 	cycle_adjustment(my_alloc,sch_sums,&nbr_lists,up,alpha,cycle);
       }
       else {
-	cycle_adjustment(my_alloc,sch_sums,&nbr_lists,down,beta,cycle);
+	cycle_adjustment(my_alloc,sch_sums,&nbr_lists,down,beta,cycle);	
       }
       destroy_cycle(cycle); 
     }
@@ -502,9 +502,6 @@ struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
   destroy_neighbor_lists(&nbr_lists);
   destroy_nonintegral_graph(&graph);
   free(sch_sums);
-
-
-  /*  print_partial_alloc(*my_alloc); */
 
   return pure_allocation_from_partial(my_alloc);
 }

@@ -9,9 +9,9 @@ int main(int argc, char const *argv[])
 
   print_pure_alloc(purified);
 
-  destroy_partial_alloc(&input_alloc);
+  destroy_partial_alloc(input_alloc);
 
-  destroy_pure_alloc(&purified);
+  destroy_pure_alloc(purified);
 
   return 0;
 }

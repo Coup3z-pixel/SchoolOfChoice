@@ -21,9 +21,9 @@ struct double_cee {
   int** priority;
 };
 
-void destroy_int_cee(struct int_cee* my_cee);
+void destroy_int_cee(struct int_cee my_cee);
 
-void destroy_double_cee(struct double_cee* my_cee);
+void destroy_double_cee(struct double_cee my_cee);
 
 void print_int_cee(struct int_cee* my_cee);
 
@@ -40,7 +40,7 @@ void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
 
 int* popular_schools(struct double_cee* my_cee);
 
-void relatedness_matrix(struct double_cee* my_cee, int* popular, struct square_matrix* rel_mat);
+struct square_matrix related_matrix(struct double_cee* my_cee, int* popular);
 
 void increase_subset_sizes(int* subset_sizes, struct double_cee* my_cee,
 			   int* underallocated_student);
