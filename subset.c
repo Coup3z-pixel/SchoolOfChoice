@@ -197,6 +197,72 @@ struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* 
   return my_matrix;
 }
 
+int subset_has_right_subset_size(struct subset* my_subset) {
+  int no_elements = 0;
+
+  for (int i = 1; i <= my_subset->large_set_size; i++) {
+    if (my_subset->indicator[i-1] == 1) {
+      no_elements++;
+    }
+  }
+
+  if (no_elements < my_subset->subset_size) {
+    printf("The set has fewer than subset_size actual elements.\n");
+    return 0;
+  }
+
+  if (no_elements > my_subset->subset_size) {
+    printf("The set has more than subset_size actual elements.\n");
+    return 0;
+  }
+
+  return 1;
+}
+
+int subset_is_connected(struct subset* my_subset, struct square_matrix* related) {
+  int j,k;
+  
+  int size = my_subset->subset_size;
+
+  if (size <= 1) {
+    return 1;
+  }
+  
+  struct index the_index = index_of_subset(my_subset);
+  int* connected_nodes = malloc(size * sizeof(int));
+  connected_nodes[0] = 1;
+  for (j = 2; j <= size; j++) {
+    connected_nodes[j-1] = 0;
+  }
+  
+  int done = 0;
+  while (!done) {
+    done = 1;
+    for (j = 2; j <= size; j++) {
+      if (connected_nodes[j-1] == 0) {
+	for (k = 1; k <= size; k++) {
+	  if (connected_nodes[k-1] == 1 && related->entries[the_index.indices[j-1]-1][the_index.indices[k-1]-1] == 1) {
+	    done = 0;
+	    connected_nodes[j-1] = 1;
+	  }
+	}
+      }
+    }
+  }
+  
+  int answer = 1;
+  for (j = 2; j <= size; j++) {
+    if (connected_nodes[j-1] == 0) {
+      answer = 0;
+    }
+  }
+
+  destroy_index(the_index);
+  free(connected_nodes);
+
+  return answer;
+}
+
 int is_qualified(int j, struct square_matrix* related, int* subset_sizes, int* point_school,
 		 int set_size, int* candidate_list, int probe) {
   int k,l;
@@ -257,6 +323,18 @@ void get_candidate_list(int* candidate_list, struct square_matrix* related,
     }
   }
 
+  /*
+  printf("We did the first part of get_candidate_list.\n");
+  printf("There are %d schools and the subset is\n",nsc);
+  struct index the_index = index_of_subset(my_subset);
+  print_index(&the_index);
+  destroy_index(the_index);
+  printf(".\n");
+  
+  print_square_matrix(related);
+  printf(".\n");
+  */
+
   /* We need to reorder the candidate_list according to order to join,
      where a school is not allowed to join the list prior to the time
      that it is connected to some member of the list. */
@@ -265,20 +343,24 @@ void get_candidate_list(int* candidate_list, struct square_matrix* related,
   while (fill_number < set_size) {
     connected = 0;
     probe = fill_number-1;
+    
     while (!connected) {
       probe++;
+      
       if (related->entries[*point_school-1][candidate_list[probe-1]-1] == 1) {
 	connected = 1;
       }
+      
       for (k = 1; k < fill_number; k++) {
-	if (related->entries[candidate_list[k-1]][candidate_list[probe-1]-1]) {
+	if (related->entries[candidate_list[k-1]-1][candidate_list[probe-1]-1]) {
 	  connected = 1;
 	}
       }
     }
+    
     swap_school = candidate_list[probe-1];
     for (k = probe; k > fill_number; k--) {
-      candidate_list[k-2] = candidate_list[k-1];
+      candidate_list[k-1] = candidate_list[k-2];
     }
     candidate_list[fill_number-1] = swap_school;
     fill_number++;
@@ -287,9 +369,29 @@ void get_candidate_list(int* candidate_list, struct square_matrix* related,
 
 int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
 		int* point_school) {
+
+  if (!subset_has_right_subset_size(my_subset)) {
+    printf("We have a bad subset_size.\n");
+    exit(0);
+  }
+
+  if (!subset_is_connected(my_subset,related)) {
+    printf("Whoa, we got a disconnected subset.\n");
+  }
+  
   int j,k,l;
   int nsc = my_subset->large_set_size;
   int set_size = my_subset->subset_size;
+
+  /*
+  if (my_subset->subset_size > 0) {
+    printf("There are %d schools and the subset is\n",nsc);
+    struct index the_index = index_of_subset(my_subset);
+    print_index(&the_index);
+    destroy_index(the_index);
+    printf(".\n");
+  }
+  */
 
   if (set_size == 0) {
     *point_school = 1;
@@ -299,9 +401,11 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
     if (*point_school <= nsc) {
       my_subset->indicator[*point_school - 1] = 1;
       my_subset->subset_size = 1;
+  
       return 1;
     }
     else {
+  
       return 0;
     }
   }
@@ -323,12 +427,14 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
   probe = fill_number;
   
   while (fill_number > 0 && probe < set_size) {
-    j = candidate_list[probe-1]+1;    
+    j = candidate_list[probe-1]+1;
+    
     while (j <= nsc && !is_qualified(j,related,subset_sizes,point_school,set_size,
 				     candidate_list,probe)) {
       j++;
     }
-    if (j <= nsc) {
+    
+    if (j <= nsc) {      
       candidate_list[probe-1] = j;
       probe++;
     }
@@ -345,10 +451,12 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
     for (j = 1; j <= nsc; j++) {
       my_subset->indicator[j-1] = 0;
     }
-    my_subset->indicator[(*point_school)-1] = 1;      
-    for (k = 1; k <= set_size-1; k++) {
+    my_subset->indicator[(*point_school)-1] = 1;
+    
+    for (k = 1; k <= set_size-1; k++) {      
       my_subset->indicator[candidate_list[k-1]-1] = 1;      
     }
+  
     return 1;
   }
   
@@ -396,6 +504,7 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
       for (k = 1; k <= set_size-1; k++) {
 	my_subset->indicator[candidate_list[k-1]-1] = 1;      
       }
+  
       return 1;
     }
   }
@@ -415,8 +524,9 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
 	my_subset->indicator[j-1] = 0;
       }
     }
+  
     return 1;
   }
-
+  
   return 0;
 }

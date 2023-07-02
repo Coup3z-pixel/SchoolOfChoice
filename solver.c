@@ -24,21 +24,35 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 							&overallocated_schools);
 
   while (*underallocated_student != 0 || overallocated_schools.subset_size > 0) {
+    
     destroy_partial_alloc(allocation);
     if (*underallocated_student != 0) {
+
+      printf("We are increasing.\n");
+      
       increase_subset_sizes(subset_sizes,&(my_scp->cee),underallocated_student);
     }
     else {
+
+      /*
+      printf("We are augmenting with overallocated_schools = ");
+      print_subset(&overallocated_schools);
+      printf(".\n");
+      */
+      
       augment_subset_sizes(subset_sizes,&overallocated_schools);
     }
 
-    /*
-    printf("Now subset_sizes is (");
+    int max = 0;
     for (j = 1; j <= nsc-1; j++) {
-      printf("%d,",subset_sizes[j-1]);
+      if (subset_sizes[j-1] > max) {
+	max = subset_sizes[j-1];
+      }
     }
-    printf("%d).\n",subset_sizes[nsc-1]);
-    */
+    if (max > 2) {
+      printf("We seem to have a critical set with more than 2 elements.\n");
+      exit(0);
+    }
     
     *underallocated_student = 0;
     destroy_subset(overallocated_schools);
@@ -123,7 +137,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
   if (sch_compl.subset_size > 0) {
     right_sch_index = index_of_subset(&sch_compl);
   }
-    
+
   first_alloc =  allocate_until_new_time(my_scp, end_time);
   
   if (end_time > 0.000001) {
@@ -148,19 +162,27 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
       left_related = submatrix(related,&sch_subset);
 
       left_overallocated = nullset(sch_subset.subset_size);
+
+      int* left_subset_sizes = malloc(sch_subset.subset_size * sizeof(int));
+      for (j = 1; j <= sch_subset.subset_size; j++) {
+	left_subset_sizes[j-1] = subset_sizes[left_sch_index.indices[j-1]-1];
+      }
       
-      left_alloc = GCPS_schools_solver(&left_scp,&left_related,subset_sizes,
+      left_alloc = GCPS_schools_solver(&left_scp,&left_related,left_subset_sizes,
 				       underallocated_student,&left_overallocated);
+
+      free(left_subset_sizes);
       
       if (*underallocated_student != 0) {
 	*underallocated_student = left_stu_index.indices[*underallocated_student - 1];
       }
       
       if (left_overallocated.subset_size > 0) {
+	
 	for (j = 1; j <= sch_subset.subset_size; j++) {
 	  if (left_overallocated.indicator[j-1] == 1) {
 	    overallocated_schools->subset_size++;
-	    overallocated_schools->indicator[left_overallocated.indicator[j-1]-1] = 1;
+	    overallocated_schools->indicator[left_sch_index.indices[j-1]-1] = 1;
 	  }
 	}
       }
@@ -177,18 +199,26 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
       right_related = submatrix(related,&sch_compl);
 
       right_overallocated = nullset(sch_compl.subset_size);
+
+      int* right_subset_sizes = malloc(sch_compl.subset_size * sizeof(int));
+      for (j = 1; j <= sch_compl.subset_size; j++) {
+	right_subset_sizes[j-1] = subset_sizes[right_sch_index.indices[j-1]-1];
+      }
       
-      right_alloc = GCPS_schools_solver(&right_scp,&right_related,subset_sizes,
-					underallocated_student,&right_overallocated); 
+      right_alloc = GCPS_schools_solver(&right_scp,&right_related,right_subset_sizes,
+					underallocated_student,&right_overallocated);
+
+      free(right_subset_sizes);
       
       if (*underallocated_student != 0) {
 	*underallocated_student = right_stu_index.indices[*underallocated_student - 1];
       }
       if (right_overallocated.subset_size > 0) {
+	
 	for (j = 1; j <= sch_compl.subset_size; j++) {
 	  if (right_overallocated.indicator[j-1] == 1) {
 	    overallocated_schools->subset_size++;
-	    overallocated_schools->indicator[right_overallocated.indicator[j-1]-1] = 1;
+	    overallocated_schools->indicator[right_sch_index.indices[j-1]-1] = 1;
 	  }
 	}
       }

@@ -820,7 +820,6 @@ and when it does move on to larger $j_1'$, it begins with singletons.
 \bibliographystyle{agsm}
 \bibliography{pa_ref}
 
-\newpage
 
 \begin{appendix}
 
@@ -851,12 +850,12 @@ complexity of that language) the code is object oriented in spirit,
 being organized as interactions of objects given by \texttt{struct}s.
 With perhaps one or two exceptions, each object has a destroyer, which
 frees the memory that stores the object's data, and for many objects
-there is a way of printing the object, which is primarily useful for
-debugging.  In all cases the code for these functions is simple and
-straightforward, and printing and destroyer functions will not be
-mentioned below.  When studying the code, the reader can ignore calls
-to destroyers, trusting that the allocation and freeing of memory is
-being handled correctly.
+there is a way of printing the object, which is the output of the
+executables, but is also useful for debugging.  In all cases the code
+for these functions is simple and straightforward, and printing and
+destroyer functions will not be mentioned below.  When studying the
+code, the reader can ignore calls to destroyers, trusting that the
+allocation and freeing of memory is being handled correctly.
 
 In the C programming language, an $n$ element array is indexed by the
 integers $0, \ldots, n-1$.  We always think of it as indexed by the
@@ -879,6 +878,28 @@ example) print 0.99 instead of 0.99999999. The functions
 \texttt{uniform} and \texttt{normal} provided uniformly distributed
 (in $[0,1]$) and normally distributed (for mean 0 and standard
 deviation 1) pseudorandom numbers.
+
+\subsection{\texttt{example.c}}
+
+The file \texttt{example.c} contains the \texttt{main} function of
+\texttt{make\_ex}, which contains all of the code that is involved in
+generating an example.  Although the code is somewhat lengthy, the
+process is a straight line:
+\begin{enumerate}
+  \item[(a)] Locate the schools and students around the circle.
+  \item[(b)] Compute the matrix of distances between students and schools.
+  \item[(c)] Generate normally distributed random valences for the schools.
+  \item[(d)] The utility of student \texttt{i} for school \texttt{j}
+    is the valence of \texttt{j} plus a normally distributed
+    \texttt{(i,j)}-idiosyncratic shock minus the distance from
+    \texttt{i} to \texttt{j}.
+  \item[(e)] Each student's safe school is (roughly) the one that is closest.
+  \item[(f)] Student \texttt{i}'s priority at school \texttt{j} is one
+    if its utility is not less than the utility of \texttt{i}'s safe
+    school, and otherwise it is zero.
+  \item[(g)] The preference of student \texttt{i} is the list of
+    schools of priority one in order of decreasing utility.
+\end{enumerate}
 
 \subsection{\texttt{parser.h} and \texttt{parser.c}}
 
@@ -987,6 +1008,17 @@ have \texttt{int\_cee}'s, and \texttt{sch\_ch\_prob}'s, which have
 remains to be allocated after a certain time, so it has a member
 \texttt{time\_remaining}.
 
+The function \texttt{sch\_ch\_prob\_from\_input} takes an
+\texttt{input\_sch\_ch\_prob} as input and passes to a
+\texttt{sch\_ch\_prob} by converting the quotas from integers to
+floating point numbers, and by setting \texttt{time\_remaining} to
+1.0.  The function \texttt{reduced\_sch\_ch\_prob} passes from a
+\texttt{sch\_ch\_prob} with general priorities and priority thresholds
+to one in which the priorities of student \texttt{i} at school
+\texttt{j} is one if \texttt{i} is eligible to attend school
+\texttt{j} and zero otherwise, and the priority thresholds of all
+schools are one, as described in Section \ref{sec:Priorities}.
+
 During the allocation process, when a GMC inequality for a set $P$ of
 schools is encountered, there is a smaller allocation problem for $P$
 and the set $J_P$ of students who, at that point in the process, are
@@ -995,29 +1027,40 @@ allocation problem for the complements $P^c$ and $J_P^c$ of $P$ and
 $J_P$, and the continuation of the allocation process is the sum of
 the allocation processes for these subproblems.  The function
 \texttt{sub\_sch\_ch\_prob} constructs the subproblem for $J_P =
-\text{\texttt{stu\_subset}}$ and $P = \text{\texttt{sch\_subset}}$.
-This function has a new argument \texttt{underallocated\_student},
-which is a pointer to an integer.  This interger is $0$ until there is
-a subproblem for which some student has no eligible schools, at which
-point it becomes that student's number.  The general idea is that when
-this happens, the current attempt at an allocation is abandoned as
-quickly as possible, and another attempt is made after increasing the
-minimal \texttt{subset\_sizes} for the schools that the student is
-initially eligible for.
+\text{\texttt{stu\_subset}}$ and $P = \text{\texttt{sch\_subset}}$ and
+the subproblem for $J_P^c = \text{\texttt{stu\_compl}}$ and $P^c =
+\text{\texttt{sch\_compl}}$.  This argument
+\texttt{underallocated\_student} of this function is a pointer to an
+integer which is $0$ until there is a subproblem for which some
+student has no eligible schools, at which point it becomes that
+student's number.  The general idea is that when this happens, the
+current attempt at an allocation is abandoned as quickly as possible,
+and another attempt is made after increasing the minimal
+\texttt{subset\_sizes} for the schools that the student is initially
+eligible for.
 
 The function \texttt{time\_remaining\_of\_gmc\_eq} computes the time
-that remains if the allocation process continues until the GMC
-inequality for \texttt{school\_subset} and \texttt{captive\_students}
-holds with equality or the unit interval of time is exhausted,
-ignoring all other constraints.  The function
-\texttt{time\_remaining\_after\_first\_gmc\_eq} considers all the
-school subsets generated by \texttt{next\_subset} with the parameters
-\texttt{related} and \texttt{subset\_sizes}.  For each such set of
-schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to that set
-and the set of students who cannot be assigned further probability in
-schools outside that set.  It returns the maximum of these quantities
-while setting the pointees of \texttt{crit\_stu\_subset} and
-\texttt{crit\_sch\_subset} to subsets that attain the maximum.
+remaining if the allocation process continues until the GMC inequality
+for \texttt{school\_subset} and \texttt{captive\_students} holds with
+equality or the unit interval of time is exhausted, ignoring all other
+constraints.  It may happen that the GMC inequality for these sets has
+already been violated.  In this case the argument
+\texttt{overallocated\_schools} is set equal to
+\texttt{school\_subset}, and again the current attempt at computing an
+allocation is abandoned as quickly as possible, then restarted after
+the minimal \texttt{subset\_sizes} for elements of
+\texttt{school\_subset} have been increased.
+
+
+The function \texttt{time\_remaining\_after\_first\_gmc\_eq} considers
+all the school subsets generated by \texttt{next\_subset} with the
+parameters \texttt{related} and \texttt{subset\_sizes}.  For each such
+set of schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to
+that set and the set of students who cannot be assigned further
+probability in schools outside that set.  It returns the maximum of
+these quantities while setting the pointees of
+\texttt{crit\_stu\_subset} and \texttt{crit\_sch\_subset} to subsets
+that attain the maximum.
 
 \subsection{\texttt{partalloc.h} and \texttt{partalloc.c}}
 
@@ -1030,16 +1073,17 @@ A \texttt{pure\_alloc} has the same structure, but now
 one, and for each student \texttt{i} there should be exactly one
 school \texttt{j} such that \texttt{allocations[i-1][j-1]} is one.
 
-The function \texttt{increment\_partial\_alloc} increases a
-\texttt{base} partial allocation by adding an \texttt{increment}
-partial allocation to it.  The function
+The function
 \texttt{allocate\_until\_new\_time} creates a \texttt{partial\_alloc}
 in which each student receives
 $$\text{\texttt{my\_scp->time\_remaining}} -
 \text{\texttt{new\_time\_remaining}}$$ units of her favorite school
-and none of any other school.  The function \texttt{school\_sums}
-returns an array of \texttt{double} that specifies, for each school,
-the total amount of it that has been allocated in \texttt{my\_alloc}.
+and none of any other school.  Increasing a \texttt{base} partial
+allocation by adding an \texttt{increment} partial allocation to it is
+what \texttt{increment\_partial\_alloc} does.  The function
+\texttt{school\_sums} returns an array of \texttt{double} that
+specifies, for each school, the total amount of it that has been
+allocated in \texttt{my\_alloc}.
 
 \subsection{\texttt{solver.h} and \texttt{solver.c}}
 
@@ -1051,42 +1095,49 @@ creates a \texttt{copy} of the input \texttt{my\_scp} and then asks
 \texttt{GCPS\_schools\_solver} to try to find the GCPS allocation.  If
 the attempt comes back with \texttt{underallocated\_student != 0},
 then \texttt{subset\_sizes} is increased by applying
-\texttt{increase\_subset\_sizes} and the process is repeated, again
-and again, until \texttt{underallocated\_student == 0} and the
-computation is complete.
+\texttt{increase\_subset\_sizes}.  If the result of the calculation is
+that \texttt{overallocated\_schools} is not the nullset, then
+\texttt{subset\_sizes} is increased by applying
+\texttt{augment\_subset\_sizes}. Then the calculation is started
+again, repeated until neither of these conditions hold at the end, in
+which case the computation is complete.
 
 The function \texttt{GCPS\_schools\_solver} begins by computing the
 time that will remain after the allocation has proceeded to the first
-GMC equality, and \texttt{stu\_subset} and \texttt{sch\_subset} are
-set to be the student and school subsets of this equality.  The
-complements \texttt{stu\_compl} and \texttt{sch\_compl} of these sets
-are computed, and \texttt{first\_alloc} is the result of giving each
-student her favorite school, at unit speed, until \texttt{end\_time}.
-At \texttt{end\_time} the problem splits into two subproblems
-(possibly one of them is null because it has no students) and in the
-process of constructing them an \texttt{underallocated\_student} may
-be found.  If this happens, then \texttt{GCPS\_schools\_solver}
-aborts, sending \texttt{first\_alloc} (which is of no consequence) and
-the \texttt{underallocated\_student} back to the function that called
-\texttt{GCPS\_schools\_solver}, which may be either
-\texttt{GCPS\_schools\_solver} itself or
-\texttt{GCPS\_schools\_solver\_top\_level}.
+GMC equality.  If this does not result in a nonempty
+\texttt{overallocated\_schools}, then \texttt{stu\_subset} and
+\texttt{sch\_subset} are set to be the student and school subsets of
+this equality and \texttt{stu\_compl} and \texttt{sch\_compl} are the
+complements of these sets.  The result of giving each student her
+favorite school, at unit speed, until \texttt{end\_time}, is
+\texttt{first\_alloc}.  At \texttt{end\_time} the problem splits into
+two subproblems (possibly one of them is null because it has no
+students) and in the process of constructing them an
+\texttt{underallocated\_student} may be found.  If this happens, then
+\texttt{GCPS\_schools\_solver} aborts, sending \texttt{first\_alloc}
+(which is of no consequence) and the \texttt{underallocated\_student}
+back to the function that called \texttt{GCPS\_schools\_solver}, which
+may be either \texttt{GCPS\_schools\_solver\_top\_level} or
+\texttt{GCPS\_schools\_solver} itself.
 
 If the construction of the subproblems does not turn up an
 \texttt{underallocated\_student}, then \texttt{GCPS\_schools\_solver}
 is called on each of them. (In this sense the algorithm is recursive.)
 Of course these calls may find an \texttt{underallocated\_student},
 whose number in the smaller problem must be translated into a number
-in the current problem.  The calls for the two problems produce
-\texttt{left\_alloc} and \texttt{right\_alloc}, which are
-\texttt{partial\_alloc}'s, and \texttt{increment\_partial\_allocation}
-is used to add these to \texttt{first\_alloc}, which is now the return
-value of the current call to \texttt{GCPS\_schools\_solver}.
+in the current problem, or they may find a nonempty
+\texttt{overallocated\_schools}, which must also be converted to a
+subset of the set of schools at this level.  The calls for the two
+problems produce \texttt{left\_alloc} and \texttt{right\_alloc}, which
+are \texttt{partial\_alloc}'s, and
+\texttt{increment\_partial\_allocation} is used to add these to
+\texttt{first\_alloc}, which is now the return value of the current
+call to \texttt{GCPS\_schools\_solver}.
 
 \subsection{\texttt{implement.h} and \texttt{implement.c}}
 
 The code of the algorithm going from a fractional allocation to a
-random pure allocation whose distribution has the given algorithm as
+random pure allocation whose distribution has the given allocation as
 its average follows the description in Section
 \ref{sec:Implementation}.  The \texttt{nonintegral\_graph} derived
 from the given allocation is an undirected graph with an edge between
@@ -1136,31 +1187,12 @@ the associated \texttt{pure\_alloc}.  The function
 \texttt{random\_pure\_allocation} is the master function that
 supervises the whole process.
 
-\subsection{\texttt{solve.c},\  \texttt{purify.c}, and \texttt{example.c}}
+\subsection{\texttt{solve.c} and  \texttt{purify.c}}
 
-The files \texttt{solve.c}, \texttt{purify.c}, and \texttt{example.c}
-contain the \texttt{main} functions of the executables \texttt{gcps},
-\texttt{purify}, and \texttt{make\_ex}, respectively.  The
-\texttt{main} functions in \texttt{solve.c} and \texttt{purify.c} are
-simple and straightforward, but the \texttt{main} function in
-\texttt{example.c} contains all of the code that is involved in
-generating an example.  Although the code is somewhat lengthy, the
-process is a straight line:
-\begin{enumerate}
-  \item[(a)] Locate the schools and students around the circle.
-  \item[(b)] Compute the matrix of distances between students and schools.
-  \item[(c)] Generate normally distributed random valences for the schools.
-  \item[(d)] The utility of student \texttt{i} for school \texttt{j}
-    is the valence of \texttt{j} plus a normally distributed
-    \texttt{(i,j)}-idiosyncratic shock minus the distance from
-    \texttt{i} to \texttt{j}.
-  \item[(e)] Each student's safe school is (roughly) the one that is closest.
-  \item[(f)] Student \texttt{i}'s priority at school \texttt{j} is one
-    if its utility is not less than the utility of \texttt{i}'s safe
-    school, and otherwise it is zero.
-  \item[(g)] The preference of student \texttt{i} is the list of
-    schools of priority one in order of decreasing utility.
-\end{enumerate}
+The files \texttt{solve.c} and \texttt{purify.c} contain the
+\texttt{main} functions of the executables \texttt{gcps} and
+\texttt{purify} respectively.  These main functions are
+simple and straightforward.
 
 \end{appendix}
 
