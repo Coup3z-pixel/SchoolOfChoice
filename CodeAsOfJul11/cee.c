@@ -187,6 +187,34 @@ struct square_matrix related_matrix(struct double_cee* my_cee, int* popular) {
   return relatedness;
 }
 
+void increase_subset_sizes(int* subset_sizes, struct double_cee* my_cee,
+			   int* underallocated_student) {
+  int i = *underallocated_student;
+  int j;
+  
+  int nsc = my_cee->no_schools;
+
+  int min_subset_size = 0;
+  for (j = 1; j <= nsc; j++) {
+    if (my_cee->priority[i-1][j-1] && subset_sizes[j-1] > 0) {
+      if (min_subset_size == 0) {
+	min_subset_size = subset_sizes[j-1];
+      }
+      if (subset_sizes[j-1] < min_subset_size) {
+	min_subset_size = subset_sizes[j-1];
+      }
+    }
+  }
+
+  if (min_subset_size > 0) {
+    for (j = 1; j <= nsc; j++) {
+      if (my_cee->priority[i-1][j-1] && subset_sizes[j-1] == min_subset_size) {
+	subset_sizes[j-1]++;
+      }
+    }
+  }
+}
+
 int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset) {
   int i,j;
   double school_sum = 0;
@@ -220,7 +248,7 @@ int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subs
   }
 }
 
-/*
+
 int gmc_holds(struct double_cee* my_cee) {
   int j, k;
   int nsc = my_cee->no_schools;
@@ -253,4 +281,3 @@ int gmc_holds(struct double_cee* my_cee) {
 
   return answer;
 }
-*/

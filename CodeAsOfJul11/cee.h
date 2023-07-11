@@ -42,8 +42,11 @@ int* popular_schools(struct double_cee* my_cee);
 
 struct square_matrix related_matrix(struct double_cee* my_cee, int* popular);
 
+void increase_subset_sizes(int* subset_sizes, struct double_cee* my_cee,
+			   int* underallocated_student);
+
 int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset);
 
-/* int gmc_holds(struct double_cee* my_cee); - This can be reimplemented without next_subset. */
+int gmc_holds(struct double_cee* my_cee);
 
 #endif /* CEE_H */

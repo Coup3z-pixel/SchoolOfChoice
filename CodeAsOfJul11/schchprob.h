@@ -52,7 +52,7 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp,struct subset* 
 				      struct subset* overallocated_schools);
 
 double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
-				   struct subset* crit_stu_subset,
+				   int* subset_sizes, struct subset* crit_stu_subset,
 				   struct subset* crit_sch_subset,
 				   struct subset* overallocated_schools,
 				   struct subset_list* watch_list);

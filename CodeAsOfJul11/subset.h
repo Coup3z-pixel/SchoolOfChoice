@@ -63,6 +63,8 @@ void destroy_subset(struct subset my_subset);
 
 void destroy_index(struct index my_index);
 
+void augment_subset_sizes(int* subset_sizes, struct subset* overallocated_schools);
+
 
 struct square_matrix matrix_of_zeros(int dim);
 
@@ -73,6 +75,10 @@ struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* 
 void print_square_matrix(struct square_matrix* my_matrix);
 
 void destroy_square_matrix(struct square_matrix my_matrix);
+
+
+int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
+ 		int* point_school);
 
 
 struct subset_list* initialized_subset_list();

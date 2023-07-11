@@ -269,6 +269,15 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
       inverse_sch_index[j-1] = 0;
     }
   }
+
+  /*
+  printf("\nThe inverse_sch_index is ");
+  printf("inverse_sch_index = (");
+  for (j = 1; j <= my_scp->cee.no_schools - 1; j++) {
+    printf("%i,",inverse_sch_index[j-1]);
+  }
+  printf("%i)\n",inverse_sch_index[my_scp->cee.no_schools-1]);
+  */  
   
   new_sch_ch_prob.preferences = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
@@ -415,6 +424,15 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
       eating_students->indicator[i-1] = 1;
     }
   }
+
+  /*
+  int no_eaters = 0;
+  for (i = 1; i <= nst; i++) {
+    if (school_subset->indicator[my_scp->preferences[i-1][0] - 1] == 1) {
+      no_eaters++;
+    }
+  }
+  */
   
   double total_quota = 0.0;
   for (j = 1; j <= nsc; j++) {
@@ -436,6 +454,8 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
     printf(".\n");
     */
     
+    /*      print_sch_ch_prob(my_scp); */
+    
     copy_subset(school_subset,overallocated_schools);
     return 0.0;
   }
@@ -456,7 +476,7 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
 }
 
 double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
-				   struct subset* crit_stu_subset,
+				   int* subset_sizes, struct subset* crit_stu_subset,
 				   struct subset* crit_sch_subset,
 				   struct subset* overallocated_schools,
 				   struct subset_list* watch_list) {
@@ -466,6 +486,7 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
   int nst = my_scp->cee.no_students;
   int nsc = my_scp->cee.no_schools;
 
+  /*  struct subset scan_subset = nullset(my_scp->cee.no_schools); */
   struct subset eating_students = nullset(my_scp->cee.no_students);
   struct subset crit_eat_students = nullset(my_scp->cee.no_students);
   struct subset captive_students = nullset(my_scp->cee.no_students);
@@ -479,6 +500,12 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
 
     struct subset scan_subset = subset_of_index(probe->node_index,nsc);
 
+    /*
+  while (next_subset(&scan_subset,related,subset_sizes,point_school) &&
+	 overallocated_schools->subset_size == 0) {
+    */
+
+    
     
     scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &eating_students, &captive_students,
 						 overallocated_schools);
@@ -495,6 +522,7 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
 	destroy_subset(scan_subset);  
   }
 
+  /*  destroy_subset(scan_subset);  */
   free(point_school);
   destroy_subset(eating_students);
   destroy_subset(captive_students);

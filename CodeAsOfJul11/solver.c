@@ -7,15 +7,13 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 
   struct sch_ch_prob copy;
   copy_sch_ch_prob(my_scp,&copy);
-
-  /*
+    
   int* subset_sizes;
   subset_sizes = popular_schools(&(my_scp->cee));
-  */
       
   int* popular = popular_schools(&(my_scp->cee));
   
-  struct square_matrix related = related_matrix(&(my_scp->cee),popular);
+  struct square_matrix related = related_matrix(&(my_scp->cee),subset_sizes);
       
   int* underallocated_student;
   underallocated_student = malloc(sizeof(int));
@@ -29,7 +27,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 
   struct subset_list* watch_list = initialized_subset_list();
 
-  struct partial_alloc allocation = GCPS_schools_solver(&copy,&related,
+  struct partial_alloc allocation = GCPS_schools_solver(&copy,&related,subset_sizes,
 							underallocated_student,&overallocated_schools,
 							popular,watch_list);
 
@@ -38,9 +36,9 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
     destroy_partial_alloc(allocation);
     if (*underallocated_student != 0) {
 
-      printf("We have an underallocated_student!!!\n");
-      exit(0);
+      printf("We are increasing.\n");
       
+      increase_subset_sizes(subset_sizes,&(my_scp->cee),underallocated_student);
     }
     else {
       
@@ -48,6 +46,9 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
       print_index_of_subset(&overallocated_schools);
       printf(".\n");
       
+      
+      augment_subset_sizes(subset_sizes,&overallocated_schools);
+
       struct index new_list_element = index_of_subset(&overallocated_schools);
       if (list_contains_index(watch_list,&new_list_element)) {
 	depth++;
@@ -71,6 +72,16 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
       printf(".\n");
     }
 
+    int max = 0;
+    for (j = 1; j <= nsc; j++) {
+      if (subset_sizes[j-1] > max) {
+	max = subset_sizes[j-1];
+      }
+    }
+    if (max > 6) {
+      printf("We seem to have a critical set with more than 6 elements.\n");
+      exit(0);
+    }
     
     *underallocated_student = 0;
     destroy_subset(overallocated_schools);
@@ -79,13 +90,14 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
     destroy_sch_ch_prob(copy);
     
     copy_sch_ch_prob(my_scp,&copy);
-    allocation = GCPS_schools_solver(&copy,&related,underallocated_student,
+    allocation = GCPS_schools_solver(&copy,&related,subset_sizes,underallocated_student,
 				     &overallocated_schools,
 				     popular,watch_list);
   }
 
   destroy_sch_ch_prob(copy);
   free(underallocated_student);
+  free(subset_sizes);
   free(popular);
   destroy_square_matrix(related);
   destroy_subset_list(watch_list);
@@ -93,7 +105,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
   return allocation;
 }
 
-struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct square_matrix* related,
+struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct square_matrix* related,int* subset_sizes,
 					 int* underallocated_student,struct subset* overallocated_schools,
 					 int* popular, struct subset_list* watch_list) {
   
@@ -112,6 +124,9 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
   struct subset left_overallocated;
   struct subset right_overallocated;
+
+  int* left_subset_sizes;
+  int* right_subset_sizes;
 
   int* left_popular;
   int* right_popular;
@@ -139,7 +154,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
   expanded_watch_list = reversed_subset_list(expanded_list(watch_list,related,popular));
       
-  double end_time = time_rem_after_first_gmc_eq(my_scp, related, 
+  double end_time = time_rem_after_first_gmc_eq(my_scp, related, subset_sizes,
 						&stu_subset, &sch_subset,
 						overallocated_schools,
 						expanded_watch_list);
@@ -155,9 +170,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
   if (sch_subset.subset_size > 0) {
 
     /*
+    if (sch_subset.subset_size > 0) {
       printf("The critical school subset is ");
       print_index_of_subset(&sch_subset);
       printf(".\n");
+    }
     */
     
     left_sch_index = index_of_subset(&sch_subset);
@@ -200,6 +217,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
       left_overallocated = nullset(sch_subset.subset_size);
 
+      left_subset_sizes = malloc(sch_subset.subset_size * sizeof(int));
+      for (j = 1; j <= sch_subset.subset_size; j++) {
+	left_subset_sizes[j-1] = subset_sizes[left_sch_index.indices[j-1]-1];
+      }
+
       left_popular = malloc(sch_subset.subset_size * sizeof(int));
       for (j = 1; j <= sch_subset.subset_size; j++) {
 	left_popular[j-1] = popular[left_sch_index.indices[j-1]-1];
@@ -207,10 +229,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
       left_watch_list = reduced_subset_list(watch_list,&sch_subset);
       
-      left_alloc = GCPS_schools_solver(&left_scp,&left_related,
+      left_alloc = GCPS_schools_solver(&left_scp,&left_related,left_subset_sizes,
 				       underallocated_student,&left_overallocated,
 				       left_popular,left_watch_list);
 
+      free(left_subset_sizes);
       
       if (*underallocated_student != 0) {
 	*underallocated_student = left_stu_index.indices[*underallocated_student - 1];
@@ -241,6 +264,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
       right_overallocated = nullset(sch_compl.subset_size);
 
+      right_subset_sizes = malloc(sch_compl.subset_size * sizeof(int));
+      for (j = 1; j <= sch_compl.subset_size; j++) {
+	right_subset_sizes[j-1] = subset_sizes[right_sch_index.indices[j-1]-1];
+      }
+
       right_popular = malloc(sch_compl.subset_size * sizeof(int));
       for (j = 1; j <= sch_compl.subset_size; j++) {
 	right_popular[j-1] = popular[right_sch_index.indices[j-1]-1];
@@ -248,10 +276,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
 
       right_watch_list = reduced_subset_list(watch_list,&sch_compl);
       
-      right_alloc = GCPS_schools_solver(&right_scp,&right_related,
+      right_alloc = GCPS_schools_solver(&right_scp,&right_related,right_subset_sizes,
 					underallocated_student,&right_overallocated,
 					right_popular,right_watch_list);
 
+      free(right_subset_sizes);
       
       if (*underallocated_student != 0) {
 	*underallocated_student = right_stu_index.indices[*underallocated_student - 1];
@@ -293,6 +322,9 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,struct squar
   destroy_subset(sch_subset);
   destroy_subset(stu_compl);
   destroy_subset(sch_compl);
+
+  /*   print_partial_alloc(&first_alloc); */
+ 
      
   return first_alloc;
 }
