@@ -478,14 +478,15 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
 double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
 				   int* subset_sizes, struct subset* crit_stu_subset,
 				   struct subset* crit_sch_subset,
-				   struct subset* overallocated_schools) {
+				   struct subset* overallocated_schools,
+				   struct subset_list* watch_list) {
   double scan_answer;
   double answer = 0.0;
 
   int nst = my_scp->cee.no_students;
   int nsc = my_scp->cee.no_schools;
 
-  struct subset scan_subset = nullset(my_scp->cee.no_schools);
+  /*  struct subset scan_subset = nullset(my_scp->cee.no_schools); */
   struct subset eating_students = nullset(my_scp->cee.no_students);
   struct subset crit_eat_students = nullset(my_scp->cee.no_students);
   struct subset captive_students = nullset(my_scp->cee.no_students);
@@ -493,8 +494,18 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
   int* point_school = malloc(sizeof(int));;
   *point_school = 1;
 
+
+  struct subset_list* probe = watch_list;
+  while (probe != NULL  && overallocated_schools->subset_size == 0) {
+
+    struct subset scan_subset = subset_of_index(probe->node_index,nsc);
+
+    /*
   while (next_subset(&scan_subset,related,subset_sizes,point_school) &&
 	 overallocated_schools->subset_size == 0) {
+    */
+
+    
     
     scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &eating_students, &captive_students,
 						 overallocated_schools);
@@ -505,30 +516,14 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
       copy_subset(&captive_students,crit_stu_subset);
       copy_subset(&eating_students,&crit_eat_students);
     }
+
+
+        probe = probe->next; 
+	destroy_subset(scan_subset);  
   }
-  /*
-  if (crit_eat_students.subset_size > 0 && crit_stu_subset->subset_size > 0) {
-    struct index school_index = index_of_subset(crit_sch_subset);
-    struct index eat_index = index_of_subset(&crit_eat_students);
-    struct index student_index = index_of_subset(crit_stu_subset);
-    printf("We will be allocating from %1.3f until %1.3f with school subset ",my_scp->time_remaining,answer);
-    print_index(&school_index);
-    printf(", eating students ");
-    print_index(&eat_index);
-    printf(", and captive students ");
-    print_index(&student_index);
-    printf(".\n");
-    destroy_index(school_index);
-    destroy_index(eat_index);
-    destroy_index(student_index);
-  }
-  else {
-    printf("We will be allocating from %1.3f until %1.3f.\n",my_scp->time_remaining,answer);
-  }
-  */
-  
+
+  /*  destroy_subset(scan_subset);  */
   free(point_school);
-  destroy_subset(scan_subset);
   destroy_subset(eating_students);
   destroy_subset(captive_students);
 

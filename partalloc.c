@@ -47,7 +47,11 @@ void print_partial_alloc(struct partial_alloc* my_partial_alloc) {
       printf(" ");
     }
     for (j = 1; j <= my_partial_alloc->no_schools; j++) {
-      printf("  %2.8f", my_partial_alloc->allocations[i-1][j-1]);
+      if (my_partial_alloc->allocations[i-1][j-1] < -0.000001) {
+	printf("We have a negative allocation probability.\n");
+	exit(0);
+      }
+      printf("  %2.8f", fabs(my_partial_alloc->allocations[i-1][j-1]));
     }
   }
   printf("\n");

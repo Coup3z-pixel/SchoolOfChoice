@@ -20,6 +20,11 @@ struct square_matrix {
   int** entries;
 };
 
+struct subset_list {
+  struct index* node_index;
+  struct subset_list* next;
+};
+
 struct subset nullset(int large_set_size);
 
 struct subset fullset(int large_set_size);
@@ -32,9 +37,27 @@ void complement(struct subset* given_subset, struct subset* comp);
 
 struct index index_of_subset(struct subset* my_subset);
 
+struct subset subset_of_index(struct index* my_index, int large_set_size);
+
 void print_subset(struct subset* my_subset);
 
 void print_index(struct index* my_index);
+
+void print_index_of_subset(struct subset* my_subset);
+
+int indices_are_same(struct index* first, struct index* second);
+
+int first_precedes_second(struct index* first, struct index* second);
+
+int* indices_of_elements(struct subset* my_subset);
+
+void copy_index(struct index* given_index, struct index* copy_index);
+
+struct index singleton_index(int j);
+
+struct index index_with_element_added(struct index* my_index, int j);
+
+struct index index_of_subset_from_indices_list(struct index* my_index, int* list_of_indices);
 
 void destroy_subset(struct subset my_subset);
 
@@ -49,11 +72,40 @@ struct square_matrix matrix_of_ones(int dim);
 
 struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* my_subset); 
 
-int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
- 		int* point_school);
-
 void print_square_matrix(struct square_matrix* my_matrix);
 
 void destroy_square_matrix(struct square_matrix my_matrix);
+
+
+int next_subset(struct subset* my_subset, struct square_matrix* related, int* subset_sizes,
+ 		int* point_school);
+
+
+struct subset_list* initialized_subset_list();
+
+int is_empty_list(struct subset_list* my_list);
+
+void destroy_subset_list(struct subset_list* my_list);
+
+void print_subset_list(struct subset_list* my_list);
+
+void add_subset(struct subset_list* my_list, struct index* my_index);
+
+void add_second_list_to_first(struct subset_list* first, struct subset_list* second);
+
+int list_contains_index(struct subset_list* my_list, struct index* my_index);
+
+struct subset_list* nonempty_subsets(struct index* my_index);
+
+struct subset_list* reversed_subset_list(struct subset_list* my_list);
+
+struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset);
+
+struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular);
+
+void add_supersets_of_subsets_to_list(struct subset_list* my_list, struct index* my_index,
+				      struct square_matrix* related, int* popular, int depth);
+
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related, int* popular);
 
 #endif /* SUBSET_H */

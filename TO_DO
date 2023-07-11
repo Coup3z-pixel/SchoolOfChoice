@@ -1,10 +1,15 @@
-	TO DO List
+		TO DO
 
-This is a file for sketching the likely course of further development.
-Currently the logical ordering of tasks seems to be as follows.
+The latest computations reveal that there are fairly large critical
+sets, at least sometimes, and that things slow down a lot if we search
+over all sets of such a size.  A different approach that should work,
+and be faster, is to maintain a list of the sets that have been
+overallocated, and search over subsets of supersets with one more
+element.  This seems to come down to replacing next_subset with a
+search over such a list.
 
-1.  Detection and graceful exit in the event that some bound is exceeded.
-
-2.  Testing and debugging for all existing input files, at various maximum set sizes.
-
-3.  Development of code that defines and utilizes the related matrix.
+The immediate task seems to be the development of the list
+infrastructure, followed by hooking it up.  I think a singly linked
+list is at least a decent starting point.  For the sake of brevity,
+both in memory usage and look up, I think we should represent sets by
+their indices.

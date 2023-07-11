@@ -67,12 +67,21 @@ void print_subset(struct subset* my_subset) {
 
 void print_index(struct index* my_index) {
   int i;
+  
   printf("(");
+  
   for (i = 1; i < my_index->no_elements; i++) {
     printf("%d,",my_index->indices[i-1]);
   }
   printf("%d)",my_index->indices[my_index->no_elements-1]);
 }
+
+void print_index_of_subset(struct subset* my_subset) {
+  struct index the_index = index_of_subset(my_subset);
+  print_index(&the_index);
+  destroy_index(the_index);
+}
+
 
 void print_square_matrix(struct square_matrix* my_matrix) {
   int j, k;
@@ -158,14 +167,137 @@ struct index index_of_subset(struct subset* my_subset) {
   return my_index;
 }
 
+struct subset subset_of_index(struct index* my_index, int large_set_size) {
+  struct subset answer = nullset(large_set_size);
+  answer.subset_size = my_index->no_elements;
+  for (int k = 1; k <= my_index->no_elements; k++) {
+    answer.indicator[my_index->indices[k-1]-1] = 1;
+  }
+
+  return answer;
+}
+
+int* indices_of_elements(struct subset* my_subset) {
+  int j;
+  int* list_of_indices = malloc(my_subset->large_set_size * sizeof(int));
+  int no_elements = 0;
+  for (j = 1; j <= my_subset->large_set_size; j++) {
+    if (my_subset->indicator[j-1] == 1) {
+      no_elements++;
+      list_of_indices[j-1] = no_elements;
+    }
+    else {
+      list_of_indices[j-1] = 0;
+    }
+  }
+  return list_of_indices;
+}
+
+int indices_are_same(struct index* first, struct index* second) {
+  if (first->no_elements != second->no_elements) {
+    return 0;
+  }
+  for (int j = 1; j <= first->no_elements; j++) {
+    if (first->indices[j-1] != second->indices[j-1]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int first_precedes_second(struct index* first, struct index* second) {
+  if (first->no_elements < second->no_elements) {
+    return 1;
+  }
+  if (first->no_elements > second->no_elements) {
+    return 0;
+  }
+  
+  for (int j = 1; j <= first->no_elements; j++) {
+    if (first->indices[j-1] < second->indices[j-1]) {
+      return 1;
+    }
+    if (first->indices[j-1] > second->indices[j-1]) {
+      return 0;
+    }
+  }
+  return 0;
+}
+
+void copy_index(struct index* given_index, struct index* copy_of_index) {
+  int i;
+  copy_of_index->no_elements = given_index->no_elements;
+  
+  copy_of_index->indices = malloc(copy_of_index->no_elements * sizeof(int));
+  
+  for (i = 1; i <= given_index->no_elements; i++) {
+    copy_of_index->indices[i-1] = given_index->indices[i-1];
+  }
+}
+
+struct index singleton_index(int j) {
+  struct index singleton;
+  singleton.no_elements = 1;
+  singleton.indices = malloc(sizeof(int));
+  singleton.indices[0] = j;
+  return singleton;
+}
+
+struct index index_with_element_added(struct index* my_index, int j) {
+  int k, inserted_already;
+  struct index new_index;
+  new_index.no_elements = my_index->no_elements + 1;
+  new_index.indices = malloc(new_index.no_elements * sizeof(int));
+
+  inserted_already = 0;
+  for (k = 1; k <= new_index.no_elements; k++) {
+    if (inserted_already) {
+      new_index.indices[k-1] = my_index->indices[k-2];
+    }
+    if (!inserted_already) {
+      if (k == new_index.no_elements) {
+	new_index.indices[k-1] = j;
+      }
+      else {
+	if (my_index->indices[k-1] < j) {
+	  new_index.indices[k-1] = my_index->indices[k-1];	
+	}
+	else {
+	  new_index.indices[k-1] = j;
+	  inserted_already = 1;
+	}
+      }
+    }
+  }
+  return new_index;
+}
+
+struct index index_of_subset_from_indices_list(struct index* my_index, int* list_of_indices) {
+  int j;
+
+  struct index new_index;
+  new_index.no_elements = my_index->no_elements;
+  new_index.indices = malloc(my_index->no_elements * sizeof(int));
+  for (j = 1; j <= my_index->no_elements; j++) {
+    new_index.indices[j-1] = list_of_indices[my_index->indices[j-1]-1];
+  }
+
+  return new_index;
+}
+
 void augment_subset_sizes(int* subset_sizes, struct subset* overallocated_schools) {
   int j, min, nsc;
 
   nsc = overallocated_schools->large_set_size;
   min = 0;
   for (j = 1; j <= nsc; j++) {
-    if (overallocated_schools->indicator[j-1] && min < subset_sizes[j-1]) {
-      min = subset_sizes[j-1];
+    if (overallocated_schools->indicator[j-1] == 1) {
+      if (min == 0) {
+	min = subset_sizes[j-1];
+      }
+      if (subset_sizes[j-1] < min) {
+	min = subset_sizes[j-1];
+      }
     }
   }
   
@@ -529,4 +661,322 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int* su
   }
   
   return 0;
+}
+
+
+struct subset_list* initialized_subset_list() {
+  struct subset_list* new_list = malloc(sizeof(struct subset_list));
+  new_list->node_index = NULL;
+  new_list->next = NULL;
+  return new_list;
+}
+
+int is_empty_list(struct subset_list* my_list) {
+  if (my_list->node_index == NULL && my_list-> next == NULL) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+void destroy_subset_list(struct subset_list* my_list) {
+  struct subset_list* probe = my_list;
+  while (probe->next != NULL) {
+    struct subset_list* next_probe = probe->next;
+    if (probe->node_index != NULL) {
+      destroy_index(*(probe->node_index));
+    }
+    free(probe);
+    probe = next_probe;
+  }
+  if (probe->node_index != NULL) {
+    destroy_index(*(probe->node_index));
+  }
+  free(probe);
+}
+
+void print_subset_list(struct subset_list* my_list) {
+  if (is_empty_list(my_list)) {
+    printf("null_list");
+  }
+  else {
+    struct subset_list* probe = my_list;
+    print_index(probe->node_index); 
+    while (probe->next != NULL) {
+      print_index(probe->next->node_index); 
+      probe = probe->next;
+    }
+  }
+}
+
+void add_subset(struct subset_list* my_list, struct index* my_index) {
+    
+  if (is_empty_list(my_list)) {
+    my_list->node_index = malloc(sizeof(struct index));
+    copy_index(my_index,my_list->node_index);
+  }
+  else {
+    if (my_list->next == NULL) {
+      if (!indices_are_same(my_index,my_list->node_index)) {
+	struct subset_list* new_node = malloc(sizeof(struct subset_list));
+	my_list->next = new_node;
+	new_node->next = NULL;
+	new_node->node_index = malloc(sizeof(struct index));
+	
+	if (first_precedes_second(my_index,my_list->node_index)) {
+	  copy_index(my_list->node_index,new_node->node_index);
+	  copy_index(my_index,my_list->node_index);
+	}
+	else {
+	  copy_index(my_index,new_node->node_index);
+	}
+      }
+    }
+    else {
+      if (first_precedes_second(my_index,my_list->node_index)) {
+	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
+	  new_node->node_index = malloc(sizeof(struct index));
+	  new_node->next = my_list->next;
+	  my_list->next = new_node;
+	  copy_index(my_list->node_index,new_node->node_index);
+	  copy_index(my_index,my_list->node_index);
+      }
+      else {
+	struct subset_list* probe = my_list;
+	while ((probe->next)->next != NULL && !first_precedes_second(my_index,(probe->next)->node_index) &&
+	       !indices_are_same(my_index,probe->node_index)) {
+	  probe = probe->next;
+	}
+	
+	if (!indices_are_same(my_index,probe->node_index) && !indices_are_same(my_index,(probe->next)->node_index)) {
+	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
+	  new_node->node_index = malloc(sizeof(struct index));
+	  copy_index(my_index,new_node->node_index);
+	  
+	  if (first_precedes_second(my_index,(probe->next)->node_index)) {
+	    new_node->next = probe->next;
+	    probe->next = new_node;
+	  }
+	  
+	  if (first_precedes_second((probe->next)->node_index,my_index)) {
+	    new_node->next = (probe->next)->next;
+	    (probe->next)->next = new_node;
+	  }
+	}
+      }
+    }
+  }
+}
+
+void add_second_list_to_first(struct subset_list* first, struct subset_list* second) {
+  if (!is_empty_list(second)) {
+    struct subset_list* probe = second;
+    add_subset(first,probe->node_index);
+    while (probe->next != NULL) {
+      probe = probe->next;
+      add_subset(first,probe->node_index);
+    }
+  }
+}
+
+int list_contains_index(struct subset_list* my_list, struct index* my_index) {
+  if (is_empty_list(my_list)) {
+    return 0;
+  }
+  struct subset_list* probe = my_list;
+  while (probe != NULL) {
+    if (indices_are_same(probe->node_index,my_index)) {
+      return 1;
+    }
+    probe = probe->next;
+  }
+  return 0;
+}
+
+struct subset_list* nonempty_subsets(struct index* my_index) {
+  int k, h, count, cursor;
+
+  int no_elts = my_index-> no_elements;
+  
+  struct subset_list* answer = initialized_subset_list();
+
+  int* odometer = malloc(no_elts * sizeof(int));  
+  for (k = 1; k <= no_elts; k++) {
+    odometer[k-1] = 0;
+  }
+
+  while (k <= no_elts) {
+    k = 1;
+    while (odometer[k-1] == 1) {
+      odometer[k-1] = 0;
+      k++;
+    }
+    if (k <= no_elts) {
+      odometer[k-1] = 1;
+      count = 0;
+      for (h = k; h <= no_elts; h++) {
+	if (odometer[h-1] == 1) {
+	  count++;
+	}
+      }
+      struct index* next_index = malloc(sizeof(struct index));
+      next_index->no_elements = count;
+      next_index->indices = malloc(count * sizeof(int));
+      cursor = k-1;
+      for (h = k; h <= no_elts; h++) {
+	if (odometer[h-1] == 1) {
+	  cursor++;
+	  next_index->indices[cursor-1] = my_index->indices[k-1];
+	}
+      }
+      add_subset(answer,next_index);
+      destroy_index(*next_index);
+      free(next_index);
+    }
+  }
+  return answer;
+}
+
+struct subset_list* reversed_subset_list(struct subset_list* my_list) {
+  if (my_list->next == NULL) {
+    return my_list;
+  }
+  
+  struct subset_list* probe = my_list;
+  struct subset_list* predecessor = NULL;
+  struct subset_list* successor = probe->next;
+  while (successor != NULL) {
+    probe->next = predecessor;
+    predecessor = probe;
+    probe = successor;
+    successor = probe->next;
+  }
+  probe->next = predecessor;
+
+  return probe;
+}
+
+struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset) {
+  int j, done;
+
+  int* indices_list = indices_of_elements(my_subset);
+  
+  struct subset_list* reduced_list = initialized_subset_list();
+  struct subset_list* probe = my_list;
+
+  done = 0;
+  if (is_empty_list(my_list)) {
+    done = 1;
+  }
+  while (!done) {
+    int is_subset = 1;
+    for (j = 1; j <= probe->node_index->no_elements; j++) {
+      if (my_subset->indicator[probe->node_index->indices[j-1]-1] == 0) {
+	is_subset = 0;
+      }
+    }
+    if (is_subset) {
+      struct index new_index = index_of_subset_from_indices_list(probe->node_index, indices_list);
+      add_subset(reduced_list,&new_index);
+    }
+    if (probe->next == NULL) {
+      done = 1;
+    }
+    else {
+      probe = probe->next;
+    }
+  }
+
+  free(indices_list);
+
+  return reduced_list;
+}
+
+void add_supersets_of_subsets_to_list(struct subset_list* my_list, struct index* my_index,
+				      struct square_matrix* related, int* popular, int depth) {
+  struct subset_list* list_of_supersets = immediate_supersets(my_index,related,popular);
+  add_second_list_to_first(my_list,list_of_supersets);
+}
+
+struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular) {
+  int j, k, qualified, nsc;
+
+  /*
+  printf("Going into immediate_supersets, my index is ");
+  print_index(my_index);
+  printf(".\n");
+  */
+  
+  nsc = related->dimension;
+  struct subset_list* list_of_supersets = initialized_subset_list();
+
+  for (j = 1; j <= nsc; j++) {
+    qualified = 1;
+    if (!popular[j-1]) {
+      qualified = 0;
+    }
+    if (qualified) {
+      for (k = 1; k <= my_index->no_elements; k++) {
+	if (my_index->indices[k-1] == j) {
+	  qualified = 0;
+	}
+      }
+    }
+    if (qualified) {
+      qualified = 0;
+      for (k = 1; k <= my_index->no_elements; k++) {
+	if (related->entries[my_index->indices[k-1]-1][j-1] == 1) {
+	  qualified = 1;
+	}
+      }
+    }
+    if (qualified) {
+      struct index next_superset = index_with_element_added(my_index,j);
+      
+      /*
+      printf("The next_superset is ");
+      print_index(&next_superset);
+      printf(".\n");
+      */
+      
+      add_subset(list_of_supersets,&next_superset);
+    }
+  }
+  
+  return list_of_supersets;
+}
+
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related, int* popular) {
+  int j, k, nsc, done, qualified;
+
+  nsc = related->dimension;
+  
+  struct subset_list* expansion = initialized_subset_list();
+
+  for (j = 1; j <= nsc; j++) {
+    if (popular[j-1]) {
+      struct index new_index = singleton_index(j);
+      add_subset(expansion,&new_index);
+    }
+  }
+
+  if (!is_empty_list(my_list)) {
+
+    struct subset_list* probe = my_list;
+    done = 0;
+    while (!done) {
+      struct subset_list* list_of_subsets = immediate_supersets(probe->node_index,related,popular);
+      add_second_list_to_first(expansion,list_of_subsets);
+      destroy_subset_list(list_of_subsets); 
+      if (probe->next == NULL) {
+	done = 1;
+      }
+      else {	  
+	probe = probe->next;
+      }
+    }
+  }
+
+  return expansion;
 }

@@ -39,7 +39,8 @@ void destroy_cycle(struct path_node* cycle) {
     trailer = leader;
     leader = leader->next;
   }
-  free(trailer);
+  
+  free(trailer); 
 }
 
 struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double* sch_sums) {
@@ -467,6 +468,30 @@ void sink_edge_removal(struct neighbor_lists* my_lists, int j) {
   my_lists->sink_sch_nbrs = new_list_for_sink;  
 }
 
+struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
+  int i, j;
+  int nst = my_alloc->no_students;
+  int nsc = my_alloc->no_schools;
+  
+  struct pure_alloc my_pure;
+  my_pure.no_students = nst;
+  my_pure.no_schools = nsc;
+  my_pure.allocations = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    my_pure.allocations[i-1] = malloc(nsc * sizeof(int));
+    for (j = 1; j <= nsc; j++) {
+      if (my_alloc->allocations[i-1][j-1] > 0.99999) {
+	my_pure.allocations[i-1][j-1] = 1;
+      }
+      else {
+	my_pure.allocations[i-1][j-1] = 0;
+      }
+    }
+  }
+  
+  return my_pure;
+} 
+
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
   int up = 1;
   int down = 0;
@@ -495,6 +520,7 @@ struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
       else {
 	cycle_adjustment(my_alloc,sch_sums,&nbr_lists,down,beta,cycle);	
       }
+      
       destroy_cycle(cycle); 
     }
   }
@@ -504,28 +530,4 @@ struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
   free(sch_sums);
 
   return pure_allocation_from_partial(my_alloc);
-}
-
-struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
-  int i, j;
-  int nst = my_alloc->no_students;
-  int nsc = my_alloc->no_schools;
-  
-  struct pure_alloc my_pure;
-  my_pure.no_students = nst;
-  my_pure.no_schools = nsc;
-  my_pure.allocations = malloc(nst * sizeof(int*));
-  for (i = 1; i <= nst; i++) {
-    my_pure.allocations[i-1] = malloc(nsc * sizeof(int));
-    for (j = 1; j <= nsc; j++) {
-      if (my_alloc->allocations[i-1][j-1] > 0.99999) {
-	my_pure.allocations[i-1][j-1] = 1;
-      }
-      else {
-	my_pure.allocations[i-1][j-1] = 0;
-      }
-    }
-  }
-  
-  return my_pure;
 }
