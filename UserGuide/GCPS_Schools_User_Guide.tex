@@ -159,7 +159,7 @@ spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}', and
 sequences of characters without any of the generalized white space
 characters.  Tokens are either prescribed words, numbers, or student
 tags (a student number followed by `\texttt{:}') and everything must
-be more or less exactly as shown below, modulo white space, so, for
+be more or less exactly as shown above, modulo white space, so, for
 example, the first line must not be \texttt{There are 3 students and 1
   school}, but it could be \texttt{There are 3 students and \ \ 1
   schools}.
@@ -180,8 +180,8 @@ the school, and may be assigned a seat there, and otherwise it is 0.
 priority at a school may be 0 because she is not qualified (it is a
 single sex school for boys, or her test scores are too low) or it may
 be 0 because the student prefers a seat at her ``safe school'' (as we
-explain below) and can insist on receiving a seat at a school that is
-no worse for her than that.
+explain below) and can insist on receiving a seat at a school that she
+likes at least as much.
 
 The next line provides information (for each student, the number of
 schools for which she has priority 1) that the computer could figure
@@ -198,7 +198,7 @@ The collection of information provided by an input file is a
 
 What the software does (primarily) is compute a matrix of assignment
 probabilities.  For our particular example \texttt{gcps} gives the
-following output:
+following output.  (Here and below we are leaving out the sample comment.)
 \medskip
 \begin{obeylines}\texttt{
 The allocation is:
@@ -604,16 +604,16 @@ selective schools, and the school district would like it to be the
 case that a well qualified student is almost certain to receive a seat
 in one of them if that is what she wants, and at the same time these
 schools do not have more than a small amount of unused capacity.  One
-may raise the priority threshold of a school if many students are
-receiving some probability of admission and lower the threshold if its
-seats are not being filled.  Of course changing the priority threshold
-at one of the schools will effect demand for the other school, so
-repeated adjustment of the priority thresholds of all the schools may
-be required to achieve a desirable result.  (Automating this iterative
-adjustment process may require the development of a version of
-\texttt{gcps} that can accept parameter inputs, without editing the
-source code.  This should be a simple task for an experienced C
-programmer.)
+may raise the priority threshold of one of these schools if many
+students are receiving some probability of admission and lower the
+threshold if its seats are not being filled.  Of course changing the
+priority threshold at one of the schools will effect demand for the
+other school, so repeated adjustment of the priority thresholds of all
+the schools may be required to achieve a desirable result.
+(Automating this iterative adjustment process may require the
+development of a version of \texttt{gcps} that can accept parameter
+inputs, without editing the source code.  This should be a simple task
+for an experienced C programmer.)
 
 Whether it is a good idea to use priorities as the Chinese do is an
 extremely complex question.  On the one hand there is an obvious sense
@@ -684,7 +684,11 @@ popular schools such that the graph obtained by restricting
 problems the number of such sets can still be overwhelming.
 
 The key trick is to let the computational process itself tell us which
-sets are relevant.  We maintain an array \texttt{subset\_sizes}
+sets are relevant.  
+
+\norev
+
+We maintain an array \texttt{subset\_sizes}
 assigning a nonnegative integer to each school.  This array is
 initialized by setting $\texttt{subset\_sizes[j] = 0}$ or
 $\texttt{subset\_sizes[j] = 1}$ according to whether \texttt{j} is

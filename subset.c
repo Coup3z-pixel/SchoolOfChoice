@@ -1,5 +1,13 @@
 #include "subset.h"
 
+void print_vector_of_ints(int* vector, int dim) {
+  printf("(");
+  for (int i = 1; i <= dim-1; i++) {
+    printf("%d,",vector[i-1]);
+  }
+  printf("%d)",vector[dim-1]);
+}
+
 struct subset nullset(int large_set_size) {
   int i;
   struct subset my_subset;
@@ -582,6 +590,21 @@ void add_subset(struct subset_list* my_list, struct index* my_index) {
   }
 }
 
+struct subset_list*  copy_of_subset_list(struct subset_list* my_list) {
+  struct subset_list* copy = initialized_subset_list();
+
+  if (!is_empty_list(my_list)) {
+    add_subset(copy,my_list->node_index);
+    struct subset_list* probe = my_list;
+    while (probe->next != NULL) {
+      probe = probe->next;
+      add_subset(copy,probe->node_index);      
+    }
+  }
+
+  return copy;
+}
+
 void add_second_list_to_first(struct subset_list* first, struct subset_list* second) {
   if (!is_empty_list(second)) {
     struct subset_list* probe = second;
@@ -619,6 +642,7 @@ struct subset_list* nonempty_subsets(struct index* my_index) {
     odometer[k-1] = 0;
   }
 
+  k = 1;
   while (k <= no_elts) {
     k = 1;
     while (odometer[k-1] == 1) {
@@ -627,20 +651,23 @@ struct subset_list* nonempty_subsets(struct index* my_index) {
     }
     if (k <= no_elts) {
       odometer[k-1] = 1;
+    
       count = 0;
       for (h = k; h <= no_elts; h++) {
 	if (odometer[h-1] == 1) {
 	  count++;
 	}
       }
+      
       struct index* next_index = malloc(sizeof(struct index));
       next_index->no_elements = count;
       next_index->indices = malloc(count * sizeof(int));
-      cursor = k-1;
+      
+      cursor = 0;
       for (h = k; h <= no_elts; h++) {
 	if (odometer[h-1] == 1) {
 	  cursor++;
-	  next_index->indices[cursor-1] = my_index->indices[k-1];
+	  next_index->indices[cursor-1] = my_index->indices[h-1];
 	}
       }
       add_subset(answer,next_index);
@@ -706,22 +733,45 @@ struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subs
   return reduced_list;
 }
 
-void add_supersets_of_subsets_to_list(struct subset_list* my_list, struct index* my_index,
-				      struct square_matrix* related, int* popular, int depth) {
-  struct subset_list* list_of_supersets = immediate_supersets(my_index,related,popular);
-  add_second_list_to_first(my_list,list_of_supersets);
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int* popular, int depth) {
+  struct subset_list* list_of_supersets = initialized_subset_list();
+
+  /*
+  printf("We are given my_index = ");
+  print_index(my_index);
+  printf(" whose list of nonempty subsets is ");
+  print_subset_list(nonempty_subsets(my_index));
+  printf(".\n");
+  */
+  
+  add_second_list_to_first(list_of_supersets,nonempty_subsets(my_index));
+
+  /*
+  printf("After adding nonempty_subsets(my_index), list_of_supersets is ");
+  print_subset_list(list_of_supersets);
+  printf(".\n");
+  */
+
+  int local_depth = depth;
+  while (local_depth > 0) {
+    local_depth--;
+    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets, related, popular));
+  }
+
+  /*
+  printf("At the end of supersets_of_subsets, list_of_supersets is ");
+  print_subset_list(list_of_supersets);
+  printf(".\n");
+  */
+
+  return list_of_supersets;
 }
 
 struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular) {
   int j, k, qualified, nsc;
-
-  /*
-  printf("Going into immediate_supersets, my index is ");
-  print_index(my_index);
-  printf(".\n");
-  */
   
   nsc = related->dimension;
+  
   struct subset_list* list_of_supersets = initialized_subset_list();
 
   for (j = 1; j <= nsc; j++) {
@@ -760,6 +810,19 @@ struct subset_list* immediate_supersets(struct index* my_index, struct square_ma
   return list_of_supersets;
 }
 
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related, int* popular) {
+  struct subset_list* list_of_supersets = initialized_subset_list();
+  if (!is_empty_list(my_list)) {
+    struct subset_list* probe = my_list;
+    add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related,popular));
+    while (probe->next != NULL) {
+      probe = probe->next;
+      add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related,popular));
+    }
+  }
+  return list_of_supersets;
+}
+
 struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related, int* popular) {
   int j, k, nsc, done, qualified;
 
@@ -779,6 +842,7 @@ struct subset_list* expanded_list(struct subset_list* my_list, struct square_mat
     struct subset_list* probe = my_list;
     done = 0;
     while (!done) {
+      add_subset(expansion,probe->node_index);
       struct subset_list* list_of_subsets = immediate_supersets(probe->node_index,related,popular);
       add_second_list_to_first(expansion,list_of_subsets);
       destroy_subset_list(list_of_subsets); 

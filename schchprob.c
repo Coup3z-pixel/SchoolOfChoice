@@ -192,8 +192,7 @@ struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp) {
 }
 
 struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp, 
-				   struct subset* stu_subset, struct subset* sch_subset,
-				   int* underallocated_student) {
+				   struct subset* stu_subset, struct subset* sch_subset) {
   int i, j, k;
 
   int nst = stu_subset->subset_size;  
@@ -249,12 +248,6 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
 	count++;
       }
     }
-    if (count == 0) {
-      *underallocated_student = i;
-
-      printf("We found an underallocated student.\n");
-      exit(0);	     
-    }
     new_sch_ch_prob.no_eligible_schools[i-1] = count;
   }
 
@@ -302,11 +295,6 @@ struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* my_scp,
 
   destroy_index(stu_index);
   destroy_index(sch_index);
-
-  /*
-  printf("We are leaving sub_sch_ch_prob with\n");
-  print_sch_ch_prob(&new_sch_ch_prob);
-  */
 
   return new_sch_ch_prob;
 }

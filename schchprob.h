@@ -43,8 +43,7 @@ struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp);
 struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp);
 
 struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* given_scp, 
-				   struct subset* stu_subset, struct subset* sch_subset,
-				   int* underallocated_student);
+				   struct subset* stu_subset, struct subset* sch_subset);
 
 double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp,struct subset* school_subset,
 				                                 struct subset* eating_students,

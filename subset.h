@@ -25,6 +25,8 @@ struct subset_list {
   struct subset_list* next;
 };
 
+void print_vector_of_ints(int* vector, int dim);
+
 struct subset nullset(int large_set_size);
 
 struct subset fullset(int large_set_size);
@@ -85,6 +87,8 @@ void print_subset_list(struct subset_list* my_list);
 
 void add_subset(struct subset_list* my_list, struct index* my_index);
 
+struct subset_list*  copy_of_subset_list(struct subset_list* my_list);
+
 void add_second_list_to_first(struct subset_list* first, struct subset_list* second);
 
 int list_contains_index(struct subset_list* my_list, struct index* my_index);
@@ -96,6 +100,10 @@ struct subset_list* reversed_subset_list(struct subset_list* my_list);
 struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset);
 
 struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular);
+
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related, int* popular);
+
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int* popular, int depth);
 
 void add_supersets_of_subsets_to_list(struct subset_list* my_list, struct index* my_index,
 				      struct square_matrix* related, int* popular, int depth);

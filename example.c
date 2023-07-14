@@ -4,7 +4,7 @@
 #include "normal.h"
 
 int main() {
-  int no_schools = 60;
+  int no_schools = 100;
   int no_students_per_school = 9;
   int school_capacity = 10;
   double school_valence_std_dev = 1.0;
