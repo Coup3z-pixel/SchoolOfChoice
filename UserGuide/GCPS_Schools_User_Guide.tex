@@ -114,9 +114,14 @@ starting point for further software development.
 
 This document describes these programs, from the point of view of a
 user.  It doesn't assume that the reader has already read our paper,
-but of course we are leaving out lots of relevant information.  The
-body also does not assume that the reader knows the C programming
-language, but some language features become relevant in Appendix A.
+but of course we are leaving out lots of relevant information.
+Instructions for downloading and setting up the software, and doing a
+test run, are given in Appendix \ref{app:DownloadInstall}.  It would
+probably be a good idea to follow those instructions now, or before
+reading too far into this guide, but the main body of this guide does
+not assume that you have done so.  The body also does not assume that
+the reader knows the C programming language, but some language
+features become relevant in Appendix \ref{app:Code}.
 
 \section{\texttt{gcps}}
 
@@ -438,7 +443,7 @@ which has the associated header file \texttt{implement.h}.  The file
 \texttt{purify.c} contains a high level sequence of commands that
 execute the algorithm.
 
-\section{\texttt{make\_ex}}
+\section{\texttt{make\_ex}} \label{sec:MakeEx}
 
 Development of this sort of software requires testing under at least
 somewhat realistic conditions.  The utility \texttt{make\_ex} produces
@@ -684,140 +689,88 @@ popular schools such that the graph obtained by restricting
 problems the number of such sets can still be overwhelming.
 
 The key trick is to let the computational process itself tell us which
-sets are relevant.  
+sets are relevant, by making repeated attempts at computing an
+allocation, and learning something from each failure.  In the first
+attempt we allocate each school to those students for whom the school
+is the favorite.  Whenever a school's quota is exhausted, the students
+who were consuming it switch to their favorite among the remaining
+schools.  As our initial example illustrated, this may succeed.
 
-\norev
-
-We maintain an array \texttt{subset\_sizes}
-assigning a nonnegative integer to each school.  This array is
-initialized by setting $\texttt{subset\_sizes[j] = 0}$ or
-$\texttt{subset\_sizes[j] = 1}$ according to whether \texttt{j} is
-unpopolar or popular.
-
-We now run the process as we described at the beginning, letting the
-schools fill up one at at time.  If this succeeds we are done, and
-otherwise it can fail in two ways.
-
-First, the process may arrive at a time prior to $1$ at which some
-student $i$ no longer has any schools she can consume.  We can infer
-that there must have been a set of schools $P$ containing some element
-of $\alpha_i$ that became critical, but this went unnoticed, and the
-allocation of seats in $P$ to students outside of $J_P$ continued,
-leading eventually to an insufficiency.  For each school $j$ in
-$\alpha_i$ we now increase \texttt{subset\_sizes[j]} from $1$ to $2$.
-
-The second way that the process may fail is that we arrive at a point
-when there is no longer as many seats at some school \texttt{j} as is
-required by the students who, at that point, have no other school they
-can attend.  We can infer that some set of schools $P$ containing
-\texttt{j} became critical, but the allocation of seats in $P$ to
-students who had alternatives outside of $P$ continued, again
-resulting in eventual insufficiency.  We now increase
-\texttt{subset\_sizes[j]} from $1$ to $2$.
+If it does not, there will be a point at which some school $j$ does
+not have enough remaining capacity to meet the needs of the students
+who now have no other schools they can consume, because all of those
+schools have exhausted their capacity.  Since the process has arrived
+at an infeasible allocation, there must have been a point in the
+process where, for some set of schools $P$, the total remaining
+capacity of the schools in $P$ went below the total remaining demand
+of students who could no longer consume any school outside of $P$.
+Furthermore, there must be such a $P$ that contains $j$, because the
+infeasibility is related to $j$'s capacity, so one of the inequalities
+that was violated must involve that variable.
 
 We now restart the allocation process, this time watching out for
 criticality of sets of popular schools that are either singletons or
-have two elements \texttt{j} and \texttt{k}, that are
-\texttt{related}, with \texttt{subset\_sizes[j] = 2} or
-\texttt{subset\_sizes[k] = 2}.  Again, this may succeed. There may be
-a time prior of $1$ when there is a student $h$ who no longer has any
-schools she can consume, in which case we increase
-\texttt{subset\_sizes[j]} for those $j \in \alpha_h$ for which the
-value is currently minimal.  There may be a time at which one of sets
-of schools $P$ we are watching no longer has enough seats to serve the
-students who have no alternatives outside $P$, in which case we
-increase \texttt{subset\_sizes[j]} for those $j \in P$ for which the
-value is currently minimal.
+of the form $\{j,k\}$ where $k$ is another popular school that is
+\texttt{related} to $j$.  If such a set becomes critical, the process
+splits into two parts, one for $\{j,k\}$ and the students who can no
+longer consume schools outside this set, and the other for the other
+remaining schools and the other students.  Again, this may
+succeed.
 
-In general, after adjusting \texttt{subset\_sizes}, we run the
-allocation process again from the beginning, looking for criticality
-of sets $P$ of popular schools such that $|P| \le
-\text{\texttt{subset\_sizes[j]}}$ for some $j \in P$ and the induced
-subgraph of \texttt{related} is connected.  If, at some time prior to
-the end, there is a student $i$ who has no available schools, then we
-increase \texttt{subset\_sizes[j]} by $1$ for every school $j \in
-\alpha_i$ such that $\text{\texttt{subset\_sizes[j]}} = \min_{k \in
-  \alpha_i} \text{\texttt{subset\_sizes[k]}}.$ If, at some time prior
-to $1$, there is a set $P$ that we are watching that no longer has
-enough seats, then we increase \texttt{subset\_sizes[j]} for those $j
-\in P$ for which the value is currently minimal.
+One way it might fail is that there comes a time at which some school
+$j' \ne j$ does not have enough remaining capacity to meet the needs
+of the students who now have no other schools they can consume.  If
+this happens we restart the allocation process, now watching out for
+criticality of sets of popular schools that are either singletons or
+of the form $\{h,k\}$ where $h \in \{j,j'\}$ and $k$ is another
+popular school that is \texttt{related} to $h$.  The process might
+also fail because, for some popular $k$ such that $j$ and $k$ are
+\texttt{related}, there comes a time at which the collective capacity
+of $j$ and $k$ is not sufficient to meet the needs of the students who
+can no longer consume other schools.  In this case the next iteration
+of the allocation process watches out for criticality of sets of
+popular schools that are either singletons or of the form $\{h,l\}$
+where $h \in \{j,k\}$ and $l$ is another popular school that is
+\texttt{related} to $h$.
 
-In the implementation of this program there is the following
-computational problem.  For a given \texttt{subset\_sizes}, we say
-that a set $P$ of popular schools is
-\texttt{subset\_sizes}-\emph{relevant} if $|P| \le
-\text{\texttt{subset\_sizes[j]}}$ for some $j \in P$ and the subgraph
-of \texttt{related} induced by $P$ is connected.  We would like to
-enumerate the \texttt{subset\_sizes}-relevant sets efficiently,
-ideally without repetition.  The function that does this is
-\texttt{next\_subset} in \texttt{subset.c}. It is the most complex
-part of the code, and may be virtually impenetrable without guidance,
-so we now give a detailed description of how it works.
+The process might also fail because, even with more sets of schools
+being monitored, there still comes a time at which $j$ does not have
+enough remaining capacity to meet the needs of the students who cannot
+consume other schools.  That is, looking at two element sets of
+schools containing $j$ did not resolve the issue.  In this event the
+next iteration of the allocation process watches out for criticality
+of sets of schools with three or fewer elements that contain $j$ and
+are \texttt{related}-connected. If such a set becomes critical during
+this iteration, the first such set to become critical is added to a
+list of sets whose criticality is monitored in all future iterations
+of the allocation process.
 
-We identify the set of schools with the set of integers between $1$
-and the number of schools, so the schools are linearly ordered.  Fix
-an integer $r$ and a \texttt{subset\_sizes}-relevant set of popular
-schools $P$ with $r$ elements.  There is a unique ordering $j_1,
-\ldots, j_r$ of the elements of $P$ such that $j_1$ is the smallest $j
-\in P$ such that $|P| \le \text{\texttt{subset\_sizes[j]}}$ and for
-each $h = 2, \ldots, r$, $j_h$ is the smallest element of $\{j_h,
-\ldots, j_r\}$ that is \texttt{related} to $j_g$ for some $g = 1,
-\ldots, h-1$.  Conversely, suppose that $j_1, \ldots, j_r$ is a list
-of distinct popular schools such that $j_1$ is the smallest element
-\texttt{j} of the list such that $r \le
-\text{\texttt{subset\_sizes[j]}}$, and for each $h = 2, \ldots, r$,
-$j_h$ is \texttt{related} to one of $j_1, \ldots, j_{h-1}$ and is the
-smallest element of $\{j_h, \ldots, j_r\}$ with this property.  Then,
-by induction, for each $h$ the subgraph of \texttt{related} induced by
-$P = \{j_1, \ldots, j_h\}$ is connected, so the subgraph of
-\texttt{related} induced by $P = \{j_1, \ldots, j_r\}$ is connected,
-and thus $P$ is \texttt{subset\_sizes}-relevant.
+In general, we maintain a list of sets of schools that have proven
+relevant to the allocation process.  In each iteration of the process
+we monitor the criticality of \texttt{related}-connected sets of
+schools that consist of a subset of one of these sets and at most one
+other element.  In the event that the process fails because there
+comes a time at which some set $P$ of schools has insufficient
+capacity for the students who have no options outside $P$, the first
+response is to add $P$ to our list.  If this does not resolve the
+issue because even with more schools being monitored, there still
+comes a time at which $P$ has insufficient capacity, we run iterations
+of the process that monitor larger and larger supersets of subsets of
+$P$, until the issue is resolved.  This procedure is described in more
+precise detail in Subsection \ref{subsec:Solver} of the Appendix, and
+in the code itself.
 
-We order the \texttt{subset\_sizes}-relevant sets lexicograpically,
-according to the following criteria: $P = \{j_1, \ldots, j_r\} < P' =
-\{j_1', \ldots, j_r'\}$ if one of the following hold:
-\begin{enumerate}
-  \item[(a)] $j_1 < j_1'$;
-  \item[(b)] $j_1 = j_1'$ and $r < r'$
-  \item[(c)] $j_1 = j_1'$, $r = r'$, and there is an $h = 1, \ldots,
-    r$ such that $j_1 = j_1', \ldots, j_{h-1} = j_{h-1}'$ and $j_h <
-    j_h'$.
-\end{enumerate}
-
-For a given $P = \{j_1, \ldots, j_r\}$ with the elements ordered as
-above, the function \texttt{next\_subset} finds the next set in this
-ordering.  For $h = 1, \ldots, r$ we say that $j$ is
-$(j_1, \ldots, j_{h-1})$-\emph{unqualified} if one of the following holds:
-\begin{enumerate}
-  \item[(a)] $j$ is unpopular;
-  \item[(b)] $j = j_g$ for some $g = 1, \ldots, h-1$;
-  \item[(c)] $j < j_1$ and $r \le \text{\texttt{subset\_sizes[j]}}$;
-  \item[(d)] $j$ is not \texttt{related} to one of $j_1, \ldots, j_{h-1}$;
-  \item[(e)] $g = 1, \ldots, h-1$ is the smallest index such that $j$
-    is \texttt{related} to $j_g$, and $j$ is less than one of $j_{g+1},
-    \ldots, j_{h-1}$.
-    
-\end{enumerate}
-We say that $j$ is $(j_1, \ldots, j_{h-1})$-\emph{qualified} if it is not
-$(j_1, \ldots, j_{h-1})$-unqualified.
-
-In its search for the next \texttt{subset\_sizes}-relevant $P$,
-\texttt{next\_subset} checks the $j_r' > j_r$, in order, looking for
-one that is $(j_1, \ldots, j_{r-1})$-qualified.  If $j_r'$ is the
-first such number, then $P' = \{j_1, \ldots, j_{r-1},j_r'\}$ is the
-next \texttt{subset\_sizes}-relevant set.  If there is no such $j_r'$,
-then \texttt{next\_subset} checks the $j_{r-1}' > j_{r-1}$, in order,
-looking for one that is $(j_1, \ldots, j_{r-2})$-qualified.  When it
-finds one it checks the possible values of $j_r'$ in order, looking
-for one that is $(j_1, \ldots, j_{r-2},j_{r-1}')$-qualified, and for
-the first $j_{r-1}'$ such that it finds a $(j_1, \ldots,
-j_{r-2},j_{r-1}')$-qualified $j_r'$, and the first such $j_r'$, $P' =
-\{j_1, \ldots, j_{r-2},j_{r-1}',j_r'\}$ is the next
-\texttt{subset\_sizes}-relevant set.  The process continues in this
-manner, except that instead of immediately replacing $j_1$ with $j_1'$
-in the search for $r$-element sets, \texttt{next\_subset} first looks
-for $(r+1)$-element sets for the given $j_1$ if $r$ is small enough,
-and when it does move on to larger $j_1'$, it begins with singletons.
+Several remarks are in order.  First, this procedure is an algorithm,
+in the sense that it is guaranteed to halt in finite time, because the
+collection of sets being monitored increases as the process
+progresses.  Since minimal critical sets can be arbitrarily large, it
+is almost certainly the case that its worst case running time is
+exponential.  Nevertheless, large minimal critical sets are extremely
+rare events, and the procedure seems to work very well in practice.
+For example, it finishes in a few seconds on an example produced by
+\texttt{make\_ex} with 100 schools and 900 students.  Finally, there
+is room for further refinement of the procedure, and it is possible
+that there are variants that are much faster still.
 
 %%%------------------------------------------------------------------------------------
 %%%------------------------------------------------------------------------------------
@@ -833,9 +786,9 @@ As we have mentioned earlier, we hope that our code provides a useful
 starting point for others, either contributing to the repository at
 Github, or for applications to districts with particular features.
 For this reason we have kept things as simple as possible, even if
-that entails less convenience for the user.  In particular, the input
-and output formats are inflexible, and some users will probably want
-to develop a more sophisticated interface.
+that entails somewhat less convenience for the user.  In particular,
+the input and output formats are inflexible, and some users will
+probably want to develop more sophisticated interfaces.
 
 In this Appendix we provide an overview of the code, passing from the
 simpler and more basic files to increasingly higher levels, in each
@@ -852,14 +805,21 @@ although we have used C rather than C++ (for a project as small as
 this, the various advantages of C++ seem not worth the additional
 complexity of that language) the code is object oriented in spirit,
 being organized as interactions of objects given by \texttt{struct}s.
+Most of the time objects are ``passed by reference'' to functions,
+which means that instead of passing the object itself, what is passed
+is a pointer to the object.  Understanding the pointer concept of C is
+a prerequisite to any detailed understanding of the code.
+
 With perhaps one or two exceptions, each object has a destroyer, which
 frees the memory that stores the object's data, and for many objects
-there is a way of printing the object, which is the output of the
-executables, but is also useful for debugging.  In all cases the code
-for these functions is simple and straightforward, and printing and
-destroyer functions will not be mentioned below.  When studying the
-code, the reader can ignore calls to destroyers, trusting that the
-allocation and freeing of memory is being handled correctly.
+there is a way of printing the object.  These printing functions
+provide the format of the output of \texttt{make\_ex}, \texttt{gcps},
+and \texttt{purify}, and for other objects the printing functions can
+be useful for debugging.  In all cases the code for these functions is
+simple and straightforward, and printing and destroyer functions will
+not be mentioned below.  When studying the code, the reader can ignore
+calls to destroyers, trusting that the allocation and freeing of
+memory is being handled correctly.
 
 In the C programming language, an $n$ element array is indexed by the
 integers $0, \ldots, n-1$.  We always think of it as indexed by the
@@ -899,8 +859,8 @@ process is a straight line:
     \texttt{i} to \texttt{j}.
   \item[(e)] Each student's safe school is (roughly) the one that is closest.
   \item[(f)] Student \texttt{i}'s priority at school \texttt{j} is one
-    if its utility is not less than the utility of \texttt{i}'s safe
-    school, and otherwise it is zero.
+    if its utility for $i$ is not less than the utility of
+    \texttt{i}'s safe school, and otherwise it is zero.
   \item[(g)] The preference of student \texttt{i} is the list of
     schools of priority one in order of decreasing utility.
 \end{enumerate}
@@ -941,7 +901,9 @@ which \texttt{no\_elements} is the number of elements of the subset
 \texttt{no\_elements}-tuple of elements of $\{1, \ldots,
 \text{\texttt{large\_set\_size}}\}$.  The function
 \texttt{index\_of\_subset} passes from the first representation to the
-second.
+second, and texttt{subset\_of\_index} goes in the other direction.
+(Since an index does not know the size of set it is a subset of, the
+data is a required argument.)
 
 A \texttt{square\_matrix} is a $\text{\texttt{dimension}} \times
 \texttt{dimension}$ matrix whose $(i,j)$ entry is an integer
@@ -953,7 +915,14 @@ edge with endpoints $i$ and $j$, and otherwise
 $$\text{\texttt{entries[i-1][j-1]}} = 0 =
 \text{\texttt{entries[j-1][i-1]}}.$$
 
-The coding of \texttt{next\_subset} has already been described in Section \ref{sec:ManySchools}.
+A \texttt{subset\_list} is a linked list of subsets in \texttt{index}
+form.  A \texttt{subset\_list} keeps the subsets in order from least
+to greatest.  The ordering of subsets is lexicographic, with smaller
+subsets preceeding larger subsets and subsets of the same size ordered
+according the element of least index, the element of second smallest
+index if the two subsets have the same element of least index, etc.
+The function \texttt{reduced\_subset\_list} returns the list of
+subsets in \texttt{my\_list} that are subsets of \texttt{my\_subset}.
 
 \subsection{\texttt{cee.h} and \texttt{cee.c}}
 
@@ -975,22 +944,10 @@ using priority thresholds.
 The computations of \texttt{popular\_schools} and
 \texttt{relatedness\_matrix} are straightforward, and were explained
 in Section \ref{sec:ManySchools}.  The function
-\texttt{increase\_subset\_sizes} increases the components of
-\texttt{subset\_sizes} for schools that
-\texttt{underallocated\_student} is eligible for and for which the
-current value is minimal.
-
-The function \texttt{minimum\_gmc\_inequality} takes (pointers to) a
-\texttt{double\_cee} and a set \texttt{school\_subset} as arguments,
-computes the set of students that cannot attend any school outside
-\texttt{school\_subset}, returns 1 (true) if the GMC inequality for
-\texttt{school\_subset} and this set of students holds, and returns 0
-(false) otherwise. The function \texttt{gmc\_holds} decides whether
-the argument satisfies \texttt{minimum\_gmc\_inequality} for every
-subset of the set of schools.  The running time is proportional to 2
-raised to the power of the number of schools, which can be practical
-when the number of schools is moderate, say around 20, but of course
-it blows up rapidly after that.
+\texttt{sub\_double\_cee} computes the \texttt{sub\_cee} obtained from
+\texttt{given\_cee} by restricting to the set of students given by
+\texttt{stu\_index} and the set of schools given by
+\texttt{sch\_index}.
 
 \subsection{\texttt{schchprob.h} and \texttt{schchprob.c}}
 
@@ -1033,15 +990,7 @@ the allocation processes for these subproblems.  The function
 \texttt{sub\_sch\_ch\_prob} constructs the subproblem for $J_P =
 \text{\texttt{stu\_subset}}$ and $P = \text{\texttt{sch\_subset}}$ and
 the subproblem for $J_P^c = \text{\texttt{stu\_compl}}$ and $P^c =
-\text{\texttt{sch\_compl}}$.  This argument
-\texttt{underallocated\_student} of this function is a pointer to an
-integer which is $0$ until there is a subproblem for which some
-student has no eligible schools, at which point it becomes that
-student's number.  The general idea is that when this happens, the
-current attempt at an allocation is abandoned as quickly as possible,
-and another attempt is made after increasing the minimal
-\texttt{subset\_sizes} for the schools that the student is initially
-eligible for.
+\text{\texttt{sch\_compl}}$.  
 
 The function \texttt{time\_remaining\_of\_gmc\_eq} computes the time
 remaining if the allocation process continues until the GMC inequality
@@ -1050,21 +999,18 @@ equality or the unit interval of time is exhausted, ignoring all other
 constraints.  It may happen that the GMC inequality for these sets has
 already been violated.  In this case the argument
 \texttt{overallocated\_schools} is set equal to
-\texttt{school\_subset}, and again the current attempt at computing an
+\texttt{school\_subset}, and the current attempt at computing an
 allocation is abandoned as quickly as possible, then restarted after
-the minimal \texttt{subset\_sizes} for elements of
-\texttt{school\_subset} have been increased.
-
+the list of schools being monitored has been adjusted by adding
+\texttt{overallocated\_schools} to it.
 
 The function \texttt{time\_remaining\_after\_first\_gmc\_eq} considers
-all the school subsets generated by \texttt{next\_subset} with the
-parameters \texttt{related} and \texttt{subset\_sizes}.  For each such
-set of schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to
-that set and the set of students who cannot be assigned further
-probability in schools outside that set.  It returns the maximum of
-these quantities while setting the pointees of
-\texttt{crit\_stu\_subset} and \texttt{crit\_sch\_subset} to subsets
-that attain the maximum.
+all the school subsets in \texttt{watch\_list}.  For each such set of
+schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to that set
+and the set of students who cannot be assigned further probability in
+schools outside that set.  It returns the maximum of these quantities
+while setting the pointees of \texttt{crit\_stu\_subset} and
+\texttt{crit\_sch\_subset} to subsets that attain the maximum.
 
 \subsection{\texttt{partalloc.h} and \texttt{partalloc.c}}
 
@@ -1089,51 +1035,89 @@ what \texttt{increment\_partial\_alloc} does.  The function
 specifies, for each school, the total amount of it that has been
 allocated in \texttt{my\_alloc}.
 
-\subsection{\texttt{solver.h} and \texttt{solver.c}}
+\subsection{\texttt{solver.h} and \texttt{solver.c}} \label{subsec:Solver}
 
-The function \texttt{GCPS\_schools\_solver\_top\_level} creates the
-array \texttt{subset\_sizes}, which is initially just the indicator
-function of the set of popular schools, the matrix \texttt{related},
-and the integer pointer \texttt{underallocated\_student}.  It also
-creates a \texttt{copy} of the input \texttt{my\_scp} and then asks
-\texttt{GCPS\_schools\_solver} to try to find the GCPS allocation.  If
-the attempt comes back with \texttt{underallocated\_student != 0},
-then \texttt{subset\_sizes} is increased by applying
-\texttt{increase\_subset\_sizes}.  If the result of the calculation is
-that \texttt{overallocated\_schools} is not the nullset, then
-\texttt{subset\_sizes} is increased by applying
-\texttt{augment\_subset\_sizes}. Then the calculation is started
-again, repeated until neither of these conditions hold at the end, in
-which case the computation is complete.
+The file \texttt{solver.c} contains the top level of code that defines
+the executable \texttt{gcps}.  The function
+\texttt{GCPS\_schools\_solver\_top\_level} creates a \texttt{copy} of
+the input \texttt{my\_scp}, the indicator function \texttt{popular} of
+the set of popular schools, and the matrix \texttt{related}.  It also
+initializes the sets if schools \texttt{overallocated\_schools} and
+\texttt{new\_critical\_set} to be nullsets, it initializes the subset
+list \texttt{watch\_list} to be the empty list, and it sets the
+integer parameter \texttt{depth} to $0$.  It then repeatedly asks
+\texttt{GCPS\_schools\_solver} to try to find the GCPS allocation,
+persisting until \texttt{overallocated\_schools} and
+\texttt{new\_critical\_set} are both nullsets.  When this happens it
+returns the computed allocation.
 
-The function \texttt{GCPS\_schools\_solver} begins by computing the
-time that will remain after the allocation has proceeded to the first
-GMC equality.  If this does not result in a nonempty
-\texttt{overallocated\_schools}, then \texttt{stu\_subset} and
-\texttt{sch\_subset} are set to be the student and school subsets of
-this equality and \texttt{stu\_compl} and \texttt{sch\_compl} are the
-complements of these sets.  The result of giving each student her
-favorite school, at unit speed, until \texttt{end\_time}, is
-\texttt{first\_alloc}.  At \texttt{end\_time} the problem splits into
-two subproblems (possibly one of them is null because it has no
-students) and in the process of constructing them an
-\texttt{underallocated\_student} may be found.  If this happens, then
-\texttt{GCPS\_schools\_solver} aborts, sending \texttt{first\_alloc}
-(which is of no consequence) and the \texttt{underallocated\_student}
-back to the function that called \texttt{GCPS\_schools\_solver}, which
-may be either \texttt{GCPS\_schools\_solver\_top\_level} or
-\texttt{GCPS\_schools\_solver} itself.
+If an attempt of \texttt{GCPS\_schools\_solver} to find the GCPS
+allocation results in a nonempty \texttt{new\_critical\_set}, then
+this set is added to \texttt{watch\_list}, \texttt{submission\_list}
+is set to a copy of \texttt{watch\_list}, \texttt{depth} is set to
+$0$, and there is then another attempt.  If an attempt of
+\texttt{GCPS\_schools\_solver} to find the GCPS allocation results in
+an empty \texttt{new\_critical\_set} and a nonempty
+\texttt{overallocated\_schools}, then \texttt{overallocated\_schools}
+is a set that was found to have insufficient remaining capacity for
+the students who could not go elsewhere.  The natural reaction is to
+add this set to \texttt{watch\_list}, set \texttt{submission\_list} to
+a copy of \texttt{watch\_list}, and try again.  However,
+\texttt{overallocated\_schools} may already be one of the sets in
+\texttt{watch\_list}, which means that it was already added and this
+was not adequate to resolve its insufficiency.  In this case the next
+attempt of \texttt{GCPS\_schools\_solver} must have a
+\texttt{submission\_list} that is created by adding more
+\texttt{supersets\_of\_subsets} of \texttt{overallocated\_schools} to
+\texttt{watch\_list}.  Roughly, the parameter \texttt{depth} is the
+maximal number of additional elements that of
+\texttt{supersets\_of\_subsets} adds to each set, and we increase this
+after each failed attempt until the insufficiency of
+\texttt{overallocated\_schools} is resolved.
 
-If the construction of the subproblems does not turn up an
-\texttt{underallocated\_student}, then \texttt{GCPS\_schools\_solver}
-is called on each of them. (In this sense the algorithm is recursive.)
-Of course these calls may find an \texttt{underallocated\_student},
-whose number in the smaller problem must be translated into a number
-in the current problem, or they may find a nonempty
-\texttt{overallocated\_schools}, which must also be converted to a
-subset of the set of schools at this level.  The calls for the two
-problems produce \texttt{left\_alloc} and \texttt{right\_alloc}, which
-are \texttt{partial\_alloc}'s, and
+We now turn to the description of \texttt{GCPS\_schools\_solver}.  The
+function \texttt{expanded\_list} passes from a given list of school
+subsets to a larger list by adding every \texttt{related}-connected
+set of \texttt{popular} schools that is obtained from a subset of one
+of the elements of the list by adding one school.  The function
+\texttt{GCPS\_schools\_solver} begins by applying this function to
+obtain \texttt{expanded\_watch\_list} and
+\texttt{expanded\_submission\_list}.  It then computes the time that
+will remain after the allocation has proceeded to the first GMC
+equality for sets in \texttt{expanded\_submission\_list}.
+
+We first ask whether \texttt{expanded\_watch\_list} has the critical
+set \texttt{sch\_subset} of schools.  The sets in
+\texttt{expanded\_submission\_list} that are not in
+\texttt{expanded\_watch\_list} will not be remembered in subsequent
+attempts, so if it does not, then we set \texttt{new\_critical\_set}
+equal to \texttt{sch\_subset} and halt the process, so that it will be
+added to \texttt{watch\_list}.  If \texttt{sch\_subset} is one of the
+sets in \texttt{expanded\_watch\_list}, but
+\texttt{overallocated\_schools} is nonempty, then we also halt the
+process, so that \texttt{overallocated\_schools} can be dealt with, as
+we described above.
+
+If the process has not been halted, then the result of giving each
+student her favorite school, at unit speed, until \texttt{end\_time},
+is \texttt{first\_alloc}.  If $\text{\texttt{end\_time}} > 0$, then
+the further allocation process splits into two subproblems.  (Possibly
+one of them is null because it has no students.)  The first ``left''
+subproblem relates to the critical set \texttt{sch\_subset} and the
+set \texttt{stu\_subset} of students who are no longer able to consume
+any school outside of this set.  The second ``right'' subproblem is
+obtained by restricting to the complements \texttt{stu\_compl} and
+\texttt{sch\_compl} of these sets.  The remainder of the code in
+\texttt{solver.c} constructs these subproblems, applies
+\texttt{GCPS\_schools\_solver} to them, and returns the results of
+these calculations (either allocations or a nonempty set
+\texttt{new\_critical\_set} or \texttt{overallocated\_schools}) to the
+function that called \texttt{GCPS\_schools\_solver}, either
+\texttt{GCPS\_schools\_solver\_top\_level} or possibly
+\texttt{GCPS\_schools\_solver} itself.  (In this sense the algorithm
+is recursive.)  If the calls for the two problems produce
+\texttt{left\_alloc} and \texttt{right\_alloc}, which are
+\texttt{partial\_alloc}'s, then
 \texttt{increment\_partial\_allocation} is used to add these to
 \texttt{first\_alloc}, which is now the return value of the current
 call to \texttt{GCPS\_schools\_solver}.
@@ -1197,6 +1181,197 @@ The files \texttt{solve.c} and \texttt{purify.c} contain the
 \texttt{main} functions of the executables \texttt{gcps} and
 \texttt{purify} respectively.  These main functions are
 simple and straightforward.
+
+\section{Downloading and Setting Up} \label{app:DownloadInstall}
+
+Here we give step-by-step instructions for downloading the code,
+compiling the executables, and starting to use them.  I am going to
+assume a Unix command line environment, which could be a terminal in
+Linux, the terminal application in MacOS, or some third flavor of
+Unix.  (There are probably easy enough ways to do these things in
+Windows (I wouldn't know) but a Windows user can also just get
+Cygwin.)
+
+To download the file we can use either \texttt{curl} or \texttt{wget}.
+To see whether you have these tools you can use the \texttt{which}
+command.  On MacOS I have curl but not wget:
+\begin{obeylines}
+  \texttt{
+    \%\% which curl
+    /usr/bin/curl
+    \%\% which wget
+    }
+\end{obeylines}
+
+\medskip\noindent
+On my Ubuntu it is the other way around:
+\begin{obeylines}
+  \texttt{
+    \#\# which curl
+    \#\# which wget
+    /usr/bin/wget
+    }
+\end{obeylines}
+\bigskip
+The two command lines for getting the files are slightly different
+because \texttt{wget} will download a file to a file with the same
+name in the current directory, but with \texttt{curl} you need to use
+the \texttt{-o} flag to redirect the output to a named file:
+\begin{obeylines}
+  \texttt{
+    \%\% curl https://andymclennan.droppages.com/Software/gcps\_schools.tar -o /dir/of/choice/gcps\_schools.tar
+    \#\# wget https://andymclennan.droppages.com/Software/gcps\_schools.tar
+    }
+\end{obeylines}
+\bigskip
+
+\noindent
+Either way, you should now have a file \texttt{gcps\_schools.tar}.  We use the \texttt{tar} command to
+extract its contents, then go into the directory \texttt{GCPS} that this action creates:
+\begin{obeylines}
+  \texttt{
+    \%\% tar xvf gcps\_schools.tar
+    \%\% cd GCPS
+    }
+\end{obeylines}
+\bigskip
+
+To compile the executables we need the tools \texttt{make} and
+\texttt{gcc}, and we can check for their presence using
+\texttt{which}:
+\begin{obeylines}
+  \texttt{
+    \%\% which make
+    /usr/bin/make
+    \%\% which gcc
+    /usr/bin/gcc
+    }
+\end{obeylines}
+\bigskip
+
+\noindent
+Assuming all is well, we issue the command \texttt{make} and see the text that the command directs to the screen:
+\begin{obeylines}
+  \texttt{
+    \%\% make
+    gcc -I. -c normal.c
+    gcc -o make\_ex example.c normal.o -lm
+    gcc -I. -c parser.c
+    gcc -I. -c subset.c
+    gcc -I. -c cee.c
+    gcc -I. -c schchprob.c
+    gcc -I. -c partalloc.c
+    gcc -I. -c solver.c
+    gcc -o gcps solve.c parser.o subset.o cee.o schchprob.o
+    \ \ partalloc.o solver.o normal.o -lm
+    gcc -I. -c implement.c
+    gcc -o purify purify.c normal.o parser.o subset.o partalloc.o
+    \ \ implement.o -lm
+    }
+\end{obeylines}
+\bigskip
+\noindent
+Each line of output above corresponds to one of the commands in the
+\texttt{makefile}, and each of the commands in the makefile specifies
+an object to be constructed (either an object (a \texttt{.o} file) or
+an executable) the resources that are required to construct it, and
+the command that constructs it.  (There is also an object
+\texttt{all}, which gives a mechanism for constructing all of the
+executables at once because \texttt{make}'s default behavior is to
+construct the first object in the \texttt{makefile}, and an object
+\texttt{clean}.  The command \texttt{make clean} removes the objects
+and executables, and also any of the \texttt{*\~} files that the
+\texttt{emacs} editor leaves behind after a preexisting file has been
+edited.)
+
+There are now the executables \texttt{make\_ex}, \texttt{gcps}, and
+\texttt{purify}.  On most Unix's these can invoked simply by typing
+the executable name on the command line, but it may be the case that,
+for security reasons, the current directory is not in the
+\texttt{path} (the list of directories that the command line looks in
+when a command is invoked) in which case you will need to type
+\texttt{./make\_ex}, \texttt{./gcps}, and \texttt{./purify}.  We begin
+with \texttt{make\_ex}:
+\begin{obeylines}
+  \texttt{
+    \%\% make\_ex
+    /* This file was generated by make\_ex with 2 schools, 3 students
+    per school, capacity 4 for all schools, school valence standard
+    deviation 1.00, and idiosyncratic standard deviation 1.00. */
+There are 6 students and 2 schools
+The vector of quotas is (4,4)
+The priority matrix is
+\ \ \     1    1
+\ \ \     1    1
+\ \ \     1    0
+\ \ \     1    0
+\ \ \     1    0
+\ \ \     0    1
+The students numbers of ranked schools are
+(2,2,1,1,1,1)
+The preferences of the students are
+1:    1   2
+2:    1   2
+3:    1
+4:    1
+5:    1
+6:    2
+The priority thresholds of the schools are
+1   1   
+    }
+\end{obeylines}
+\bigskip
+\noindent
+\textbf{Warning:} If what you get looks a bit different, it may be
+because your installation of C and mine have different random number
+generators.
+
+Let's redirect the output to the file \texttt{schools.scp}, then invoke \texttt{gcps}:
+\begin{obeylines}
+  \texttt{
+    \%\% make\_ex > schools.scp
+    \%\% gcps
+  /* This is a sample introductory comment. */
+There are 6 students and 2 schools
+\ \ \ \ \ \ \ \ \           1:   \ \ \ \ \ \ \        2:
+1:   0.50000000  0.50000000
+2:   0.50000000  0.50000000
+3:   1.00000000  0.00000000
+4:   1.00000000  0.00000000
+5:   1.00000000  0.00000000
+6:   0.00000000  1.00000000
+  }
+\end{obeylines}
+\bigskip
+
+
+
+Finally, let's redirect the output of \texttt{gcps} to the file \texttt{allocate.mat}, then invoke \texttt{purify}:
+\begin{obeylines}
+  \texttt{
+    \%\% gcps > allocate.mat
+    \%\% purify
+    /* This is a sample introductory comment. */
+\ \ \ \          1:   2:
+   1:    0 \ \    1
+   2:    1 \ \    0
+   3:    1 \ \    0
+   4:    1 \ \    0
+   5:    1 \ \    0
+   6:    0 \ \    1
+  }
+\end{obeylines}
+\bigskip
+
+That's all there is to it! We've now been through a complete cycle,
+and the rest is up to you.  If you feel like it, you may want to
+experiment with different parameters for \texttt{make\_ex} by editing
+the file \texttt{example.c}, as described in Section \ref{sec:MakeEx},
+then running \texttt{make} again and going through the
+\texttt{make\_ex}-\texttt{gcps}- \texttt{purify} cycle.  This will
+give you an initial feel for how fast \texttt{gcps} is.  (It's
+\textit{very} fast.)  But after reading the rest of this guide, you
+may well have your own ideas concerning what to do next.
 
 \end{appendix}
 

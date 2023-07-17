@@ -30,7 +30,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
     if (new_critical_set.subset_size > 0) {
 
       /*
-      printf("    We are adding the critical set ");
+      printf("We are adding the critical set ");
       struct index new_crit_index = index_of_subset(&new_critical_set);
       print_index(&new_crit_index);
       destroy_index(new_crit_index);
@@ -58,7 +58,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
       if (list_contains_index(watch_list,&new_list_element)) {
 	depth++;
 
-	/* printf("  We are now at depth %d.\n",depth); */
+	/* printf("We are now at depth %d.\n",depth); */
 
 	if (depth >= 8) {
 	  printf("We have reached depth 8 and are quitting.\n");
@@ -83,9 +83,6 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
     destroy_sch_ch_prob(copy);
     
     copy_sch_ch_prob(my_scp,&copy);
-
-    /* printf("\n\n"); */
-    
     allocation = GCPS_schools_solver(&copy,&related,popular,
 				     &overallocated_schools,&new_critical_set,
 				     submission_list, watch_list);
@@ -161,10 +158,9 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp, struct squa
 						expanded_submission_list);
 
   /*
-  if (overallocated_schools->subset_size == 0 && sch_subset.subset_size > 1) {
-    struct index big_index = index_of_subset(&sch_subset);
-    print_index(&big_index);
-    destroy_index(big_index);
+  if (overallocated_schools->subset_size == 0 && sch_subset.subset_size > 8) {
+    printf("We seem to have a minimal critical set with 8 or more elements.\n");
+    exit(0);
   }
   */
 

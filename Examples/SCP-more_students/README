@@ -1,0 +1,4 @@
+	This directory contains examples with 10 schools and the
+capacities of the schools between 10 and 100, in increments of 10.
+The number of students per school is 90% of capacity.  As expected,
+everything works smoothly, without any hesitation.

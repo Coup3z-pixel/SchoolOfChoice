@@ -4,9 +4,9 @@
 #include "normal.h"
 
 int main() {
-  int no_schools = 10;
-  int no_students_per_school = 90;
-  int school_capacity = 100;
+  int no_schools = 2;
+  int no_students_per_school = 3;
+  int school_capacity = 4;
   double school_valence_std_dev = 1.0;
   double idiosyncratic_std_dev = 1.0;
   
