@@ -97,15 +97,12 @@ struct subset_list* nonempty_subsets(struct index* my_index);
 
 struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset);
 
-struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular);
+struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related);
 
-struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related, int* popular);
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related);
 
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int* popular, int depth);
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth);
 
-void add_supersets_of_subsets_to_list(struct subset_list* my_list, struct index* my_index,
-				      struct square_matrix* related, int* popular, int depth);
-
-struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related, int* popular);
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related);
 
 #endif /* SUBSET_H */

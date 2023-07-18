@@ -163,16 +163,23 @@ int* popular_schools(struct double_cee* my_cee) {
   return pop;
 }
 
-struct square_matrix related_matrix(struct double_cee* my_cee, int* popular) {
+struct square_matrix related_matrix(struct double_cee* my_cee) {
   int i,j,k;
   int nst = my_cee->no_students;
   int nsc = my_cee->no_schools;
 
+  int* popular = popular_schools(my_cee);
+
   struct square_matrix relatedness = matrix_of_zeros(nsc);
+
+  for (j = 1; j <= nsc; j++) {
+    if (popular[j-1] == 1) {
+      relatedness.entries[j-1][j-1] = 1;
+    }
+  }
   
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
-      relatedness.entries[j-1][j-1] = 1;
       if (my_cee->priority[i-1][j-1] > 0 && popular[j-1] == 1) {
 	for (k = j+1; k <= nsc; k++) {
 	  if (my_cee->priority[i-1][k-1] > 0 && popular[k-1] == 1) {
@@ -183,6 +190,8 @@ struct square_matrix related_matrix(struct double_cee* my_cee, int* popular) {
       }
     }
   }
+
+  free(popular);
   
   return relatedness;
 }

@@ -40,7 +40,7 @@ void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
 
 int* popular_schools(struct double_cee* my_cee);
 
-struct square_matrix related_matrix(struct double_cee* my_cee, int* popular);
+struct square_matrix related_matrix(struct double_cee* my_cee);
 
 /* int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset); */
 

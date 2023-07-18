@@ -717,7 +717,7 @@ struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subs
   return reduced_list;
 }
 
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int* popular, int depth) {
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth) {
   struct subset_list* list_of_supersets = initialized_subset_list();
 
   /*
@@ -739,7 +739,7 @@ struct subset_list* supersets_of_subsets(struct index* my_index, struct square_m
   int local_depth = depth;
   while (local_depth > 0) {
     local_depth--;
-    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets, related, popular));
+    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets, related));
   }
 
   /*
@@ -751,7 +751,7 @@ struct subset_list* supersets_of_subsets(struct index* my_index, struct square_m
   return list_of_supersets;
 }
 
-struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related, int* popular) {
+struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related) {
   int j, k, qualified, nsc;
   
   nsc = related->dimension;
@@ -760,7 +760,7 @@ struct subset_list* immediate_supersets(struct index* my_index, struct square_ma
 
   for (j = 1; j <= nsc; j++) {
     qualified = 1;
-    if (!popular[j-1]) {
+    if (related->entries[j-1][j-1] == 0) {
       qualified = 0;
     }
     if (qualified) {
@@ -794,35 +794,35 @@ struct subset_list* immediate_supersets(struct index* my_index, struct square_ma
   return list_of_supersets;
 }
 
-struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related, int* popular) {
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related) {
   struct subset_list* list_of_supersets = initialized_subset_list();
   if (!is_empty_list(my_list)) {
     struct subset_list* probe = my_list;
-    add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related,popular));
+    add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related));
     while (probe->next != NULL) {
       probe = probe->next;
-      add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related,popular));
+      add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related));
     }
   }
   return list_of_supersets;
 }
 
-struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related, int* popular) {
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related) {
   int j, k, nsc, done, qualified;
 
   nsc = related->dimension;
   
   struct subset_list* expansion = initialized_subset_list();
 
-  int no_popular = 1;
+  int zero_popular = 1;
 
   for (j = 1; j <= nsc; j++) {
-    if (popular[j-1]) {
-      no_popular = 0;
+    if (related->entries[j-1][j-1] == 1) {
+      zero_popular = 0;
     }
   }
 
-  if (no_popular) {
+  if (zero_popular == 1) {
     for (j = 1; j <= nsc; j++) {
       struct index new_index = singleton_index(j);
       add_subset(expansion,&new_index);
@@ -831,7 +831,7 @@ struct subset_list* expanded_list(struct subset_list* my_list, struct square_mat
 
   else {
     for (j = 1; j <= nsc; j++) {
-      if (popular[j-1]) {
+      if (related->entries[j-1][j-1]) {
 	struct index new_index = singleton_index(j);
 	add_subset(expansion,&new_index);
       }
@@ -843,7 +843,7 @@ struct subset_list* expanded_list(struct subset_list* my_list, struct square_mat
       done = 0;
       while (!done) {
 	add_subset(expansion,probe->node_index);
-	struct subset_list* list_of_subsets = immediate_supersets(probe->node_index,related,popular);
+	struct subset_list* list_of_subsets = immediate_supersets(probe->node_index,related);
 	add_second_list_to_first(expansion,list_of_subsets);
 	destroy_subset_list(list_of_subsets); 
 	if (probe->next == NULL) {
