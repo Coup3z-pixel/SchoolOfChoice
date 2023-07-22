@@ -1,0 +1,5 @@
+	This directory contains the code at the point at which the
+implementation in terms of a watch list is basically working, but
+before the old code has been cleaned out.  In particular, the code for
+next_subset is in here.  We are saving in preparation for cleaning out
+code related to the set_sizes implementation.
