@@ -376,7 +376,7 @@ school's assignment probabilities.
 
 There is a subgraph consisting of all arcs whose flows are not
 integers.  A key point is that for any node that is an endpoint of one
-of the arcs in the subgraph, there is another node in the subgraph
+of the arcs in the subgraph, there is another arc in the subgraph
 that also has that node as an endpoint.  For each student, this is
 obvious because the sum of the student's assignment probabilities is
 one.  If the sum of the flows into a school is an integer, and one of
@@ -569,9 +569,9 @@ students right at the cutoff.  Our main concern in this section is to
 explain how our mechanism can achieve similar outcomes.
 
 The first point is that our input files can have a richer structure
-than our original example suggests, as illustrated by the input on the
-next page.  The priorities can be arbitrary nonnegative integers.  A
-student having a priority of 0 at a particular school is understood as
+than our original example suggests, as illustrated by the input below.
+The priorities can be arbitrary nonnegative integers.  A student
+having a priority of 0 at a particular school is understood as
 indicating that the student cannot be assigned there, either because
 she is not qualified or because she prefers her safe school.  A
 student's safe school can be indicated by giving the student the
@@ -661,13 +661,14 @@ there is an $i$ such that both of the schools are elements of
 $\alpha_i$.  The computer computes a square matrix \texttt{related}
 whose rows and columns are indexed by the schools, such that
 \texttt{related[j][k]} is one if $j$ and $k$ are both popular and
-$\alpha_j \cap \alpha_k \ne \emptyset$, or if $j = k$, and otherwise
-\texttt{related[j][k]} is zero.  We think of \texttt{related} as
-encoding an undirected graph whose nodes are the schools, with an edge
-connecting $j$ and $k$ if and only if \texttt{related[j][k]} and
-\texttt{related[k][j]} are both one.  For any set of schools $P$ there
-is an induced subgraph whose set of nodes is $P$ and whose edges are
-the edges of the graph whose endpoints are both in $P$.
+$\alpha_j \cap \alpha_k \ne \emptyset$, or if $j = k$ and $j$ is
+popular, and otherwise \texttt{related[j][k]} is zero.  We think of
+\texttt{related} as encoding an undirected graph whose nodes are the
+popular schools, with an edge connecting $j$ and $k$ if and only if
+\texttt{related[j][k]} and \texttt{related[k][j]} are both one.  For
+any set of schools $P$ there is an induced subgraph whose set of nodes
+is $P$ and whose edges are the edges of the graph whose endpoints are
+both in $P$.
 
 An undirected graph is \emph{connected} if, for any pair of nodes $j$
 and $k$, there is a sequence of edges leading from $j$ to $k$.
@@ -1219,8 +1220,8 @@ name in the current directory, but with \texttt{curl} you need to use
 the \texttt{-o} flag to redirect the output to a named file:
 \begin{obeylines}
   \texttt{
-    \%\% curl https://andymclennan.droppages.com/Software/gcps\_schools.tar -o /dir/of/choice/gcps\_schools.tar
-    \#\# wget https://andymclennan.droppages.com/Software/gcps\_schools.tar
+    \%\% curl https://github.com/Coup3z-pixel/SchoolOfChoice/gcps\_schools.tar -o /dir/of/choice/gcps\_schools.tar
+    \#\# wget https://github.com/Coup3z-pixel/SchoolOfChoice/gcps\_schools.tar
     }
 \end{obeylines}
 \bigskip
@@ -1231,7 +1232,7 @@ extract its contents, then go into the directory \texttt{GCPS} that this action 
 \begin{obeylines}
   \texttt{
     \%\% tar xvf gcps\_schools.tar
-    \%\% cd GCPS
+    \%\% cd gcps\_schools
     }
 \end{obeylines}
 \bigskip
