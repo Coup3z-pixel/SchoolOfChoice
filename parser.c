@@ -314,7 +314,7 @@ double get_double(FILE *fp, char next) {
   return atof(str);
 }
 
-void check_student_tag(FILE *fp, char next, int i) {
+void check_student_tag(FILE *fp, char next) {
   if (!isdigit(next)) {
     printf("ERROR: what should be a student number begins with a nondigit.\n");
     exit(0);
@@ -452,7 +452,7 @@ struct input_sch_ch_prob sch_ch_prob_from_file() {
   my_sch_ch_prob.preferences = malloc(my_sch_ch_prob.cee.no_students * sizeof(int*));
   for (i = 1; i <= my_sch_ch_prob.cee.no_students; i++) {
     next = get_next(fp);
-    check_student_tag(fp,next,i);
+    check_student_tag(fp,next);
     my_sch_ch_prob.preferences[i-1] = malloc(my_sch_ch_prob.no_eligible_schools[i-1]*sizeof(int));
     for (j = 1; j <= my_sch_ch_prob.no_eligible_schools[i-1]; j++) {
       next = get_next(fp);
@@ -586,12 +586,12 @@ struct partial_alloc allocation_from_file() {
   int i, j;
   for (j = 1; j <= allocation.no_schools; j++) {
       next = get_next(fp);
-      check_student_tag(fp,next,j);
+      check_student_tag(fp,next);
   }
   allocation.allocations = malloc(allocation.no_students * sizeof(double*));
   for (i = 1; i <= allocation.no_students; i++) {
     next = get_next(fp);
-    check_student_tag(fp,next,i);
+    check_student_tag(fp,next);
     allocation.allocations[i-1] = malloc(allocation.no_schools * sizeof(double));
     for (j = 1; j <= allocation.no_schools; j++) {
       next = get_next(fp);

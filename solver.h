@@ -12,9 +12,9 @@
 struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp);
 
 struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp, struct square_matrix* related,
-					 struct subset* target, int depth,
-					 struct subset* overallocated_schools, struct subset* new_critical_set,
-					 struct subset_list* submission_list, struct subset_list* watch_list,
-					 int mode);
+					 int depth, struct subset_list* watch_list,
+					 struct subset_list* found_critical_sets,
+					 struct subset_list* found_overalloc_sets,
+					 int* we_found_somthing);
 
 #endif /* SOLVER_H */

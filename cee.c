@@ -173,7 +173,11 @@ struct square_matrix related_matrix(struct double_cee* my_cee) {
   struct square_matrix relatedness = matrix_of_zeros(nsc);
 
   for (j = 1; j <= nsc; j++) {
+    int count = 0;
     if (popular[j-1] == 1) {
+      count++;
+    }
+    if (count >=1) {
       relatedness.entries[j-1][j-1] = 1;
     }
   }

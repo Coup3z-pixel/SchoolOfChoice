@@ -1,7 +1,7 @@
 #include "implement.h"
 
 void destroy_nonintegral_graph(struct nonintegral_graph* my_graph) {
-  int i,j;
+  int i;
 
   for (i = 1; i <= my_graph->no_students; i++) {
     free(my_graph->stu_sch_edges[i-1]);
@@ -347,13 +347,10 @@ double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
 void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
 		      struct neighbor_lists* my_lists, int up,
 		      double adjustment, struct path_node* my_cycle) {
-  int k,l;
   struct path_node* probe = my_cycle;
 
   int done = 0;
   while (!done) {
-    double gap;
-    
     if (probe->type == 1) {
       if (up) {
 	my_alloc->allocations[probe->index-1][(probe->next)->index-1] += adjustment;
@@ -414,7 +411,7 @@ void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
 }
 
 void student_edge_removal(struct neighbor_lists* my_lists, int i, int j) {
-  int k,l,cursor;
+  int k, cursor;
 
   my_lists->stu_no_nbrs[i-1]--;
   my_lists->sch_no_nbrs[j-1]--;
@@ -493,8 +490,11 @@ struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
 } 
 
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
+  int i;
   int up = 1;
   int down = 0;
+
+  int nst = my_alloc->no_students;
 
   struct path_node* cycle;
   
@@ -502,12 +502,15 @@ struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
   struct nonintegral_graph graph = graph_from_alloc(my_alloc,sch_sums);
   struct neighbor_lists nbr_lists = neighbor_lists_from_graph(&graph);
 
-  int stu_index = 1;
-  while (stu_index <= my_alloc->no_students) {
-    while (nbr_lists.stu_no_nbrs[stu_index-1] == 0) {
-      stu_index++;
+  int done = 0;
+  while(!done) {
+    done = 1;
+    for (i = 1; i <= nst; i++) {
+      if (nbr_lists.stu_no_nbrs[i-1] > 0) {
+	done = 0;
+      }
     }
-    if (stu_index <= my_alloc->no_students) {
+    if (!done) {
       cycle = find_cyclic_path(&nbr_lists);
 
       double alpha = bound_of_cycle(my_alloc,sch_sums,up,cycle);
