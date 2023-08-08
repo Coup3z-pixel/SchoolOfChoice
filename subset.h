@@ -119,47 +119,16 @@ struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subs
 
 struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related);
 
-struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related);
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list,
+						struct square_matrix* related);
 
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth);
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related,
+					 int depth);
 
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth);
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related,
+					 int depth);
 
 struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related);
-
-
-int alternative_untargeted_first_subset(struct subset* my_subset, struct square_matrix* related,
-					int set_size);
-
-int alternative_untargeted_next_subset(struct subset* my_subset, struct square_matrix* related,
-				       int set_size);
-
-
-int alternative_targeted_first_subset(struct subset* my_subset, struct subset* target,
-				      struct square_matrix* related, int set_size);
-
-int alternative_targeted_next_subset(struct subset* my_subset, struct subset* target,
-				     struct square_matrix* related, int set_size);
-
-int* targeted_ordered_list_from_subset(struct subset* my_subset, struct subset* target,
-			      struct square_matrix* related);
-
-int targeted_is_qualified(int j, struct subset* target, struct square_matrix* related,
-			  int* candidate_list, int probe);
-
-int targeted_first_subset(struct subset* my_subset, struct subset* target,
-		 struct square_matrix* related, int set_size);
-
-int targeted_next_subset(struct subset* my_subset, struct subset* target,
-		struct square_matrix* related, int set_size);
-
-int* ordered_list_from_subset(struct subset* my_subset, struct square_matrix* related);
-
-int is_qualified(int j, struct square_matrix* related, int* candidate_list, int probe);
-
-int first_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
-
-int next_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
 
 int* properly_ordered_candidate_list(struct subset* my_subset, struct square_matrix* related);
 
