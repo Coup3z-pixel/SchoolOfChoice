@@ -369,18 +369,14 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp) {
 }
 
 double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset* school_subset,
-				                                  struct subset* eating_students,
-				                                  struct subset* captive_students,
-				      struct subset* overallocated_schools) {
+				      int level, int* target_level,
+				      struct subset* eating_students,
+				      struct subset* captive_students,
+				      struct subset* overallocated_schools,
+				      int* exit_status) {
   int i,j;
   int nst = my_scp->cee.no_students; /* my_scp and school_subset are inputs. */
   int nsc = my_scp->cee.no_schools;  /* captive_students and the return value are outputs. */
-
-  /*
-  printf("The school subset is ");
-  print_subset(school_subset);
-  printf(".\n");
-  */
 
   destroy_subset(*captive_students);
   *captive_students = fullset(nst);
@@ -411,20 +407,10 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
     }
   }
   
-  if (total_quota - captive_students->subset_size * my_scp->time_remaining < -0.000001) {
-
-    /*
-    printf("\nAt over_allocation we have total quota = %1.3f, subset_size = %d, and time_remaining = %1.3f.\n",total_quota,
-	   captive_students->subset_size, my_scp->time_remaining);
-
-    struct index captive_index = index_of_subset(captive_students);
-    printf("The captive students are ");
-    print_index(&captive_index);
-    destroy_index(captive_index);
-    printf(".\n");
-    */
-    
+  if (total_quota - captive_students->subset_size * my_scp->time_remaining < -0.000001) {      
     copy_subset(school_subset,overallocated_schools);
+    *target_level = level;
+    *exit_status = 2;
     return 0.0;
   }
   
@@ -443,52 +429,52 @@ double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp, struct subset*
   }
 }
 
-double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_matrix* related,
-				   int depth,
+
+double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, 
+				   int level, int* target_level, int depth,
 				   struct subset* crit_stu_subset,
 				   struct subset* crit_sch_subset,
 				   struct subset* overallocated_schools,
-				   struct subset_list* known_facets) {
-  int j;
-  
+				   struct subset_list* observed_overallocated_sets,
+				   struct subset_list* known_facets,
+				   int* exit_status) {
+
+  if (level == 0 || *target_level == 0) {
+    printf("Somehow we got level zero or target_level zero.\n");
+    exit(0);
+  }
+
   double scan_answer;
   double answer = 0.0;
 
-  int nst = my_scp->cee.no_students;
+  struct subset_list* submission_list = copy_of_subset_list(observed_overallocated_sets);
+  add_second_list_to_first(submission_list, known_facets);
+
   int nsc = my_scp->cee.no_schools;
 
-  struct subset eating_students = nullset(nst);
-  struct subset crit_eat_students = nullset(nst);
-  struct subset captive_students = nullset(nst);
+  struct square_matrix related = related_matrix(&(my_scp->cee),my_scp->time_remaining);
+  
+  /**/  struct subset_list* expanded_submission_list; /**/
 
-  j = 0;
-  while (overallocated_schools->subset_size == 0 && j < nsc) {
-    j++;
+  /**/  expanded_submission_list = expanded_list(submission_list, &related); /**/
 
-    struct subset scan_subset = singleton_subset(j,nsc);
-    
-    scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &eating_students, &captive_students,
-						 overallocated_schools);
-    
-    if (scan_answer > answer + 0.000001) {
-      answer = scan_answer;
-      copy_subset(&scan_subset,crit_sch_subset);
-      copy_subset(&captive_students,crit_stu_subset);
-      copy_subset(&eating_students,&crit_eat_students);
-    }
+  struct subset eating_students = nullset(my_scp->cee.no_students);
+  struct subset crit_eat_students = nullset(my_scp->cee.no_students);
+  struct subset captive_students = nullset(my_scp->cee.no_students);
 
-    destroy_subset(scan_subset);  
-  }
+  struct subset scan_subset;
 
-  if (!is_empty_list(known_facets)) {
-    struct subset_list* probe = known_facets;
+  if (!is_empty_list(expanded_submission_list)) {
+    struct subset_list* probe = expanded_submission_list;
   
     while (overallocated_schools->subset_size == 0 && probe != NULL) {
 
-      struct subset scan_subset = subset_of_index(probe->node_index,nsc);
+      scan_subset = subset_of_index(probe->node_index,nsc);
     
-      scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &eating_students,
-						   &captive_students, overallocated_schools);
+      scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, level, target_level,
+						   &eating_students, &captive_students,
+						   overallocated_schools,
+						   exit_status);
     
       if (scan_answer > answer) {
 	answer = scan_answer;
@@ -502,21 +488,31 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
     }
   }
 
-  int subset_size = 2;
-  
-  while (overallocated_schools->subset_size == 0 && subset_size <= depth) {
+  int max_subset_size;
+  if (level <= *target_level && level >= *target_level - depth) {
+    max_subset_size = depth;
+  }
+  else {
+    max_subset_size = 1;
+  }
 
-    struct subset scan_subset = nullset(nsc);
+  int subset_size = 1;
 
-    /* int count = 0; */
+  int count = 0;
   
+  while (overallocated_schools->subset_size == 0 && subset_size <= max_subset_size) {
+
+    scan_subset = nullset(nsc);
+
     while (overallocated_schools->subset_size == 0 &&
-	   next_subset(&scan_subset, related, subset_size)) {
-
-      /* count++; */
+	   new_next_subset(&scan_subset,&related,subset_size)) {
       
-      scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, &eating_students,
-						   &captive_students, overallocated_schools);
+      count++;
+    
+      scan_answer = time_remaining_of_gmc_equality(my_scp, &scan_subset, level, target_level,
+						   &eating_students, &captive_students,
+						   overallocated_schools,
+						   exit_status);
     
       if (scan_answer > answer) {
 	answer = scan_answer;
@@ -526,20 +522,26 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, struct square_mat
       }
     }
 
-    /*
-    if (subset_size >= 2) {
-      printf("At subset_size %d there were %d subsets.\n",subset_size,count);
-    }
-    */
-      
-    destroy_subset(scan_subset);
+    /*  printf("At subset_size %d and depth %d we examined %d sets.\n",subset_size,depth,count); */
     
+    destroy_subset(scan_subset);
     subset_size++;
   }
 
+  if (crit_sch_subset->subset_size > 0) {
+    struct index crit_sch_index = index_of_subset(crit_sch_subset);
+    if (*exit_status == 0 && !list_contains_index(known_facets,&crit_sch_index)) {
+      *exit_status = 1;
+    }
+    destroy_index(crit_sch_index);
+  }
+
+  /**/  destroy_subset_list(expanded_submission_list); /**/
+  destroy_square_matrix(related);
   destroy_subset(eating_students);
   destroy_subset(captive_students);
 
   return answer;
 }
+
 

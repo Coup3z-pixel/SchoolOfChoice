@@ -98,6 +98,10 @@ int maximum_set_size(struct subset_list* my_list);
 
 void add_subset(struct subset_list* my_list, struct index* my_index);
 
+void remove_subset(struct subset_list* my_list, struct index* my_index);
+
+int list_contains_index(struct subset_list* my_list, struct index* my_index);
+
 struct subset_list*  copy_of_subset_list(struct subset_list* my_list);
 
 void add_second_list_to_first(struct subset_list* first, struct subset_list* second);
@@ -114,6 +118,21 @@ struct subset_list* nonempty_subsets(struct index* my_index);
 struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset);
 
 struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related);
+
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related);
+
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth);
+
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth);
+
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related);
+
+
+int alternative_untargeted_first_subset(struct subset* my_subset, struct square_matrix* related,
+					int set_size);
+
+int alternative_untargeted_next_subset(struct subset* my_subset, struct square_matrix* related,
+				       int set_size);
 
 
 int alternative_targeted_first_subset(struct subset* my_subset, struct subset* target,
@@ -141,5 +160,13 @@ int is_qualified(int j, struct square_matrix* related, int* candidate_list, int 
 int first_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
 
 int next_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
+
+int* properly_ordered_candidate_list(struct subset* my_subset, struct square_matrix* related);
+
+int new_is_qualified(int j, struct square_matrix* related, int* candidate_list, int probe);
+
+int new_first_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
+
+int new_next_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
 
 #endif /* SUBSET_H */

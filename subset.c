@@ -457,6 +457,40 @@ void get_candidate_list(int* candidate_list, struct square_matrix* related,
   }
 }
 
+struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related, int depth) {
+  struct subset_list* list_of_supersets = initialized_subset_list();
+
+  /*
+  printf("We are given my_index = ");
+  print_index(my_index);
+  printf(" whose list of nonempty subsets is ");
+  print_subset_list(nonempty_subsets(my_index));
+  printf(".\n");
+  */
+  
+  add_second_list_to_first(list_of_supersets,nonempty_subsets(my_index));
+
+  /*
+  printf("After adding nonempty_subsets(my_index), list_of_supersets is ");
+  print_subset_list(list_of_supersets);
+  printf(".\n");
+  */
+
+  int local_depth = depth;
+  while (local_depth > 0) {
+    local_depth--;
+    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets, related));
+  }
+
+  /*
+  printf("At the end of supersets_of_subsets, list_of_supersets is ");
+  print_subset_list(list_of_supersets);
+  printf(".\n");
+  */
+
+  return list_of_supersets;
+}
+
 
 struct subset_list* initialized_subset_list() {
   struct subset_list* new_list = malloc(sizeof(struct subset_list));
@@ -555,12 +589,14 @@ void add_subset(struct subset_list* my_list, struct index* my_index) {
       }
       else {
 	struct subset_list* probe = my_list;
-	while ((probe->next)->next != NULL && !first_precedes_second(my_index,(probe->next)->node_index) &&
+	while ((probe->next)->next != NULL &&
+	       !first_precedes_second(my_index,(probe->next)->node_index) &&
 	       !indices_are_same(my_index,probe->node_index)) {
 	  probe = probe->next;
 	}
 	
-	if (!indices_are_same(my_index,probe->node_index) && !indices_are_same(my_index,(probe->next)->node_index)) {
+	if (!indices_are_same(my_index,probe->node_index) &&
+	    !indices_are_same(my_index,(probe->next)->node_index)) {
 	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
 	  new_node->node_index = malloc(sizeof(struct index));
 	  copy_index(my_index,new_node->node_index);
@@ -578,6 +614,62 @@ void add_subset(struct subset_list* my_list, struct index* my_index) {
       }
     }
   }
+}
+
+void remove_subset(struct subset_list* my_list, struct index* my_index) {
+  if (!is_empty_list(my_list)) {
+    
+    if (my_list->next == NULL) {
+      if (indices_are_same(my_list->node_index,my_index)) {
+	destroy_index(*(my_list->node_index));
+	my_list->node_index = NULL;
+      }
+    }
+    
+    else {
+      
+      if (indices_are_same(my_list->node_index,my_index)) {
+	destroy_index(*(my_list->node_index));
+	struct subset_list* new_list = my_list->next;
+	my_list->node_index = new_list->node_index;
+	my_list->next = new_list->next;
+	free(new_list);
+      }
+
+      else {
+	struct subset_list* trailer = my_list;
+	struct subset_list* probe = my_list->next;
+	while (trailer->next != NULL) {
+	  if (indices_are_same(probe->node_index,my_index)) {
+	    destroy_index(*(probe->node_index));
+	    trailer->next = probe->next;
+	    free(probe);
+	    probe = trailer->next;
+	  }
+	  else {
+	    probe = probe->next;
+	    trailer = trailer->next;
+	  }
+	}
+      }
+    }
+  }
+}
+
+int list_contains_index(struct subset_list* my_list, struct index* my_index) {
+  if (is_empty_list(my_list)) {
+    return 0;
+  }
+  
+  struct subset_list* probe = my_list;
+  while (probe != NULL) {
+    if (indices_are_same(probe->node_index, my_index)) {
+	return 1;
+    }
+    probe = probe->next;
+  }
+  
+  return 0;  
 }
 
 struct subset_list*  copy_of_subset_list(struct subset_list* my_list) {
@@ -659,20 +751,6 @@ void add_subsets_of_subset_to_list(struct subset_list* big_list, struct subset* 
     }
   }
 
-}
-
-int list_contains_index(struct subset_list* my_list, struct index* my_index) {
-  if (is_empty_list(my_list)) {
-    return 0;
-  }
-  struct subset_list* probe = my_list;
-  while (probe != NULL) {
-    if (indices_are_same(probe->node_index,my_index)) {
-      return 1;
-    }
-    probe = probe->next;
-  }
-  return 0;
 }
 
 struct subset_list* nonempty_subsets(struct index* my_index) {
@@ -803,6 +881,71 @@ struct subset_list* immediate_supersets(struct index* my_index, struct square_ma
   return list_of_supersets;
 }
 
+struct subset_list* immediate_supersets_of_list(struct subset_list* my_list, struct square_matrix* related) {
+  struct subset_list* list_of_supersets = initialized_subset_list();
+  if (!is_empty_list(my_list)) {
+    struct subset_list* probe = my_list;
+    add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related));
+    while (probe->next != NULL) {
+      probe = probe->next;
+      add_second_list_to_first(list_of_supersets,immediate_supersets(probe->node_index,related));
+    }
+  }
+  return list_of_supersets;
+}
+
+struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related) {
+  int j, nsc, done;
+
+  nsc = related->dimension;
+  
+  struct subset_list* expansion = initialized_subset_list();
+
+  int zero_popular = 1;
+
+  for (j = 1; j <= nsc; j++) {
+    if (related->entries[j-1][j-1] == 1) {
+      zero_popular = 0;
+    }
+  }
+
+  if (zero_popular == 1) {
+    for (j = 1; j <= nsc; j++) {
+      struct index new_index = singleton_index(j);
+      add_subset(expansion,&new_index);
+    }
+  }
+
+  else {
+    for (j = 1; j <= nsc; j++) {
+      if (related->entries[j-1][j-1]) {
+	struct index new_index = singleton_index(j);
+	add_subset(expansion,&new_index);
+      }
+    }
+
+    if (!is_empty_list(my_list)) {
+
+      struct subset_list* probe = my_list;
+      done = 0;
+      while (!done) {
+	add_subset(expansion,probe->node_index);
+	struct subset_list* list_of_subsets = immediate_supersets(probe->node_index,related);
+	add_second_list_to_first(expansion,list_of_subsets);
+	destroy_subset_list(list_of_subsets); 
+	if (probe->next == NULL) {
+	  done = 1;
+	}
+	else {	  
+	  probe = probe->next;
+	}
+      }
+    }
+  }
+
+  return expansion;
+} 
+
 
 int reset_probe_and_deficit_from_end(struct subset* my_subset, int* probe_ptr, int* deficit_ptr) {
   
@@ -826,7 +969,101 @@ int reset_probe_and_deficit_from_end(struct subset* my_subset, int* probe_ptr, i
   return 1;
 }
 
-int turn_odometer_until_hit(struct subset* my_subset, struct subset* target,
+int untargeted_turn_odometer_until_hit(struct subset* my_subset, struct square_matrix* related,
+				       int* probe_ptr, int* deficit_ptr) {
+  int large_size = my_subset->large_set_size;
+
+  while (*deficit_ptr > 0 || !is_connected(my_subset,related)) {
+    if (*deficit_ptr > 0) {
+      if (*probe_ptr == large_size) {
+	return 0;
+      }
+      (*probe_ptr)++;
+      my_subset->indicator[*probe_ptr - 1] = 1;
+      (*deficit_ptr)--;
+    }
+    else {
+      if (*probe_ptr < large_size) {
+	my_subset->indicator[*probe_ptr - 1] = 0;
+	(*probe_ptr)++;
+	my_subset->indicator[*probe_ptr - 1] = 1;
+      }
+      else {
+	if (!reset_probe_and_deficit_from_end(my_subset,probe_ptr,deficit_ptr)) {
+	  return 0;
+	}
+      }
+    }
+  }
+
+  return 1;
+}
+
+int alternative_untargeted_first_subset(struct subset* my_subset, struct square_matrix* related,
+					int set_size) {
+
+  int probe = 0;
+  int deficit = set_size;
+
+  my_subset->subset_size = set_size;
+
+  if (!untargeted_turn_odometer_until_hit(my_subset, related, &probe, &deficit)) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int alternative_untargeted_next_subset(struct subset* my_subset, struct square_matrix* related,
+				       int set_size) {
+  int large_size = my_subset->large_set_size;
+
+  if (my_subset->subset_size == 0) {
+    return alternative_untargeted_first_subset(my_subset, related, set_size);
+  }
+
+  int probe = 0;
+  int deficit = set_size;
+
+  while (deficit > 0) {
+    probe++;
+    if (my_subset->indicator[probe-1] == 1) {
+      deficit--;
+    }
+  }
+  
+  if (probe < large_size) {
+    my_subset->indicator[probe - 1] = 0;
+    probe++;
+    my_subset->indicator[probe - 1] = 1;
+  }
+  else {
+    while (probe >= 1 && my_subset->indicator[probe - 1] == 1) {
+      my_subset->indicator[probe - 1] = 0;
+      probe--;
+      deficit++;
+    }
+    while (probe >= 1 && my_subset->indicator[probe - 1] == 0) {
+      probe--;
+    }
+    if (probe == 0) {
+      return 0;
+    }
+    else {
+      my_subset->indicator[probe - 1] = 0;
+      probe++;
+      my_subset->indicator[probe - 1] = 1;
+    }
+  }
+
+  if (!untargeted_turn_odometer_until_hit(my_subset, related, &probe, &deficit)) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int targeted_turn_odometer_until_hit(struct subset* my_subset, struct subset* target,
 			    struct square_matrix* related, int* probe_ptr, int* deficit_ptr) {
   int large_size = my_subset->large_set_size;
 
@@ -865,7 +1102,7 @@ int alternative_targeted_first_subset(struct subset* my_subset, struct subset* t
 
   my_subset->subset_size = set_size;
 
-  if (!turn_odometer_until_hit(my_subset,target,related,&probe,&deficit)) {
+  if (!targeted_turn_odometer_until_hit(my_subset,target,related,&probe,&deficit)) {
     return 0;
   }
 
@@ -914,7 +1151,7 @@ int alternative_targeted_next_subset(struct subset* my_subset, struct subset* ta
     }
   }
 
-  if (!turn_odometer_until_hit(my_subset,target,related,&probe,&deficit)) {
+  if (!targeted_turn_odometer_until_hit(my_subset,target,related,&probe,&deficit)) {
     return 0;
   }
 
@@ -1260,15 +1497,226 @@ int next_subset(struct subset* my_subset, struct square_matrix* related, int set
       my_subset->indicator[ordered_list[k-1]-1] = 1;      
     }
     free(ordered_list);
-
-    if (!is_connected(my_subset,related)) {
-      printf("We have a disconnected subset coming out of next_subset.\n");
-      exit(0);
-    }
-  
     return 1;
   }
 
   free(ordered_list);
+  return 0;
+}
+
+int* properly_ordered_candidate_list(struct subset* my_subset,
+				     struct square_matrix* related) {
+  int j, k, cursor, try, done;
+  
+  int nsc = related->dimension;
+  int set_size = my_subset->subset_size;
+  
+  int* improper_list = malloc(set_size * sizeof(int));
+  cursor = 0;
+  for (j = 1; j <= nsc; j++) {
+    if (my_subset->indicator[j-1] == 1) {
+      cursor++;
+      improper_list[cursor-1] = j;
+    }
+  }
+  
+  int* available = malloc(set_size * sizeof(int));
+  for (k = 1; k <= set_size; k++) {
+    available[k-1] = 1;
+  }
+  
+  int* proper_list = malloc(set_size * sizeof(int));
+  proper_list[0] = improper_list[0];
+  available[0] = 0;
+
+  cursor = 2;
+  while (cursor <= set_size) {
+    try = 2;
+    
+    done = 0;
+    while (!done) {
+      if (available[try-1] == 1) {
+	for (k = 1; k < cursor; k++) {
+	  if (related->entries[proper_list[k-1]-1][improper_list[try-1]-1] == 1) {
+	    done = 1;
+	  }
+	}
+      }
+      if (!done) {
+	try++;
+      }
+    }
+    
+    proper_list[cursor-1] = improper_list[try-1];
+    available[try-1] = 0;
+    cursor++;
+  }
+
+  /*
+  for (k = 2; k <= set_size; k++) {
+  int is_valid = 0;
+    for (int l = 1; l < k; l++) {
+      if (related->entries[proper_list[k-1]-1][proper_list[l-1]-1] == 1) {
+	is_valid = 1;
+      }
+    }
+    if (!is_valid) {
+      printf("We have a failure of validity in proper_list.\n");
+      exit(0);
+    }
+  }
+  */
+
+
+  free(improper_list);
+  free(available);
+  return(proper_list);
+}
+
+
+int new_is_qualified(int j, struct square_matrix* related, int* candidate_list, int probe) {
+  int k,l;
+
+  if (related->entries[j-1][j-1] == 0) {
+    return 0;
+  }
+  
+  if (probe == 1) {
+    return 1;
+  }
+
+  if (j <= candidate_list[0]) {
+    return 0;
+  }
+  
+  for (k = 1; k < probe; k++) {
+    if (j == candidate_list[k-1]) {
+      return 0;
+    }
+  }
+
+  k = 1;
+  int done = 0;
+  while(!done) {
+    if (k == probe) {
+      return 0;
+    }
+    else {
+      if (related->entries[j-1][candidate_list[k-1]-1] == 1) {
+	done = 1;
+      }
+      else {
+	k++;
+      }
+    }
+  }
+  
+  for (l = k+1; l < probe; l++) {
+    if (j < candidate_list[l-1]) {      
+      return 0;
+    }
+  }
+    
+  return 1;
+}
+
+
+int new_first_subset(struct subset* my_subset, struct square_matrix* related, int set_size) {
+
+  int j, k, probe;
+  int nsc = my_subset->large_set_size;
+
+  int* candidate_list = malloc(set_size * sizeof(int));
+  for (k = 1; k <= set_size; k++) {
+    candidate_list[k-1] = 0;
+  }
+      
+  probe = 1;
+  
+  while (probe > 0 && probe <= set_size) {
+    j = candidate_list[probe-1]+1;
+    
+    while (j <= nsc && !new_is_qualified(j, related, candidate_list, probe)) {
+      j++;
+    }
+    
+    if (j <= nsc) {      
+      candidate_list[probe-1] = j;
+      probe++;
+    }
+    else {
+      candidate_list[probe-1] = 0;
+      probe--;
+    }
+  } 
+
+  if (probe > set_size) {    
+    my_subset->subset_size = set_size;
+    for (j = 1; j <= nsc; j++) {
+      my_subset->indicator[j-1] = 0;
+    }
+    for (k = 1; k <= set_size; k++) {      
+      my_subset->indicator[candidate_list[k-1]-1] = 1;      
+    }
+    free(candidate_list);
+    return 1;
+  }
+
+  free(candidate_list);
+  return 0;
+}
+
+int new_next_subset(struct subset* my_subset, struct square_matrix* related, int set_size) {
+
+  if (my_subset->subset_size == 0) {
+    return new_first_subset(my_subset, related, set_size);
+  }
+  
+  int j, k, probe;
+  int nsc = my_subset->large_set_size;
+
+  int* candidate_list = properly_ordered_candidate_list(my_subset,related); 
+      
+  probe = set_size;
+  
+  while (probe > 0 && probe <= set_size) {
+    j = candidate_list[probe-1]+1;
+    
+    while (j <= nsc && !new_is_qualified(j, related, candidate_list, probe)) {
+      j++;
+    }
+
+    if (j == nsc+1)  {
+      candidate_list[probe-1] = 0;
+      probe--;
+    }
+    else {
+      candidate_list[probe-1] = j;
+      probe++;
+    }
+  }
+
+  if (probe > set_size) {
+
+    /*
+    printf("The candidate list is (");
+    for (k = 1; k < set_size; k++) {
+      printf("%d,",candidate_list[k-1]);
+    }
+    printf("%d).\n",candidate_list[set_size-1]);
+    */
+    
+    my_subset->subset_size = set_size;
+    for (j = 1; j <= nsc; j++) {
+      my_subset->indicator[j-1] = 0;
+    }
+    for (k = 1; k <= set_size; k++) {      
+      my_subset->indicator[candidate_list[k-1]-1] = 1;      
+    }
+    free(candidate_list);
+    return 1;
+  }
+
+  free(candidate_list);
   return 0;
 } 

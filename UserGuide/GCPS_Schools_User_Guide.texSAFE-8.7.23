@@ -1,0 +1,1361 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\makeatletter
+\usepackage{graphicx,epsf}
+\usepackage{times,float}
+\usepackage{enumerate}
+\usepackage[round,comma]{natbib}
+\usepackage[colorlinks=true,citecolor=blue]{hyperref}
+\usepackage{bm}
+\usepackage{multirow}
+%\usepackage{blkarray}
+\usepackage{rotating}
+
+\setlength{\textwidth}{6.4in} \setlength{\textheight}{8.5in}
+\setlength{\topmargin}{-.2in} \setlength{\oddsidemargin}{.1in}
+\renewcommand{\baselinestretch}{1.3}
+
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem*{thm*}{Theorem}
+\newtheorem{prop}{Proposition}
+\newtheorem{cor}{Corollary}
+\newtheorem{lem}{Lemma}
+\newtheorem*{lem*}{Lemma}
+\newtheorem{claim}{Claim}
+\newtheorem{rem}{Remark}
+\newtheorem{ex}{Example}
+\newtheorem{fact}{Fact}
+\newtheorem*{fact*}{Fact}
+\newtheorem{remark}{Remark}
+
+
+\newcommand{\rR}{\mathrel{R}}
+\newcommand{\rP}{\mathrel{P}}
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\norev}{\medskip \centerline{\textbf{No Revisions Below}} \medskip}
+\renewcommand{\Re}{\mathbb{R}}
+\newcommand{\In}{\mathbb{Z}}
+
+\newcommand{\bare}{\overline{e}}
+\newcommand{\barl}{\overline{l}}
+
+\newcommand{\bq}{\mathbf{q}}
+
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cX}{\mathcal{X}}
+
+\newcommand{\dr}{{\dot r}}
+\newcommand{\dq}{{\dot q}}
+\newcommand{\dg}{{\dot g}}
+\newcommand{\ddp}{{\dot p}}
+
+\newcommand{\hA}{{\hat A}}
+\newcommand{\hO}{{\hat O}}
+
+\newcommand{\halpha}{{\hat \alpha}}
+
+\newcommand{\ta}{{\tilde a}}
+\newcommand{\te}{{\tilde e}}
+\newcommand{\tn}{{\tilde n}}
+
+\newcommand{\tB}{{\tilde B}}
+
+\newcommand{\bark}{{\overline k}}
+\newcommand{\bart}{{\overline t}}
+
+\newcommand{\varep}{\varepsilon}
+
+\newcommand{\bone}{\mathbf{1}}
+
+\begin{document}
+
+\title{GCPS Schools: A User's Guide}
+
+\author{Andrew McLennan\footnote{School of Economics, University of
+    Queensland, {\tt a.mclennan@economics.uq.edu.au}}}
+
+\date{\today}
+
+\maketitle
+
+\begin{abstract}
+This document provides a brief introduction to the software package GCPS Schools.
+\end{abstract}
+
+% \pagebreak
+
+\section{Introduction}
+
+In the paper ``An Efficient School Choice Mechanism Based on a
+Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
+and Yuki Tamura) we describe a new algorithm for school choice, along
+with its theoretical foundations.  This algorithm has been implemented
+(using the C programming language) in the software package \emph{GCPS
+  Schools} as an executable \texttt{gcps}, which passes from a school
+choice problem (as described below) to a matrix specifying, for each
+student-school pair, the probability that the student is assigned to
+the school.  The software package also contains two other executables
+\texttt{purify} and \texttt{make\_ex}.  The first of these passes from
+a matrix of assignment probabilities to a random pure assignment whose
+probability distribution averages to the given matrix of
+probabilities.  The second program generates example school choice
+problems of the sort that might occur in large school districts.
+These programs provide the basic computational resources required to
+apply our mechanism, and perhaps in some cases they will suffice.
+However, our primary hope is that the underlying code will be a useful
+starting point for further software development.
+
+This document describes these programs, from the point of view of a
+user.  It doesn't assume that the reader has already read our paper,
+but of course we are leaving out lots of relevant information.
+Instructions for downloading and setting up the software, and doing a
+test run, are given in Appendix \ref{app:DownloadInstall}.  It would
+probably be a good idea to follow those instructions now, or before
+reading too far into this guide, but the main body of this guide does
+not assume that you have done so.  The body also does not assume that
+the reader knows the C programming language, but some language
+features become relevant in Appendix \ref{app:Code}.
+
+\section{\texttt{gcps}}
+
+To begin with we describe a simple example of an input file, which the
+application \texttt{gcps} expects to find in a file called
+\texttt{schools.scp} in the current directory.  (If there is no such
+file \texttt{gcps} simply complains and quits.)
+
+\begin{obeylines}\texttt{
+/* This is a sample introductory comment. */
+There are 4 students and 3 schools
+The vector of quotas is (1,2,1)
+The priority matrix is
+     1     1     1
+     1     0     1
+     1     1     1
+     1     1     1
+The students numbers of ranked schools are (3,2,3,3)
+The preferences of the students are
+1:  1  2  3  
+2:  1  3  
+3:  1  2  3  
+4:  1  2  3  
+The priority thresholds of the schools are
+1   1   1   
+  }
+\end{obeylines}
+
+\medskip
+
+Our input files begin with a comment between \texttt{/*} and
+\texttt{*/}.  This is purely for your convenience, and the comment can
+be of any length, and provide whatever information is useful to you,
+but it is mandatory insofar as the computer will insist that the first
+two characters of the file are \texttt{/*} and will only start
+extracting information after it sees the \texttt{*/}.  The computer
+divides the remainder into ``generalized white space'' (in addition to
+spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}', and
+`\texttt{,}' are treated as white space) and ``tokens,'' which are
+sequences of characters without any of the generalized white space
+characters.  Tokens are either prescribed words, numbers, or student
+tags (a student number followed by `\texttt{:}') and everything must
+be more or less exactly as shown above, modulo white space, so, for
+example, the first line must not be \texttt{There are 3 students and 1
+  school}, but it could be \texttt{There are 3 students and \ \ 1
+  schools}.
+
+The next line gives the quotas (i.e., the capacities) of the schools,
+so school 2 has two seats, and the other two schools each have one
+seat.  Here we see the convenience of making `\texttt{(}',
+`\texttt{)}', and `\texttt{,}' white space characters: otherwise we
+would have had to write \texttt{The vector of quotas is 1 2 1}.
+
+Our treatment of priorities is somewhat different from what is typical
+in the school choice literature, where the priority is thought of as
+the ``utility'' the school gets from a student, and is often required
+to come from a strict ranking of the students.  At this stage a
+student's priority at a school is either 1 if she is allowed to attend
+the school, and may be assigned a seat there, and otherwise it is 0.
+(We'll talk about more complicated priorities later.)  A student's
+priority at a school may be 0 because she is not qualified (it is a
+single sex school for boys, or her test scores are too low) or it may
+be 0 because the student prefers a seat at her ``safe school'' (as we
+explain below) and can insist on receiving a seat at a school that she
+likes at least as much.
+
+The next line provides information (for each student, the number of
+schools for which she has priority 1) that the computer could figure
+out for itself, but we prefer to confirm that whatever person or
+software prepared the input knew what they were doing.  After that
+come the students' preferences: for each student, that student's tag
+followed by the schools she might attend, listed from best to worst.
+Finally, there are the schools' minimum priorities for admission,
+which in this context are all 1: a student is good enough to admit to
+a school if her priority for that school is 1 and not
+otherwise. (Again, we'll talk about more complex situations later.)
+The collection of information provided by an input file is a
+\emph{school choice problem}.
+
+What the software does (primarily) is compute a matrix of assignment
+probabilities.  For our particular example \texttt{gcps} gives the
+following output.  (Here and below we are leaving out the sample comment.)
+\medskip
+\begin{obeylines}\texttt{
+The allocation is:
+\ \ \ \ \ 1:    \    2:  \      3:
+1:      0.25     0.67     0.08
+2:      0.25     0.00     0.75
+3:      0.25     0.67     0.08
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+
+\smallskip
+Note that the sum of the entries in each row is 1 and the sum of the
+entries in each school's column is that school's quota.  In general
+the sum of the quotas may exceed the number of students, in which case
+we require that the sum of the entries in each school's column does
+not exceed that school's quota. An assignment of probabilities with
+these properties --- each student's total assignment is 1 and no
+school is overassigned --- is a \emph{feasible allocation}.  
+
+Our mechanism is based on the ``simultaneous eating'' algorithm of
+\cite{bm01} for probabilistic allocation of objects, as generalized by
+\cite{balbuzanov22jet}.  In our example each student consumes
+probability of a seat in her favorite school (school 1) until that
+resource is exhausted at time 0.25, at which point each student
+switches to the next best thing.  This continues until school 2 is
+also exhausted, after which all finish up by consuming probability of
+a seat in school 3.
+
+This makes good sense if the schools simply fill up one by one, as in
+this example, but is that always what happens?  Actually, no.  To help
+understand this we first introduce a new concept, the ``safe school.''
+The idea is that each student has one school, say the closest school
+or the school that a sibling attends, to which she is guaranteed
+admission if she insists.  Each student submits a ranking of the
+schools that she is eligible for and (weakly) prefers to her safe
+school, and her priority is 1 at those schools and 0 at all others.
+
+Now suppose that there are two schools, say 1 and 2, that are quite
+popular.  Some students have school 1 as their safe school, but prefer
+2, and some students have school 2 as their safe school, but prefer 1.
+There are also some students who have other safe schools, but prefer
+either 1 or 2, or both.  As the students consume probability at their
+favorite schools, there can come a time at which schools 1 and 2
+together only have enough remaining capacity to serve the students who
+can insist on going to one of these two schools, even though school 1
+still has excess capacity if it can ignore the students who have 1 as
+their safe school but prefer 2 and the students who have 2 as their
+safe school but prefer 1, and similarly for school 2.  When this
+happens we say that the set of schools $P = \{1,2\}$ has become
+\emph{critical}.
+
+At this time further consumption of capacity at schools 1 and 2 is
+restricted to those students who cannot be assigned to other schools,
+so further consumption of these schools is denied to students who do
+not have 1 or 2 as their safe school, and also to students who have 1
+or 2 as their safe school but prefer some third school that is still
+available.  For each of the latter students the least preferred of the
+schools she is willing to attend that is still available becomes the
+new safe school.
+
+More generally, let $P$ be a set of schools, and let $J_P$ be the set
+of students whose priorities for all schools outside of $P$ are 0.
+For any $i \in J_P$, a feasible allocation must assign probability 1
+to student $i$ receiving a seat in $P$, so a necessary condition for
+the existence of a feasible allocation is that the total capacity of
+the schools in $P$ is not less than the number of students in $J_P$.
+In fact this condition is sufficient for the existence of a feasible
+allocation: \emph{if, for each set of schools $P$, the total capacity
+  of the schools in $P$ is not less than the number of students in
+  $J_P$, then a feasible allocation exists.}  This is not an obvious
+or trivial result, and a somewhat more general version of it is one of
+the main points of our paper.  This result extends to situations where
+the resources have already been partially allocated: \emph{if, for
+  each set of schools $P$, the total remaining capacity of the schools
+  in $P$ is not less than the total remaining demand of students in
+  $J_P$} (where this set is defined in relation to the students'
+current safe schools) \emph{then there is an allocation of the
+  remaining resources that gives a feasible allocation.}
+
+We can now describe the algorithm in a bit more detail.  At each time
+each student is consuming probability of a seat at the favorite school
+among those that are still available to her.  This continues until the
+first time that there is a set of schools $P$ such that the remaining
+capacity is just sufficient to meet the needs of the students in the
+set $J_P$ of students who no longer have access to any schools outside
+of $P$.  At this point the problem divides into two subproblems, one
+corresponding to the sets $P$ and $J_P$ and the other corresponding to
+the complements of these sets.  These problems have the same form as
+the original problem, and can be treated algorithmically in the same
+way, so the algorithm can descend recursively to smaller and smaller
+subproblems until a feasible allocation has been fully computed.
+
+
+\section{\texttt{purify}} \label{sec:Implementation}
+
+Leaving out the initial comment, the output of \texttt{gcps} is a
+matrix of assignment probabilities, as shown in the example below.
+(Now, to minimize confusion, the schools are $A$, $B$, and $C$.)
+
+\begin{obeylines}\texttt{
+\ \ \ \ \ $A$:    \     $B$:  \      $C$:
+1:      0.25     0.67     0.08
+2:      0.25     0.00     0.75
+3:      0.25     0.67     0.08
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+
+\medskip
+Generating a random deterministic assignment with a probability
+distribution that averages to this matrix is called
+\emph{implementation} by \cite{bckm13aer}.  The executable
+\texttt{purify} reads a feasible matrix $m$ of assignment
+probabilities from a file \texttt{allocate.mat}, which must have the
+form of the output of \texttt{gcps}, and it produces a random
+deterministic allocation with a suitable distribution, using an
+algorithm of \cite{bckm13aer}, as it applies to our somewhat simpler
+framework.
+
+We can illustrate the algorithm using the feasible allocation shown
+above.  We consider a cyclic path alternating between students and
+schools, say $1 \to C \to 3 \to A \to 1$, such that the entries of the
+matrix for $(1,C)$, $(3,C)$, $(3,A)$, and $(1,A)$ are all strictly
+between $0$ and $1$.  If we add $0.08$ to the entries for $(1,C)$ and
+$(3,A)$ while subtracting $0.08$ from the entries for $(3,C)$ and
+$(1,A)$, we obtain
+\begin{obeylines}\texttt{
+\ \ \ \ \ $A$:    \     $B$:  \  $C$:
+1:      0.17     0.67     0.17
+2:      0.25     0.00     0.75
+3:      0.33     0.67     0.00
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+(Recall that $0.08$, $0.17$, and $0.33$ are really $\tfrac{1}{12}$,
+$\tfrac16$ and $\tfrac13$.)  This is also a feasible allocation.  We
+could also subtract $0.08$ from the entries for $(1,C)$ and $(3,A)$
+while adding $0.08$ the entries for $(3,C)$ and $(1,A)$, thereby
+obtaining the feasible allocation
+\begin{obeylines}\texttt{
+\ \ \ \ \ $A$:    \     $B$:  \      $C$:
+1:      0.33     0.67     0.00
+2:      0.25     0.00     0.75
+3:      0.17     0.67     0.17
+4:      0.25     0.67     0.08
+}
+\end{obeylines} \noindent
+Note that each of these matrices has one more zero than the original matrix.
+
+The computer chooses between these two matrices by flipping a coin.
+If heads, it then generates a random pure allocation that averages to
+the first matrix, and if tails, then it produces a random pure
+allocation that averages to the second matrix.  The average of the
+overall distribution of pure allocations is the matrix we started
+with.
+
+We now give a more formal explanation of the algorithm.  There is a
+directed graph whose nodes are the students, the schools, and a
+\emph{sink}.  The graph has an arc from each student to each school,
+and an arc from each school to the sink.  A \emph{flow} is an
+assignment of a positive number to each arc such that for each
+student, the sum of the flows to all schools is $1$, and for each
+school the sum of the flows from all students is equal to the flow
+from that school to the sink.  A matrix of assignment probabilities
+$m$ has an associated flow $f$ in which the flow from each student to
+each school is the probability that the student receives a seat in the
+school, and the flow from the school to the sink is the sum of the
+school's assignment probabilities.
+
+There is a subgraph consisting of all arcs whose flows are not
+integers.  A key point is that for any node that is an endpoint of one
+of the arcs in the subgraph, there is another arc in the subgraph
+that also has that node as an endpoint.  For each student, this is
+obvious because the sum of the student's assignment probabilities is
+one.  If the sum of the flows into a school is an integer, and one of
+these flows is not an integer, then there must be another flow into
+the school that is not an integer.  If the sum of the flows into a
+school is not an integer, then one of the flows into the school is not
+an integer, and the flow from the school to the sink is not an
+integer.  The sum of the flows into the sink is the sum of the flows
+out of the students, which is the number of students, hence an
+integer, so if the flow from one of the schools to the sink is not an
+integer, there must be another such school.
+
+Consequently the subgraph has a \emph{cycle}, which is a sequence of
+distinct nodes $n_1, \ldots, n_k$ such that $k > 2$ and, for each $i =
+1, \ldots, k$, $n_i$ and $n_{i+1}$ are the endpoints of an arc in the
+subgraph.  (We are treating the indices as integers mod $k$, so $k + 1
+= 1$.)  The algorithm for finding a cycle (whose correctness is the
+proof of the existence of a cycle) works in an obvious manner.
+Beginning with $n_1$ and $n_2$ that are the endpoints of an arc in the
+subgraph, it finds $n_3 \ne n_1$ such that $n_2$ and $n_3$ are the
+endpoints of an arc in the subgraph.  In general, after finding $n_i$
+such that $n_{i-1}$ and $n_i$ are the endpoints of an arc in the
+subgraph, the algorithm asks whether there is $j = 1, \ldots, i-2$
+such that $n_i = n_j$, in which case $n_j, \ldots, n_{i-1}$ is the
+desired cycle, and otherwise it finds $n_{i+1} \ne n_{i-1}$ such that
+$n_i$ and $n_{i+1}$ are the endpoints of an arc in the subgraph.
+Since there are finitely many nodes, the process must eventually halt.
+
+Given a cycle $n_1, \ldots, n_k$, for each $i = 1, \ldots, k$ we say
+that $n_in_{i+1}$ is a \emph{forward arc} if $n_i$ is a student and
+$n_{i+1}$ is a school, or if $n_i$ is a school and $n_{i+1}$ is the
+sink, and otherwise we say that $n_{i+1}n_i$ is a \emph{backward arc}.
+For any real number $\delta$, if we modify $f$ by adding a constant
+$\delta$ to the flow of each forward arc while subtracting $\delta$
+from the flow of each backward arc, the result $f^\delta$ is a new
+flow, because for each student the sum of outward flows is $1$, and
+for each school the sum of flows from students to the school is the
+flow from the school to the sink.
+
+Let $\alpha$ be the smallest positive number such that $f^\alpha$ has
+at least one more integer entry than $f$, and let $\beta$ be the
+smallest positive number such that $f^{-\beta}$ has at least one more
+integer entry than $f$.  Then $f = \tfrac{\beta}{\alpha +
+  \beta}f^\alpha + \tfrac{\alpha}{\alpha + \beta}f^{-\beta}$.  Let
+$m^\alpha$ and $m^{-\beta}$ be the restrictions of $f^\alpha$ and
+$f^{-\beta}$ to the arcs from students to schools.  It is easy to see
+that $m^\alpha$ and $m^{-\beta}$ are feasible allocations: their
+entries lie in $[0,1]$, and the sums of the entries for each student
+and each school are the corresponding sums for $m$.
+
+The algorithm passes from $m$ and $f$ to $m^\alpha$ and $f^{\alpha}$
+with probability $\tfrac{\beta}{\alpha + \beta}$, and to $m^{-\beta}$
+and $f^{-\beta}$ with probability $\tfrac{\alpha}{\alpha + \beta}$.
+Whichever of $m^\alpha$ and $m^{-\beta}$ is chosen, if it is not a
+deterministic assignment, then the process is repeated.  We claim that
+the the average of the resulting distribution of pure allocations is
+$m$.  Since $m = \tfrac{\beta}{\alpha + \beta}m^\alpha +
+\tfrac{\alpha}{\alpha + \beta}m^{-\beta}$, this is clear if $m^\alpha$
+and $m^{-\beta}$ are pure allocations, and in general it follows from
+induction on the number of nonintegral entries of $m$.
+
+The code for the algorithm described above is in \texttt{implement.c},
+which has the associated header file \texttt{implement.h}.  The file
+\texttt{purify.c} contains a high level sequence of commands that
+execute the algorithm.
+
+\section{\texttt{make\_ex}} \label{sec:MakeEx}
+
+Development of this sort of software requires testing under at least
+somewhat realistic conditions.  The utility \texttt{make\_ex} produces
+examples of input files for \texttt{gcps} that reflect the
+geographical dispersion of schools within school districts with many
+schools, and the idiosyncratic nature of school quality and student
+preferences.
+
+One of the files produced by \texttt{make\_ex} begins as follows:
+\begin{obeylines}\texttt{
+    /* This file was generated by make\_ex with 20 schools,
+    4 students per school, capacity 5 for all schools,
+    school valence standard deviation 1.00,
+    and idiosyncratic standard deviation 1.00. */
+}
+\end{obeylines} \noindent
+In this example there are 20 schools that are spaced evenly around a
+circle of circumference 20.  Since there are 4 students per school,
+there are 80 students.  Their homes are also spaced evenly around the
+circle.  Each student's safe school is the school closest to her home.
+A student's utility for a school is the sum of the school's valence
+and an idiosyncratic shock, minus the distance from the student's home
+to the school.  Each school's valence is a normally distributed random
+variable with mean 0.0 and standard deviation 1.0, and for each
+student-school pair the idiosyncratic shock is a normally distributed
+random variable with mean 0.0 and standard deviation 1.0.  All of
+these random variables are independent.  The program passes from the
+utilities to an input for \texttt{gcps} by finding the ranking, for
+each student, of the schools for which the student's utility is at
+least as large as the utility of the safe school.
+
+Near the beginning of the file \texttt{example.c} there are the following lines:
+\begin{obeylines}\texttt{
+  int no\_schools = 20;
+  int no\_students\_per\_school = 4;
+  int school\_capacity = 5;
+  double school\_valence\_std\_dev = 1.0;
+  double idiosyncratic\_std\_dev = 1.0;
+}
+\end{obeylines} \noindent
+Even for someone who knows nothing about the C programming language,
+this is pretty easy to understand.  The keywords \texttt{int} and
+\texttt{double} are data types for integers and floating point
+numbers.  Thus \texttt{no\_schools},
+\texttt{no\_students\_per\_school}, and \texttt{school\_capacity} are
+integers, while \texttt{school\_valence\_std\_dev} and
+\texttt{idiosyncratic\_std\_dev} are floating point numbers.  Each
+line assigns a value to some variable.  If you would like to generate
+examples with different parameters, the way to do that is to first
+change the parameters by editing \texttt{example.c}, then run
+\texttt{make} to compile \texttt{make\_ex} with the new parameters,
+and finally issue a command like \texttt{make\_ex > my\_file.scp}
+which runs \texttt{make\_ex} and redirects the output to the file
+\texttt{my\_file.scp}.  For example, to diminish the relative
+importance of travel costs one can increase
+\texttt{school\_valence\_std\_dev} and
+\texttt{idiosyncratic\_std\_dev}.
+
+This illustrates an important point concerning the relationship
+between this software and its users.  Most softwares have interfaces
+with the user that neither require nor allow the user to edit the
+source code, but to create such an interface here would be
+counterproductive. It would add complexity to the source code that had
+nothing to do with the underlying algorithms.  More importantly, the
+main purpose of this software is to provide a starting point for the
+user's own programming effort in adapting it to the particular
+requirements and idiosyncratic features of the user's school choice
+setting.  Our algorithms are not very complicated, and someone
+familiar with C should hopefully not have a great deal of difficulty
+figuring out what is going on and then bending it to her purposes.
+Starting to look at and edit the source code as soon as possible is a
+first step down that road.
+
+
+\section{Finer Priorities} \label{sec:Priorities}
+
+To appreciate the issue discussed in this section one needs to
+understand some of the history of other school choice mechanisms.
+Instead of matching students to seats in schools, it is perhaps more
+intuitive to consider matching a finite set of boys with a finite set
+of girls, who each have strict preferences over potential partners and
+remaining single.
+
+The boy-proposes version of the famous deferred acceptance algorithm
+begins with each boy proposing to his favorite girl, if there is one
+he prefers to being alone.  Each girl rejects all proposals that are
+less attractive than being alone, and if she has received more than
+one acceptable proposal, she holds on to her favorite and rejects all
+the others.  In each subsequent round, each boy who was rejected in
+the previous round proposes to his favorite among the girls who have
+not yet rejected him, if one of these is acceptable. Each girl now has
+a number of new proposals, and possibly the proposal she brought
+forward from the previous round.  She retains her favorite of these,
+if it is acceptable, rejecting all others.  This procedure is repeated
+until there is a round with no rejections, at which point each girl
+holding a proposal pairs up with the boy whose proposal she is
+holding. This mechanism was first proposed in the academic literature
+by \cite{GaSh62}, but it turned out that it had already been used for
+several years to match new graduates of medical schools with
+residencies.  For almost twenty years it has been used in school
+matching, with the students proposing and the seats in the various
+schools rejecting, and it is now in widespread use around the world.
+
+The key point for us is that this mechanism is not well defined unless
+both sides have strict preferences.  In the context of school
+matching, the schools' preferences are called \emph{priorities}.  If
+these priorities are not actual reflections of society's values, this
+can result in inefficiency.  For example, if Carol School's priorities
+rank Bob above Ted while Alice School's priorities rank Ted above Bob,
+then we could have an assignment in which Bob envies Ted's seat at
+Alice School while Ted envies Bob's seat at Carol School.  This sort
+of inefficiency can be quantitatively important, and a major advantage
+of our mechanism is that it is efficient, in an even stronger sense
+than not allowing outcomes in which improving trades are possible.
+
+However, there are cases in which the schools' priorities do reflect
+actual values.  In China, for example, each student's priority at all
+schools is the score on a standardized test.  A consequence of this,
+under deferred acceptance, is that, in effect, each school has an exam
+score cutoff, accepting all students above the cutoff, rejecting all
+students below the cutoff, and randomizing (roughly speaking) over
+students right at the cutoff.  Our main concern in this section is to
+explain how our mechanism can achieve similar outcomes.
+
+The first point is that our input files can have a richer structure
+than our original example suggests, as illustrated by the input below.
+The priorities can be arbitrary nonnegative integers.  A student
+having a priority of 0 at a particular school is understood as
+indicating that the student cannot be assigned there, either because
+she is not qualified or because she prefers her safe school.  A
+student's safe school can be indicated by giving the student the
+highest possible priority at that school.  The computer passes from
+this input to a school choice problem in which the priority of a
+student at a school is 1 if her priority in the input is not less than
+the school's priority threshold, and it is 0 otherwise, each school's
+priority threshold is set to 1, and each student's preference is
+truncated by eliminating schools she is not eligible for.  Applying
+this procedure to the input below gives our original example.
+
+\begin{obeylines}\texttt{
+/* This is a sample introductory comment. */
+There are 4 students and 3 schools
+The vector of quotas is (1,2,1)
+The priority matrix is
+     5     6     9
+     2     2     9
+     5     4     9
+     3     4     9
+The students numbers of ranked schools are (3,3,3,3)
+The preferences of the students are
+1:  1  2  3  
+2:  1  2  3  
+3:  1  2  3  
+4:  1  2  3  
+The priority thresholds of the schools are
+1   3   5   
+  }
+\end{obeylines}
+
+It is possible to repeatedly adjust the schools' priority thresholds
+to achieve a desired effect.  For example, suppose there are two
+selective schools, and the school district would like it to be the
+case that a well qualified student is almost certain to receive a seat
+in one of them if that is what she wants, and at the same time these
+schools do not have more than a small amount of unused capacity.  One
+may raise the priority threshold of one of these schools if many
+students are receiving some probability of admission and lower the
+threshold if its seats are not being filled.  Of course changing the
+priority threshold at one of the schools will effect demand for the
+other school, so repeated adjustment of the priority thresholds of all
+the schools may be required to achieve a desirable result.
+(Automating this iterative adjustment process may require the
+development of a version of \texttt{gcps} that can accept parameter
+inputs, without editing the source code.  This should be a simple task
+for an experienced C programmer.)
+
+Whether it is a good idea to use priorities as the Chinese do is an
+extremely complex question.  On the one hand there is an obvious sense
+in which it is desirable to provide the best resources to those who
+can extract the greatest benefit.  On the other side, the Chinese
+system intensifies the intergenerational transmission of advantage,
+and there is some education research suggesting that average students
+benefit from having talented peers while talented students are not
+disadvantaged by having some peers who are ordinary. One could easily
+list numerous additional issues.  Balancing various concerns in
+practice requires information concerning what would actually happen
+under various policy alternatives.  Our mechanism provides a wide
+range of alternatives, for which outcomes from existing data can be
+easily computed.
+
+\section{What If There Are Many Schools?} \label{sec:ManySchools}
+
+As the algorithm was described above, it looked ahead, for each
+nonempty set of schools $P$, to determine the time at which it would
+become necessary to restrict further consumption of schools in $P$ to
+students in $J_P$.  This is not unduly burdensome if there are a
+moderate number of schools.  (For a ``toy'' example with 20 schools,
+hence over one million sets of schools, this form of the algorithm
+finishes in about 10 seconds.)  But some school choice problems have
+several dozen or even hundreds of schools, and will overwhelm the
+naive version of the algorithm described above.  There are several
+things that can be done about this.
+
+First, to help things along a bit, the computer looks for schools
+whose capacity will not be exceeded even if every student who ranks it
+ends up receiving a seat.  Such a school is said to be
+\emph{unpopular}.  An unpopular school will never be an element of a
+minimal critical set. A school is \emph{popular} if it is not
+unpopular
+
+Two schools are \emph{related} if there is a student who can attend
+either one.  For each student $i$ let $\alpha_i$ be the set of schools
+at which $i$ has priority one.  Formally, two schools are related if
+there is an $i$ such that both of the schools are elements of
+$\alpha_i$.  The computer computes a square matrix \texttt{related}
+whose rows and columns are indexed by the schools, such that
+\texttt{related[j][k]} is one if $j$ and $k$ are both popular and
+$\alpha_j \cap \alpha_k \ne \emptyset$, or if $j = k$ and $j$ is
+popular, and otherwise \texttt{related[j][k]} is zero.  We think of
+\texttt{related} as encoding an undirected graph whose nodes are the
+popular schools, with an edge connecting $j$ and $k$ if and only if
+\texttt{related[j][k]} and \texttt{related[k][j]} are both one.  For
+any set of schools $P$ there is an induced subgraph whose set of nodes
+is $P$ and whose edges are the edges of the graph whose endpoints are
+both in $P$.
+
+An undirected graph is \emph{connected} if, for any pair of nodes $j$
+and $k$, there is a sequence of edges leading from $j$ to $k$.
+Suppose that $P$ is a set of schools such that the induced subgraph of
+\texttt{related} is not connected.  Then $P = P_1 \cup P_2$ where
+$P_1$ and $P_2$ are nonempty, $P_1 \cup P_2 = \emptyset$, and there is
+no path of edges leading from a school in $P_1$ to a school in $P_2$.
+In particular, there is no school in $P_1$ that is \texttt{related} to
+a school in $P_2$.  If $P$ is critical, then both $P_1$ and $P_2$ are
+critical, because every student in $J_P$ is either in $J_{P_1}$ or in
+$J_{P_2}$, so there are just enough remaining seats in $P_1$ to meet
+the remaining needs of students in $J_{P_1}$, and similarly for $P_2$.
+Therefore $P$ cannot be a \emph{minimal} critical set.
+
+At this point we have seen that in a search for a minimal critical
+set, it is only necessary to consider subsets $P$ of the set of
+popular schools such that the graph obtained by restricting
+\texttt{related} to $P$ is connected.  For large school choice
+problems the number of such sets can still be overwhelming.
+
+The key trick is to let the computational process itself tell us which
+sets are relevant, by making repeated attempts at computing an
+allocation, and learning something from each failure.  In the first
+attempt we allocate each school to those students for whom the school
+is the favorite.  Whenever a school's quota is exhausted, the students
+who were consuming it switch to their favorite among the remaining
+schools.  As our initial example illustrated, this may succeed.
+
+If it does not, there will be a point at which some school $j$ does
+not have enough remaining capacity to meet the needs of the students
+who now have no other schools they can consume, because all of those
+schools have exhausted their capacity.  Since the process has arrived
+at an infeasible allocation, there must have been a point in the
+process where, for some set of schools $P$, the total remaining
+capacity of the schools in $P$ went below the total remaining demand
+of students who could no longer consume any school outside of $P$.
+Furthermore, there must be such a $P$ that contains $j$, because the
+infeasibility is related to $j$'s capacity, so one of the inequalities
+that was violated must involve that variable.
+
+We now restart the allocation process, this time watching out for
+criticality of sets of popular schools that are either singletons or
+of the form $\{j,k\}$ where $k$ is another popular school that is
+\texttt{related} to $j$.  If such a set becomes critical, the process
+splits into two parts, one for $\{j,k\}$ and the students who can no
+longer consume schools outside this set, and the other for the other
+remaining schools and the other students.  Again, this may
+succeed.
+
+One way it might fail is that there comes a time at which some school
+$j' \ne j$ does not have enough remaining capacity to meet the needs
+of the students who now have no other schools they can consume.  If
+this happens we restart the allocation process, now watching out for
+criticality of sets of popular schools that are either singletons or
+of the form $\{h,k\}$ where $h \in \{j,j'\}$ and $k$ is another
+popular school that is \texttt{related} to $h$.  The process might
+also fail because, for some popular $k$ such that $j$ and $k$ are
+\texttt{related}, there comes a time at which the collective capacity
+of $j$ and $k$ is not sufficient to meet the needs of the students who
+can no longer consume other schools.  In this case the next iteration
+of the allocation process watches out for criticality of sets of
+popular schools that are either singletons or of the form $\{h,l\}$
+where $h \in \{j,k\}$ and $l$ is another popular school that is
+\texttt{related} to $h$.
+
+The process might also fail because, even with more sets of schools
+being monitored, there still comes a time at which $j$ does not have
+enough remaining capacity to meet the needs of the students who cannot
+consume other schools.  That is, looking at two element sets of
+schools containing $j$ did not resolve the issue.  In this event the
+next iteration of the allocation process watches out for criticality
+of sets of schools with three or fewer elements that contain $j$ and
+are \texttt{related}-connected. If such a set becomes critical during
+this iteration, the first such set to become critical is added to a
+list of sets whose criticality is monitored in all future iterations
+of the allocation process.
+
+In general, we maintain a list of sets of schools that have proven
+relevant to the allocation process.  In each iteration of the process
+we monitor the criticality of \texttt{related}-connected sets of
+schools that consist of a subset of one of these sets and at most one
+other element.  In the event that the process fails because there
+comes a time at which some set $P$ of schools has insufficient
+capacity for the students who have no options outside $P$, the first
+response is to add $P$ to our list.  If this does not resolve the
+issue because even with more schools being monitored, there still
+comes a time at which $P$ has insufficient capacity, we run iterations
+of the process that monitor larger and larger supersets of subsets of
+$P$, until the issue is resolved.  This procedure is described in more
+precise detail in Subsection \ref{subsec:Solver} of the Appendix, and
+in the code itself.
+
+Several remarks are in order.  First, this procedure is an algorithm,
+in the sense that it is guaranteed to halt in finite time, because the
+collection of sets being monitored increases as the process
+progresses.  Since minimal critical sets can be arbitrarily large, it
+is almost certainly the case that its worst case running time is
+exponential.  Nevertheless, large minimal critical sets are extremely
+rare events, and the procedure seems to work very well in practice.
+For example, it finishes in a few seconds on an example produced by
+\texttt{make\_ex} with 100 schools and 900 students.  Finally, there
+is room for further refinement of the procedure, and it is possible
+that there are variants that are much faster still.
+
+%%%------------------------------------------------------------------------------------
+%%%------------------------------------------------------------------------------------
+\bibliographystyle{agsm}
+\bibliography{pa_ref}
+
+
+\begin{appendix}
+
+\section{About the Code} \label{app:Code}
+
+As we have mentioned earlier, we hope that our code provides a useful
+starting point for others, either contributing to the repository at
+Github, or for applications to districts with particular features.
+For this reason we have kept things as simple as possible, even if
+that entails somewhat less convenience for the user.  In particular,
+the input and output formats are inflexible, and some users will
+probably want to develop more sophisticated interfaces.
+
+In this Appendix we provide an overview of the code, passing from the
+simpler and more basic files to increasingly higher levels, in each
+case describing those features that might not be so obvious.  Our hope
+is to ease the process of learning about the code by providing a level
+of explanation in which the objects in the code are described in human
+terms, and in relation to the earlier descriptions of the algorithms.
+While reading the descriptions of the files below, the reader should
+also be looking at the files themselves, and especially the header
+(\texttt{*.h}) files.
+
+Before diving into details, here are some general remarks.  First,
+although we have used C rather than C++ (for a project as small as
+this, the various advantages of C++ seem not worth the additional
+complexity of that language) the code is object oriented in spirit,
+being organized as interactions of objects given by \texttt{struct}s.
+Most of the time objects are ``passed by reference'' to functions,
+which means that instead of passing the object itself, what is passed
+is a pointer to the object.  Understanding the pointer concept of C is
+a prerequisite to any detailed understanding of the code.
+
+With perhaps one or two exceptions, each object has a destroyer, which
+frees the memory that stores the object's data, and for many objects
+there is a way of printing the object.  These printing functions
+provide the format of the output of \texttt{make\_ex}, \texttt{gcps},
+and \texttt{purify}, and for other objects the printing functions can
+be useful for debugging.  In all cases the code for these functions is
+simple and straightforward, and printing and destroyer functions will
+not be mentioned below.  When studying the code, the reader can ignore
+calls to destroyers, trusting that the allocation and freeing of
+memory is being handled correctly.
+
+In the C programming language, an $n$ element array is indexed by the
+integers $0, \ldots, n-1$.  We always think of it as indexed by the
+integers $1, \ldots, n$, so the $j^{\text{th}}$ component of
+\texttt{vec} is \texttt{vec[j-1]}.  Similarly, the $(i,j)$ component
+of a matrix \texttt{mat} is \texttt{mat[i-1][j-1]}.  While this is
+perhaps not one of the most appealing features of C, and it certainly
+adds bulk to the code, once you get used to it, in a curious way it
+seems to enhance the readability of the code.
+
+\subsection{\texttt{normal.h} and \texttt{normal.c}}
+
+The function \texttt{min} computes the minimum of two doubles.  The
+function \texttt{is\_integer} returns 1 (true) if the given double is
+within one one millionth of an integer and 0 (false) otherwise.
+Incidently, the reason that the numbers in the output of \text{gcps}
+have many digits is that an output of \texttt{gcps} must be an
+accurate input for \texttt{purify}, so \texttt{gcps} shouldn't (for
+example) print 0.99 instead of 0.99999999. The functions
+\texttt{uniform} and \texttt{normal} provided uniformly distributed
+(in $[0,1]$) and normally distributed (for mean 0 and standard
+deviation 1) pseudorandom numbers.
+
+\subsection{\texttt{example.c}}
+
+The file \texttt{example.c} contains the \texttt{main} function of
+\texttt{make\_ex}, which contains all of the code that is involved in
+generating an example.  Although the code is somewhat lengthy, the
+process is a straight line:
+\begin{enumerate}
+  \item[(a)] Locate the schools and students around the circle.
+  \item[(b)] Compute the matrix of distances between students and schools.
+  \item[(c)] Generate normally distributed random valences for the schools.
+  \item[(d)] The utility of student \texttt{i} for school \texttt{j}
+    is the valence of \texttt{j} plus a normally distributed
+    \texttt{(i,j)}-idiosyncratic shock minus the distance from
+    \texttt{i} to \texttt{j}.
+  \item[(e)] Each student's safe school is (roughly) the one that is closest.
+  \item[(f)] Student \texttt{i}'s priority at school \texttt{j} is one
+    if its utility for $i$ is not less than the utility of
+    \texttt{i}'s safe school, and otherwise it is zero.
+  \item[(g)] The preference of student \texttt{i} is the list of
+    schools of priority one in order of decreasing utility.
+\end{enumerate}
+
+\subsection{\texttt{parser.h} and \texttt{parser.c}}
+
+Two parsing functions \texttt{sch\_ch\_prob\_from\_file} and
+\texttt{allocation\_from\_file} are declared in \texttt{parser.h}.  As
+their names suggest, these functions read data from files,
+constructing, respectively, a school choice problem
+(\texttt{sch\_ch\_prob}) and an allocation (\texttt{partial\_alloc}).
+A valid input file has an opening comment, which begins with
+\texttt{/*} and ends with \texttt{*/}, and a body.  In the body, in
+addition to the usual white space characters (space, tab, and newline)
+the characters `\texttt{(}', `\texttt{)}', and `\texttt{,}' are
+treated as white space.  The body is divided into whitespace and
+tokens, which are sequences of adjacent characters without any white
+space that are preceeded and followed by white space.
+
+Everything in \texttt{parser.c} is easy to understand.  There are
+numerous functions checking that the verbal tokens are the ones that
+are expected, and quitting with an error message if one of them
+isn't. This makes the code extremely verbose and thoroughly
+amateurish.  If the reader kindly refrains from looking in
+\texttt{parser.c}, this author will be spared considerable
+embarrassment.
+
+\subsection{\texttt{subset.h} and \texttt{subset.c}}
+
+One may represent a subset of $\{1, \ldots, n\}$ as an $n$-tuple of
+0's and 1's, or as a list of its elements.  The first of these is
+given by \texttt{subset}, which, in addition to the $n$-tuple
+\texttt{indicator} of elements of $\{0,1\}$, keeps track of the number
+of elements of the subset and the number of elements of the set it is
+a subset of.  The second representation is given by \texttt{index}, in
+which \texttt{no\_elements} is the number of elements of the subset
+(not the containing set) and \texttt{indices} is a strictly increasing
+\texttt{no\_elements}-tuple of elements of $\{1, \ldots,
+\text{\texttt{large\_set\_size}}\}$.  The function
+\texttt{index\_of\_subset} passes from the first representation to the
+second, and texttt{subset\_of\_index} goes in the other direction.
+(Since an index does not know the size of set it is a subset of, the
+data is a required argument.)
+
+A \texttt{square\_matrix} is a $\text{\texttt{dimension}} \times
+\texttt{dimension}$ matrix whose $(i,j)$ entry is an integer
+\texttt{entries[i-1][j-1]}.  The most important use of this notion is
+to represent an undirected graph with
+$$\text{\texttt{entries[i-1][j-1]}} = 1 =
+\text{\texttt{entries[j-1][i-1]}}$$ if $i = j$ or the graph has an
+edge with endpoints $i$ and $j$, and otherwise
+$$\text{\texttt{entries[i-1][j-1]}} = 0 =
+\text{\texttt{entries[j-1][i-1]}}.$$
+
+A \texttt{subset\_list} is a linked list of subsets in \texttt{index}
+form.  A \texttt{subset\_list} keeps the subsets in order from least
+to greatest.  The ordering of subsets is lexicographic, with smaller
+subsets preceeding larger subsets and subsets of the same size ordered
+according the element of least index, the element of second smallest
+index if the two subsets have the same element of least index, etc.
+The function \texttt{reduced\_subset\_list} returns the list of
+subsets in \texttt{my\_list} that are subsets of \texttt{my\_subset}.
+
+\subsection{\texttt{cee.h} and \texttt{cee.c}}
+
+A school choice \emph{communal endowment economy} (CEE) consists of
+\texttt{no\_students} students, \texttt{no\_schools} schools, a
+specification of \texttt{quotas} (i.e., capacities) for the schools,
+and a matrix \texttt{priority} specifying a nonnegative integer
+\texttt{priority[i-1][j-1]} for each student \texttt{i} and each
+school \texttt{j}.  When a CEE occurs as a part of an input, the
+\texttt{quotas} are usually integers, but partially allocated CEE's
+are used in the computations, when the remaining unallocated
+\texttt{quotas} are floating point numbers.  For this reason there are
+\texttt{int\_cee}'s and \texttt{double\_cee}'s.  Some of the more
+advanced functions in \texttt{cee.h} are specific to priorities that
+are either $0$ or $1$; in Section \ref{sec:Priorities} we explained
+how to pass from more complicated priorities to binary priorities
+using priority thresholds.
+
+The computations of \texttt{popular\_schools} and
+\texttt{relatedness\_matrix} are straightforward, and were explained
+in Section \ref{sec:ManySchools}.  The function
+\texttt{sub\_double\_cee} computes the \texttt{sub\_cee} obtained from
+\texttt{given\_cee} by restricting to the set of students given by
+\texttt{stu\_index} and the set of schools given by
+\texttt{sch\_index}.
+
+\subsection{\texttt{schchprob.h} and \texttt{schchprob.c}}
+
+A \emph{school choice problem} combines a CEE, which may be thought of
+as describing the outcomes that are physically possible, with
+preferences for the students and priority thresholds for the schools.
+A student is \emph{eligible} for a school if her priority at that
+school is at or above the school's priority threshold. A student's
+(strict) preference is the list of the schools she is eligible for,
+going from best to worst.  For convenience we keep track of each
+student's number of eligible schools.
+
+The underlying CEE may be either an \texttt{int\_cee} or a
+\texttt{double\_cee}.  Typically the input school choice problem has
+an \texttt{int\_cee}, and \texttt{double\_cee}'s are used in computing
+an allocation, so there are \texttt{input\_sch\_ch\_prob}'s, which
+have \texttt{int\_cee}'s, and \texttt{sch\_ch\_prob}'s, which have
+\texttt{double\_cee}'s.  A \texttt{sch\_ch\_prob} is typically what
+remains to be allocated after a certain time, so it has a member
+\texttt{time\_remaining}.
+
+The function \texttt{sch\_ch\_prob\_from\_input} takes an
+\texttt{input\_sch\_ch\_prob} as input and passes to a
+\texttt{sch\_ch\_prob} by converting the quotas from integers to
+floating point numbers, and by setting \texttt{time\_remaining} to
+1.0.  The function \texttt{reduced\_sch\_ch\_prob} passes from a
+\texttt{sch\_ch\_prob} with general priorities and priority thresholds
+to one in which the priorities of student \texttt{i} at school
+\texttt{j} is one if \texttt{i} is eligible to attend school
+\texttt{j} and zero otherwise, and the priority thresholds of all
+schools are one, as described in Section \ref{sec:Priorities}.
+
+During the allocation process, when a GMC inequality for a set $P$ of
+schools is encountered, there is a smaller allocation problem for $P$
+and the set $J_P$ of students who, at that point in the process, are
+not eligible for any schools outside of $P$.  There is a similar
+allocation problem for the complements $P^c$ and $J_P^c$ of $P$ and
+$J_P$, and the continuation of the allocation process is the sum of
+the allocation processes for these subproblems.  The function
+\texttt{sub\_sch\_ch\_prob} constructs the subproblem for $J_P =
+\text{\texttt{stu\_subset}}$ and $P = \text{\texttt{sch\_subset}}$ and
+the subproblem for $J_P^c = \text{\texttt{stu\_compl}}$ and $P^c =
+\text{\texttt{sch\_compl}}$.  
+
+The function \texttt{time\_remaining\_of\_gmc\_eq} computes the time
+remaining if the allocation process continues until the GMC inequality
+for \texttt{school\_subset} and \texttt{captive\_students} holds with
+equality or the unit interval of time is exhausted, ignoring all other
+constraints.  It may happen that the GMC inequality for these sets has
+already been violated.  In this case the argument
+\texttt{overallocated\_schools} is set equal to
+\texttt{school\_subset}, and the current attempt at computing an
+allocation is abandoned as quickly as possible, then restarted after
+the list of schools being monitored has been adjusted by adding
+\texttt{overallocated\_schools} to it.
+
+The function \texttt{time\_remaining\_after\_first\_gmc\_eq} considers
+all the school subsets in \texttt{watch\_list}.  For each such set of
+schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to that set
+and the set of students who cannot be assigned further probability in
+schools outside that set.  It returns the maximum of these quantities
+while setting the pointees of \texttt{crit\_stu\_subset} and
+\texttt{crit\_sch\_subset} to subsets that attain the maximum.
+
+\subsection{\texttt{partalloc.h} and \texttt{partalloc.c}}
+
+In a \texttt{partial\_alloc} for \texttt{no\_students} students and
+\texttt{no\_schools} schools, \texttt{allocations} is a matrix that
+specifies an allocation \texttt{allocations[i-1][j-1]} of school
+\texttt{j} to student \texttt{i} for each \texttt{i} and \texttt{j}.
+A \texttt{pure\_alloc} has the same structure, but now
+\texttt{allocations[i-1][j-1]} is an integer that should be zero or
+one, and for each student \texttt{i} there should be exactly one
+school \texttt{j} such that \texttt{allocations[i-1][j-1]} is one.
+
+The function
+\texttt{allocate\_until\_new\_time} creates a \texttt{partial\_alloc}
+in which each student receives
+$$\text{\texttt{my\_scp->time\_remaining}} -
+\text{\texttt{new\_time\_remaining}}$$ units of her favorite school
+and none of any other school.  Increasing a \texttt{base} partial
+allocation by adding an \texttt{increment} partial allocation to it is
+what \texttt{increment\_partial\_alloc} does.  The function
+\texttt{school\_sums} returns an array of \texttt{double} that
+specifies, for each school, the total amount of it that has been
+allocated in \texttt{my\_alloc}.
+
+\subsection{\texttt{solver.h} and \texttt{solver.c}} \label{subsec:Solver}
+
+The file \texttt{solver.c} contains the top level of code that defines
+the executable \texttt{gcps}.  The function
+\texttt{GCPS\_schools\_solver\_top\_level} creates a \texttt{copy} of
+the input \texttt{my\_scp}, the indicator function \texttt{popular} of
+the set of popular schools, and the matrix \texttt{related}.  It also
+initializes the sets if schools \texttt{overallocated\_schools} and
+\texttt{new\_critical\_set} to be nullsets, it initializes the subset
+list \texttt{watch\_list} to be the empty list, and it sets the
+integer parameter \texttt{depth} to $0$.  It then repeatedly asks
+\texttt{GCPS\_schools\_solver} to try to find the GCPS allocation,
+persisting until \texttt{overallocated\_schools} and
+\texttt{new\_critical\_set} are both nullsets.  When this happens it
+returns the computed allocation.
+
+If an attempt of \texttt{GCPS\_schools\_solver} to find the GCPS
+allocation results in a nonempty \texttt{new\_critical\_set}, then
+this set is added to \texttt{watch\_list}, \texttt{submission\_list}
+is set to a copy of \texttt{watch\_list}, \texttt{depth} is set to
+$0$, and there is then another attempt.  If an attempt of
+\texttt{GCPS\_schools\_solver} to find the GCPS allocation results in
+an empty \texttt{new\_critical\_set} and a nonempty
+\texttt{overallocated\_schools}, then \texttt{overallocated\_schools}
+is a set that was found to have insufficient remaining capacity for
+the students who could not go elsewhere.  The natural reaction is to
+add this set to \texttt{watch\_list}, set \texttt{submission\_list} to
+a copy of \texttt{watch\_list}, and try again.  However,
+\texttt{overallocated\_schools} may already be one of the sets in
+\texttt{watch\_list}, which means that it was already added and this
+was not adequate to resolve its insufficiency.  In this case the next
+attempt of \texttt{GCPS\_schools\_solver} must have a
+\texttt{submission\_list} that is created by adding more
+\texttt{supersets\_of\_subsets} of \texttt{overallocated\_schools} to
+\texttt{watch\_list}.  Roughly, the parameter \texttt{depth} is the
+maximal number of additional elements that of
+\texttt{supersets\_of\_subsets} adds to each set, and we increase this
+after each failed attempt until the insufficiency of
+\texttt{overallocated\_schools} is resolved.
+
+We now turn to the description of \texttt{GCPS\_schools\_solver}.  The
+function \texttt{expanded\_list} passes from a given list of school
+subsets to a larger list by adding every \texttt{related}-connected
+set of \texttt{popular} schools that is obtained from a subset of one
+of the elements of the list by adding one school.  The function
+\texttt{GCPS\_schools\_solver} begins by applying this function to
+obtain \texttt{expanded\_watch\_list} and
+\texttt{expanded\_submission\_list}.  It then computes the time that
+will remain after the allocation has proceeded to the first GMC
+equality for sets in \texttt{expanded\_submission\_list}.
+
+We first ask whether \texttt{expanded\_watch\_list} has the critical
+set \texttt{sch\_subset} of schools.  The sets in
+\texttt{expanded\_submission\_list} that are not in
+\texttt{expanded\_watch\_list} will not be remembered in subsequent
+attempts, so if it does not, then we set \texttt{new\_critical\_set}
+equal to \texttt{sch\_subset} and halt the process, so that it will be
+added to \texttt{watch\_list}.  If \texttt{sch\_subset} is one of the
+sets in \texttt{expanded\_watch\_list}, but
+\texttt{overallocated\_schools} is nonempty, then we also halt the
+process, so that \texttt{overallocated\_schools} can be dealt with, as
+we described above.
+
+If the process has not been halted, then the result of giving each
+student her favorite school, at unit speed, until \texttt{end\_time},
+is \texttt{first\_alloc}.  If $\text{\texttt{end\_time}} > 0$, then
+the further allocation process splits into two subproblems.  (Possibly
+one of them is null because it has no students.)  The first ``left''
+subproblem relates to the critical set \texttt{sch\_subset} and the
+set \texttt{stu\_subset} of students who are no longer able to consume
+any school outside of this set.  The second ``right'' subproblem is
+obtained by restricting to the complements \texttt{stu\_compl} and
+\texttt{sch\_compl} of these sets.  The remainder of the code in
+\texttt{solver.c} constructs these subproblems, applies
+\texttt{GCPS\_schools\_solver} to them, and returns the results of
+these calculations (either allocations or a nonempty set
+\texttt{new\_critical\_set} or \texttt{overallocated\_schools}) to the
+function that called \texttt{GCPS\_schools\_solver}, either
+\texttt{GCPS\_schools\_solver\_top\_level} or possibly
+\texttt{GCPS\_schools\_solver} itself.  (In this sense the algorithm
+is recursive.)  If the calls for the two problems produce
+\texttt{left\_alloc} and \texttt{right\_alloc}, which are
+\texttt{partial\_alloc}'s, then
+\texttt{increment\_partial\_allocation} is used to add these to
+\texttt{first\_alloc}, which is now the return value of the current
+call to \texttt{GCPS\_schools\_solver}.
+
+\subsection{\texttt{implement.h} and \texttt{implement.c}}
+
+The code of the algorithm going from a fractional allocation to a
+random pure allocation whose distribution has the given allocation as
+its average follows the description in Section
+\ref{sec:Implementation}.  The \texttt{nonintegral\_graph} derived
+from the given allocation is an undirected graph with an edge between
+a student and a school if the student's allocation of the school is
+strictly between zero and one, and an edge between a school and the
+sink if the total allocation of the school is not an integer.  The
+function \texttt{graph\_from\_alloc} has the given allocation as its
+input, and its output is the derived \texttt{nonintegral\_graph}.
+
+Especially for large school choice problems, we expect the
+\texttt{nonintegral\_graph} to be quite sparse, so it can be
+represented more compactly, and be easier to work with, if we encode
+it by listing the neighbors of each node.  The \texttt{stu\_sch\_nbrs}
+member of \texttt{neighbor\_lists} is a list of \texttt{no\_students}
+lists, where the \texttt{stu\_sch\_nbrs[i-1]} are arrays of varying
+dimension. We set \texttt{stu\_sch\_nbrs[i-1][0] = 0} in order to have
+a place holder that allows us to not have an array with no entries
+when \texttt{i} has no neighbors.  The actual neighbors of \texttt{i}
+are
+$$\text{\texttt{stu\_sch\_nbrs[i-1][1],...,stu\_sch\_nbrs[i-1][stu\_no\_nbrs[i-1]]}}.$$
+The members \texttt{sch\_no\_nbrs} and \texttt{sink\_sch\_nbrs} follow
+this pattern, except that in the latter case there is just a single
+list.  The member \texttt{sch\_sink\_nbrs} is a
+\texttt{no\_schools}-dimensional array of integers with
+\texttt{sch\_sink\_nbrs[j-1] = 1} if there is an edge connecting
+\texttt{j} and the \texttt{sink} and \texttt{sch\_sink\_nbrs[j-1] = 0}
+otherwise.  To pass from a \texttt{nonintegral\_graph} to its
+representation as a \texttt{neighbor\_lists} we apply
+\texttt{neighbor\_lists\_from\_graph}.
+
+A cycle in the \texttt{nonintegral\_graph} is a linked list of
+\texttt{path\_node}'s.  The function \texttt{find\_cyclic\_path}
+implements the algorithm for finding a cycle that we described in
+Section \ref{sec:Implementation}.  Given a cycle,
+\texttt{bound\_of\_cycle} computes the smallest ``alternating
+perturbation,'' in one direction or the other, of the entries of (the
+pointee of) \texttt{my\_alloc} that turns some component of the
+allocation, or some total allocation of a school, into an integer.
+For such an \texttt{adjustment} the function
+\texttt{cyclic\_adjustment} updates the allocation, and it calls the
+functions \texttt{student\_edge\_removal} and
+\texttt{sink\_edge\_removal} to update \texttt{neighbor\_lists}.
+When \texttt{graph\_is\_nonempty(my\_lists) = 0} (false) the entries
+of \texttt{my\_alloc} are doubles that are all very close to integers,
+and the function \texttt{pure\_allocation\_from\_partial} passes to
+the associated \texttt{pure\_alloc}.  The function
+\texttt{random\_pure\_allocation} is the master function that
+supervises the whole process.
+
+\subsection{\texttt{solve.c} and  \texttt{purify.c}}
+
+The files \texttt{solve.c} and \texttt{purify.c} contain the
+\texttt{main} functions of the executables \texttt{gcps} and
+\texttt{purify} respectively.  These main functions are
+simple and straightforward.
+
+\section{Downloading and Setting Up} \label{app:DownloadInstall}
+
+Here we give step-by-step instructions for downloading the code,
+compiling the executables, and starting to use them.  I am going to
+assume a Unix command line environment, which could be a terminal in
+Linux, the terminal application in MacOS, or some third flavor of
+Unix.  (There are probably easy enough ways to do these things in
+Windows (I wouldn't know) but a Windows user can also just get
+Cygwin.)
+
+First, in a browser, open the url
+\begin{obeylines}
+  \texttt{
+    https://github.com/Coup3z-pixel/SchoolOfChoice/
+    }
+\end{obeylines}
+
+\bigskip \noindent
+You will see a list of directories and files.  Clicking on the
+filename \texttt{gcps\_schools.tar} will take you to a page for that
+file.  On the line beginning with \texttt{Code} you will see a button
+marked \texttt{Raw}.  Clicking on that button will down load the file
+to your browser.  Move it to a suitable directory.
+
+We use the \texttt{tar} command to
+extract its contents, then go into the directory \texttt{GCPS} that this action creates:
+\begin{obeylines}
+  \texttt{
+    \%\% tar xvf gcps\_schools.tar
+    \%\% cd gcps\_schools
+    }
+\end{obeylines}
+\bigskip
+
+To compile the executables we need the tools \texttt{make} and
+\texttt{gcc}, and we can check for their presence using
+the command \texttt{which}:
+\begin{obeylines}
+  \texttt{
+    \%\% which make
+    /usr/bin/make
+    \%\% which gcc
+    /usr/bin/gcc
+    }
+\end{obeylines}
+\bigskip \noindent
+If you don't have them, you will need to get them.
+
+Assuming all is well, we issue the command \texttt{make} and see the text that the command directs to the screen:
+\begin{obeylines}
+  \texttt{
+    \%\% make
+    gcc -I. -c normal.c
+    gcc -o make\_ex example.c normal.o -lm
+    gcc -I. -c parser.c
+    gcc -I. -c subset.c
+    gcc -I. -c cee.c
+    gcc -I. -c schchprob.c
+    gcc -I. -c partalloc.c
+    gcc -I. -c solver.c
+    gcc -o gcps solve.c parser.o subset.o cee.o schchprob.o
+    \ \ partalloc.o solver.o normal.o -lm
+    gcc -I. -c implement.c
+    gcc -o purify purify.c normal.o parser.o subset.o partalloc.o
+    \ \ implement.o -lm
+    }
+\end{obeylines}
+\bigskip
+\noindent
+Each line of output above corresponds to one of the commands in the
+\texttt{makefile}, and each of the commands in the makefile specifies
+an object to be constructed (either an object (a \texttt{.o} file) or
+an executable) the resources that are required to construct it, and
+the command that constructs it.  (There is also an object
+\texttt{all}, which gives a mechanism for constructing all of the
+executables at once because \texttt{make}'s default behavior is to
+construct the first object in the \texttt{makefile}, and an object
+\texttt{clean}.  The command \texttt{make clean} removes the objects
+and executables, and also any of the \texttt{*\~} files that the
+\texttt{emacs} editor leaves behind after a preexisting file has been
+edited.)
+
+There are now the executables \texttt{make\_ex}, \texttt{gcps}, and
+\texttt{purify}.  On most Unix's these can invoked simply by typing
+the executable name on the command line, but it may be the case that,
+for security reasons, the current directory is not in the
+\texttt{path} (the list of directories that the command line looks in
+when a command is invoked) in which case you will need to type
+\texttt{./make\_ex}, \texttt{./gcps}, and \texttt{./purify}.  We begin
+with \texttt{make\_ex}:
+\begin{obeylines}
+  \texttt{
+    \%\% make\_ex
+    /* This file was generated by make\_ex with 2 schools, 3 students
+    per school, capacity 4 for all schools, school valence standard
+    deviation 1.00, and idiosyncratic standard deviation 1.00. */
+There are 6 students and 2 schools
+The vector of quotas is (4,4)
+The priority matrix is
+\ \ \     1    1
+\ \ \     1    1
+\ \ \     1    0
+\ \ \     1    0
+\ \ \     1    0
+\ \ \     0    1
+The students numbers of ranked schools are
+(2,2,1,1,1,1)
+The preferences of the students are
+1:    1   2
+2:    1   2
+3:    1
+4:    1
+5:    1
+6:    2
+The priority thresholds of the schools are
+1   1   
+    }
+\end{obeylines}
+\bigskip
+\noindent
+\textbf{Warning:} If what you get looks a bit different, it may be
+because your installation of C and mine have different random number
+generators.
+
+Let's redirect the output to the file \texttt{schools.scp}, then invoke \texttt{gcps}:
+\begin{obeylines}
+  \texttt{
+    \%\% make\_ex > schools.scp
+    \%\% gcps
+  /* This is a sample introductory comment. */
+There are 6 students and 2 schools
+\ \ \ \ \ \ \ \ \           1:   \ \ \ \ \ \ \        2:
+1:   0.50000000  0.50000000
+2:   0.50000000  0.50000000
+3:   1.00000000  0.00000000
+4:   1.00000000  0.00000000
+5:   1.00000000  0.00000000
+6:   0.00000000  1.00000000
+  }
+\end{obeylines}
+\bigskip
+
+
+
+Finally, let's redirect the output of \texttt{gcps} to the file \texttt{allocate.mat}, then invoke \texttt{purify}:
+\begin{obeylines}
+  \texttt{
+    \%\% gcps > allocate.mat
+    \%\% purify
+    /* This is a sample introductory comment. */
+\ \ \ \          1:   2:
+   1:    0 \ \    1
+   2:    1 \ \    0
+   3:    1 \ \    0
+   4:    1 \ \    0
+   5:    1 \ \    0
+   6:    0 \ \    1
+  }
+\end{obeylines}
+\bigskip
+
+That's all there is to it! We've now been through a complete cycle,
+and the rest is up to you.  If you feel like it, you may want to
+experiment with different parameters for \texttt{make\_ex} by editing
+the file \texttt{example.c}, as described in Section \ref{sec:MakeEx},
+then running \texttt{make} again and going through the
+\texttt{make\_ex}-\texttt{gcps}- \texttt{purify} cycle.  This will
+give you an initial feel for how fast \texttt{gcps} is.  (When applied
+to small school choice problems, it's \textit{very} fast.)  But after
+reading the rest of this guide, you may well have your own ideas
+concerning what to do next.
+
+\end{appendix}
+
+\end{document}
+
