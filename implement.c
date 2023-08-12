@@ -6,6 +6,7 @@ void destroy_nonintegral_graph(struct nonintegral_graph* my_graph) {
   for (i = 1; i <= my_graph->no_students; i++) {
     free(my_graph->stu_sch_edges[i-1]);
   }
+  free(my_graph->stu_sch_edges);
   free(my_graph->sch_sink_edges);
 }
 

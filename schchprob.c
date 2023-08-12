@@ -539,6 +539,7 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp,
   /**/  destroy_subset_list(expanded_submission_list); /**/
   destroy_square_matrix(related);
   destroy_subset(eating_students);
+  destroy_subset(crit_eat_students);
   destroy_subset(captive_students);
 
   return answer;

@@ -60,7 +60,7 @@ int first_precedes_second(struct index* first, struct index* second);
 
 int* indices_of_elements(struct subset* my_subset);
 
-void copy_index(struct index* given_index, struct index* copy_index);
+struct index* copy_of_index(struct index* given_index);
 
 struct index singleton_index(int j);
 
@@ -95,6 +95,8 @@ void destroy_subset_list(struct subset_list* my_list);
 void print_subset_list(struct subset_list* my_list);
 
 int maximum_set_size(struct subset_list* my_list);
+
+void new_add_subset(struct subset_list* my_list, struct index* my_index);
 
 void add_subset(struct subset_list* my_list, struct index* my_index);
 

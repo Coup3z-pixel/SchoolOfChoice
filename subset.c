@@ -275,15 +275,18 @@ int first_precedes_second(struct index* first, struct index* second) {
   return 0;
 }
 
-void copy_index(struct index* given_index, struct index* copy_of_index) {
-  int i;
-  copy_of_index->no_elements = given_index->no_elements;
+struct index* copy_of_index(struct index* given_index) {
+  struct index* copy = malloc(sizeof(struct index));
+  int no_elts = given_index->no_elements;
   
-  copy_of_index->indices = malloc(copy_of_index->no_elements * sizeof(int));
-  
-  for (i = 1; i <= given_index->no_elements; i++) {
-    copy_of_index->indices[i-1] = given_index->indices[i-1];
+  copy->no_elements = no_elts;
+
+  copy->indices = malloc(no_elts * sizeof(int));
+  for (int i = 1; i <= no_elts; i++) {
+    copy->indices[i-1] = given_index->indices[i-1];
   }
+
+  return copy;
 }
 
 struct index singleton_index(int j) {
@@ -413,22 +416,6 @@ void get_candidate_list(int* candidate_list, struct square_matrix* related,
     }
   }
 
-  /*
-  printf("We did the first part of get_candidate_list.\n");
-  printf("There are %d schools and the subset is\n",nsc);
-  struct index the_index = index_of_subset(my_subset);
-  print_index(&the_index);
-  destroy_index(the_index);
-  printf(".\n");
-  
-  print_square_matrix(related);
-  printf(".\n");
-  */
-
-  /* We need to reorder the candidate_list according to order to join,
-     where a school is not allowed to join the list prior to the time
-     that it is connected to some member of the list. */
-
   fill_number = 1;
   while (fill_number < set_size) {
     connected = 0;
@@ -514,12 +501,14 @@ void destroy_subset_list(struct subset_list* my_list) {
     struct subset_list* next_probe = probe->next;
     if (probe->node_index != NULL) {
       destroy_index(*(probe->node_index));
+      free(probe->node_index);
     }
     free(probe);
     probe = next_probe;
   }
   if (probe->node_index != NULL) {
     destroy_index(*(probe->node_index));
+    free(probe->node_index);
   }
   free(probe);
 }
@@ -555,11 +544,60 @@ int maximum_set_size(struct subset_list* my_list) {
   return answer;
 }
 
+void new_add_subset(struct subset_list* my_list, struct index* my_index) {
+    
+  if (is_empty_list(my_list)) {
+    my_list->node_index = copy_of_index(my_index);
+  }
+  else {
+    if (first_precedes_second(my_index,my_list->node_index)) {
+      struct subset_list* new_second_node = malloc(sizeof(struct subset_list));
+      new_second_node->next = my_list->next;
+      new_second_node->node_index = my_list->node_index;
+      my_list->next = new_second_node;
+      my_list->node_index = copy_of_index(my_index);
+    }
+    else {
+      if (!indices_are_same(my_index,my_list->node_index)) {
+	struct subset_list* probe = my_list;
+
+	int done = 0;
+	while (!done) {
+	  if (probe->next == NULL) {
+	    done = 1;
+	  }
+	  else {
+	    if (first_precedes_second((probe->next)->node_index,my_index)) {
+	      probe = probe->next;
+	    }
+	    else {
+	      done = 1;
+	    }
+	  }
+	}
+	if (probe->next == NULL) {
+	  struct subset_list* new_last_node = malloc(sizeof(struct subset_list));
+	  probe->next = new_last_node;
+	  new_last_node->next = NULL;
+	  new_last_node->node_index = copy_of_index(my_index);
+	}
+	else {
+	  if (!indices_are_same(my_index,(probe->next)->node_index)) {
+	    struct subset_list* insert_node = malloc(sizeof(struct subset_list));
+	    insert_node->next = probe->next;
+	    probe->next = insert_node;
+	    insert_node->node_index = copy_of_index(my_index);
+	  }
+	}
+      }
+    }
+  }
+}
+
 void add_subset(struct subset_list* my_list, struct index* my_index) {
     
   if (is_empty_list(my_list)) {
-    my_list->node_index = malloc(sizeof(struct index));
-    copy_index(my_index,my_list->node_index);
+    my_list->node_index = copy_of_index(my_index);
   }
   else {
     if (my_list->next == NULL) {
@@ -567,25 +605,23 @@ void add_subset(struct subset_list* my_list, struct index* my_index) {
 	struct subset_list* new_node = malloc(sizeof(struct subset_list));
 	my_list->next = new_node;
 	new_node->next = NULL;
-	new_node->node_index = malloc(sizeof(struct index));
 	
 	if (first_precedes_second(my_index,my_list->node_index)) {
-	  copy_index(my_list->node_index,new_node->node_index);
-	  copy_index(my_index,my_list->node_index);
+	  new_node->node_index = my_list->node_index;
+	  my_list->node_index = copy_of_index(my_index);
 	}
 	else {
-	  copy_index(my_index,new_node->node_index);
+	  new_node->node_index = copy_of_index(my_index);
 	}
       }
     }
     else {
       if (first_precedes_second(my_index,my_list->node_index)) {
 	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
-	  new_node->node_index = malloc(sizeof(struct index));
 	  new_node->next = my_list->next;
 	  my_list->next = new_node;
-	  copy_index(my_list->node_index,new_node->node_index);
-	  copy_index(my_index,my_list->node_index);
+	  new_node->node_index = my_list->node_index;
+	  my_list->node_index = copy_of_index(my_index);
       }
       else {
 	struct subset_list* probe = my_list;
@@ -598,8 +634,7 @@ void add_subset(struct subset_list* my_list, struct index* my_index) {
 	if (!indices_are_same(my_index,probe->node_index) &&
 	    !indices_are_same(my_index,(probe->next)->node_index)) {
 	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
-	  new_node->node_index = malloc(sizeof(struct index));
-	  copy_index(my_index,new_node->node_index);
+	  new_node->node_index = copy_of_index(my_index);
 	  
 	  if (first_precedes_second(my_index,(probe->next)->node_index)) {
 	    new_node->next = probe->next;
@@ -622,6 +657,7 @@ void remove_subset(struct subset_list* my_list, struct index* my_index) {
     if (my_list->next == NULL) {
       if (indices_are_same(my_list->node_index,my_index)) {
 	destroy_index(*(my_list->node_index));
+	free(my_list->node_index);
 	my_list->node_index = NULL;
       }
     }
@@ -630,6 +666,7 @@ void remove_subset(struct subset_list* my_list, struct index* my_index) {
       
       if (indices_are_same(my_list->node_index,my_index)) {
 	destroy_index(*(my_list->node_index));
+	free(my_list->node_index);
 	struct subset_list* new_list = my_list->next;
 	my_list->node_index = new_list->node_index;
 	my_list->next = new_list->next;
@@ -642,6 +679,7 @@ void remove_subset(struct subset_list* my_list, struct index* my_index) {
 	while (trailer->next != NULL) {
 	  if (indices_are_same(probe->node_index,my_index)) {
 	    destroy_index(*(probe->node_index));
+	    free(probe->node_index);
 	    trailer->next = probe->next;
 	    free(probe);
 	    probe = trailer->next;
@@ -823,6 +861,7 @@ struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subs
     if (is_subset) {
       struct index new_index = index_of_subset_from_indices_list(probe->node_index, indices_list);
       add_subset(reduced_list,&new_index);
+      destroy_index(new_index);
     }
     if (probe->next == NULL) {
       done = 1;

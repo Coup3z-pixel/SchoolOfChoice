@@ -74,6 +74,8 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 	depth = 1;
 	add_subset(observed_overallocated_sets,&new_list_element);
       }
+
+      destroy_index(new_list_element);
     }
     
     destroy_subset(overallocated_schools);
@@ -92,10 +94,13 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 				     exit_status);
   }
 
+  destroy_subset(overallocated_schools);
+  destroy_subset(new_critical_set);
   destroy_sch_ch_prob(copy);
   destroy_subset_list(known_facets);
   destroy_subset_list(observed_overallocated_sets);
   free(target_level);
+  free(exit_status);
 
   return allocation;
 }
@@ -257,19 +262,11 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
       
       increment_partial_alloc(&first_alloc, &left_alloc, &left_stu_index, &left_sch_index);
 
+      destroy_subset_list(left_known_facets);
       destroy_subset(left_overallocated);
-      destroy_sch_ch_prob(left_scp);
+      destroy_subset(left_new_critical_set);
       destroy_partial_alloc(left_alloc);
       destroy_subset_list(left_observed_overallocated_sets);
-    
-      if (new_critical_set->subset_size != 0) {    
-	struct index critical_index = index_of_subset(new_critical_set);
-	if (list_contains_index(known_facets,&critical_index)) {
-	  printf("Somehow left allocation gave something already seen.\n");
-	  exit(0);
-	}
-      }
-      
     }
     
     if (*exit_status == 0 && stu_compl.subset_size > 0) {      
@@ -306,10 +303,19 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
       
       increment_partial_alloc(&first_alloc, &right_alloc, &right_stu_index, &right_sch_index);
 
+      destroy_subset_list(right_known_facets);
       destroy_subset(right_overallocated);
-      destroy_sch_ch_prob(right_scp);
+      destroy_subset(right_new_critical_set);
       destroy_partial_alloc(right_alloc);
       destroy_subset_list(right_observed_overallocated_sets);
+    }
+
+    if (stu_subset.subset_size > 0) {      
+      destroy_sch_ch_prob(left_scp);
+    }  
+      
+    if (stu_compl.subset_size > 0) {
+      destroy_sch_ch_prob(right_scp);
     }
   }
 
@@ -322,7 +328,7 @@ struct partial_alloc GCPS_schools_solver(struct sch_ch_prob* my_scp,
   if (stu_compl.subset_size > 0) {
     destroy_index(right_stu_index);
   }
-  if (stu_subset.subset_size > 0) {
+  if (sch_compl.subset_size > 0) {
     destroy_index(right_sch_index);
   }
   
