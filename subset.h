@@ -96,8 +96,6 @@ void print_subset_list(struct subset_list* my_list);
 
 int maximum_set_size(struct subset_list* my_list);
 
-void new_add_subset(struct subset_list* my_list, struct index* my_index);
-
 void add_subset(struct subset_list* my_list, struct index* my_index);
 
 void remove_subset(struct subset_list* my_list, struct index* my_index);
@@ -109,6 +107,8 @@ struct subset_list*  copy_of_subset_list(struct subset_list* my_list);
 void add_second_list_to_first(struct subset_list* first, struct subset_list* second);
 
 int first_list_contains_second(struct subset_list* first, struct subset_list* second);
+
+int lists_are_the_same(struct subset_list* first, struct subset_list* second);
 
 void add_subsets_of_subset_to_list(struct subset_list* big_list, struct subset* the_subset,
 				   struct subset_list* list_to_add);

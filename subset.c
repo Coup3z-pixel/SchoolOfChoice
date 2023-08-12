@@ -544,7 +544,7 @@ int maximum_set_size(struct subset_list* my_list) {
   return answer;
 }
 
-void new_add_subset(struct subset_list* my_list, struct index* my_index) {
+void add_subset(struct subset_list* my_list, struct index* my_index) {
     
   if (is_empty_list(my_list)) {
     my_list->node_index = copy_of_index(my_index);
@@ -587,63 +587,6 @@ void new_add_subset(struct subset_list* my_list, struct index* my_index) {
 	    insert_node->next = probe->next;
 	    probe->next = insert_node;
 	    insert_node->node_index = copy_of_index(my_index);
-	  }
-	}
-      }
-    }
-  }
-}
-
-void add_subset(struct subset_list* my_list, struct index* my_index) {
-    
-  if (is_empty_list(my_list)) {
-    my_list->node_index = copy_of_index(my_index);
-  }
-  else {
-    if (my_list->next == NULL) {
-      if (!indices_are_same(my_index,my_list->node_index)) {
-	struct subset_list* new_node = malloc(sizeof(struct subset_list));
-	my_list->next = new_node;
-	new_node->next = NULL;
-	
-	if (first_precedes_second(my_index,my_list->node_index)) {
-	  new_node->node_index = my_list->node_index;
-	  my_list->node_index = copy_of_index(my_index);
-	}
-	else {
-	  new_node->node_index = copy_of_index(my_index);
-	}
-      }
-    }
-    else {
-      if (first_precedes_second(my_index,my_list->node_index)) {
-	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
-	  new_node->next = my_list->next;
-	  my_list->next = new_node;
-	  new_node->node_index = my_list->node_index;
-	  my_list->node_index = copy_of_index(my_index);
-      }
-      else {
-	struct subset_list* probe = my_list;
-	while ((probe->next)->next != NULL &&
-	       !first_precedes_second(my_index,(probe->next)->node_index) &&
-	       !indices_are_same(my_index,probe->node_index)) {
-	  probe = probe->next;
-	}
-	
-	if (!indices_are_same(my_index,probe->node_index) &&
-	    !indices_are_same(my_index,(probe->next)->node_index)) {
-	  struct subset_list* new_node = malloc(sizeof(struct subset_list));
-	  new_node->node_index = copy_of_index(my_index);
-	  
-	  if (first_precedes_second(my_index,(probe->next)->node_index)) {
-	    new_node->next = probe->next;
-	    probe->next = new_node;
-	  }
-	  
-	  if (first_precedes_second((probe->next)->node_index,my_index)) {
-	    new_node->next = (probe->next)->next;
-	    (probe->next)->next = new_node;
 	  }
 	}
       }
@@ -728,7 +671,9 @@ struct subset_list*  copy_of_subset_list(struct subset_list* my_list) {
 void add_second_list_to_first(struct subset_list* first, struct subset_list* second) {
   if (!is_empty_list(second)) {
     struct subset_list* probe = second;
+
     add_subset(first,probe->node_index);
+    
     while (probe->next != NULL) {
       probe = probe->next;
       add_subset(first,probe->node_index);
@@ -752,6 +697,14 @@ int first_list_contains_second(struct subset_list* first, struct subset_list* se
   return 0;
 }
 
+int lists_are_the_same(struct subset_list* first, struct subset_list* second) {
+  if (first_list_contains_second(first,second) && first_list_contains_second(second,first)) {
+    return 1;
+  }
+
+  return 0;
+}
+
 void add_subsets_of_subset_to_list(struct subset_list* big_list, struct subset* the_subset,
 				   struct subset_list* list_to_add) {
   if (!is_empty_list(list_to_add)) {
@@ -763,7 +716,9 @@ void add_subsets_of_subset_to_list(struct subset_list* big_list, struct subset* 
     subset_of_subset_to_subset(&next_subset,the_subset,&next_subset_of_subset);
     
     struct index next_index = index_of_subset(&next_subset);
+
     add_subset(big_list,&next_index);
+    
     destroy_index(next_index);
     destroy_subset(next_subset);
     destroy_subset(next_subset_of_subset);
@@ -860,7 +815,7 @@ struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subs
     }
     if (is_subset) {
       struct index new_index = index_of_subset_from_indices_list(probe->node_index, indices_list);
-      add_subset(reduced_list,&new_index);
+      add_subset(reduced_list,&new_index);    
       destroy_index(new_index);
     }
     if (probe->next == NULL) {
@@ -905,14 +860,7 @@ struct subset_list* immediate_supersets(struct index* my_index, struct square_ma
       }
     }
     if (qualified) {
-      struct index next_superset = index_with_element_added(my_index,j);
-      
-      /*
-      printf("The next_superset is ");
-      print_index(&next_superset);
-      printf(".\n");
-      */
-      
+      struct index next_superset = index_with_element_added(my_index,j);      
       add_subset(list_of_supersets,&next_superset);
     }
   }

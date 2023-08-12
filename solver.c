@@ -48,8 +48,9 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
 	printf("We somehow got a critical set twice.\n");
 	exit(0);
       }
-      
+
       add_subset(known_facets,&crit_set_index);
+    
       if (list_contains_index(observed_overallocated_sets,&crit_set_index)) {
 	remove_subset(observed_overallocated_sets,&crit_set_index);
       }
@@ -72,6 +73,7 @@ struct partial_alloc GCPS_schools_solver_top_level(struct sch_ch_prob* my_scp) {
       }
       else {
 	depth = 1;
+
 	add_subset(observed_overallocated_sets,&new_list_element);
       }
 
