@@ -136,6 +136,34 @@ int main() {
   }
   printf("\n");
 
+  free(location);
+  
+  for (i = 1; i <= no_students; i++) {
+    free(distance[i-1]);
+  }
+  free(distance);
+
+  free(valence);
+  
+  for (i = 1; i <= no_students; i++) {
+    free(utility[i-1]);
+  }
+  free(utility);
+
+  free(safe_school);
+  
+  for (i = 1; i <= no_students; i++) {
+    free(priority[i-1]);
+  }
+  free(priority);
+
+  free(no_ranked_schools);
+  
+  for (i = 1; i <= no_students; i++) {
+    free(preferences[i-1]);
+  }
+  free(preferences);
+
   
   return 0;
 }

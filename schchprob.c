@@ -454,9 +454,9 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp,
 
   struct square_matrix related = related_matrix(&(my_scp->cee),my_scp->time_remaining);
   
-  /**/  struct subset_list* expanded_submission_list; /**/
+  /*  struct subset_list* expanded_submission_list; */
 
-  /**/  expanded_submission_list = expanded_list(submission_list, &related); /**/
+  /*  expanded_submission_list = expanded_list(submission_list, &related); */
 
   struct subset eating_students = nullset(my_scp->cee.no_students);
   struct subset crit_eat_students = nullset(my_scp->cee.no_students);
@@ -464,8 +464,8 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp,
 
   struct subset scan_subset;
 
-  if (!is_empty_list(expanded_submission_list)) {
-    struct subset_list* probe = expanded_submission_list;
+  if (!is_empty_list(submission_list)) {
+    struct subset_list* probe = submission_list;
   
     while (overallocated_schools->subset_size == 0 && probe != NULL) {
 
@@ -536,7 +536,8 @@ double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp,
     destroy_index(crit_sch_index);
   }
 
-  /**/  destroy_subset_list(expanded_submission_list); /**/
+  destroy_subset_list(submission_list);
+  /*  destroy_subset_list(expanded_submission_list); */
   destroy_square_matrix(related);
   destroy_subset(eating_students);
   destroy_subset(crit_eat_students);
