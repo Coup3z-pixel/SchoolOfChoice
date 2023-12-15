@@ -466,8 +466,7 @@ struct subset_list* supersets_of_subsets(struct index* my_index, struct square_m
   int local_depth = depth;
   while (local_depth > 0) {
     local_depth--;
-    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets,
-									   related));
+    add_second_list_to_first(list_of_supersets,immediate_supersets_of_list(list_of_supersets, related));
   }
 
   /*
@@ -478,91 +477,6 @@ struct subset_list* supersets_of_subsets(struct index* my_index, struct square_m
 
   return list_of_supersets;
 }
-
-
-struct unordered_subset_list* initialized_unordered_list() {
-  struct unordered_subset_list* new_list = malloc(sizeof(struct unordered_subset_list));
-  new_list->node_index = NULL;
-  new_list->next = NULL;
-  return new_list;
-}
-
-int unordered_list_is_empty(struct unordered_subset_list* my_list) {
-  if (my_list->node_index == NULL && my_list-> next == NULL) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
-void destroy_unordered_list(struct unordered_subset_list* my_list) {
-  struct unordered_subset_list* probe = my_list;
-  while (probe->next != NULL) {
-    struct unordered_subset_list* next_probe = probe->next;
-    if (probe->node_index != NULL) {
-      destroy_index(*(probe->node_index));
-      free(probe->node_index);
-    }
-    free(probe);
-    probe = next_probe;
-  }
-  if (probe->node_index != NULL) {
-    destroy_index(*(probe->node_index));
-    free(probe->node_index);
-  }
-  free(probe);
-}
-
-void print_unordered_list(struct unordered_subset_list* my_list) {
-  if (unordered_list_is_empty(my_list)) {
-    printf("null_list");
-  }
-  else {
-    struct unordered_subset_list* probe = my_list;
-    print_index(probe->node_index); 
-    while (probe->next != NULL) {
-      print_index(probe->next->node_index); 
-      probe = probe->next;
-    }
-  }
-}
-
-int length_of_unordered_list(struct unordered_subset_list* my_list) {
-  int length = 0;
-  if (my_list->node_index == NULL) {
-    return 0;
-  }
-  struct unordered_subset_list* probe = my_list;
-  while (probe->next != NULL) {
-    length++;
-    probe = probe->next;
-  }
-  return length;
-}
-
-int element_of_list_set(struct unordered_subset_list* my_list, int set_no, int elt_no) {
-  int k = 1;
-  
-  struct unordered_subset_list* probe = my_list;
-  while (k < set_no) {
-    probe = probe->next;
-    k++;
-  }
-
-  return (probe->node_index)->indices[elt_no-1];
-}
-
-void add_subset_to_unordered_list(struct unordered_subset_list* my_list, struct index* my_index) {
-  struct unordered_subset_list* probe = my_list;
-  while (probe->next != NULL) {
-    probe = probe->next;
-  }
-  probe->next = malloc(sizeof(struct unordered_subset_list));
-  (probe->next)->next = NULL;
-  (probe->next)->node_index = copy_of_index(my_index);
-}
-
 
 
 struct subset_list* initialized_subset_list() {

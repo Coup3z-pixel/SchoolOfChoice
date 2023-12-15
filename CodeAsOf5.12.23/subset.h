@@ -20,11 +20,6 @@ struct square_matrix {
   int** entries;
 };
 
-struct unordered_subset_list {
-  struct index* node_index;
-  struct unordered_subset_list* next;
-};
-
 struct subset_list {
   struct index* node_index;
   struct subset_list* next;
@@ -91,22 +86,7 @@ void print_square_matrix(struct square_matrix* my_matrix);
 void destroy_square_matrix(struct square_matrix my_matrix);
 
 
-struct unordered_subset_list* initialized_unordered_list(); 
-
-int unordered_list_is_empty(struct unordered_subset_list* my_list);
-
-void destroy_unordered_list(struct unordered_subset_list* my_list);
-
-void print_unordered_list(struct unordered_subset_list* my_list);
-
-int length_of_unordered_list(struct unordered_subset_list* my_list);
-
-int element_of_list_set(struct unordered_subset_list* my_list, int set_no, int elt_no);
-
-void add_subset_to_unordered_list(struct unordered_subset_list* my_list, struct index* my_index);
-
-
-struct subset_list* initialized_subset_list(); 
+struct subset_list* initialized_subset_list();
 
 int is_empty_list(struct subset_list* my_list);
 
