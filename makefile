@@ -18,7 +18,7 @@ make_ex: example.c normal.o
 	$(CC) -o make_ex example.c normal.o $(LDFLAGS)
 
 gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o solver.o fraccee.o
-	$(CC) -o gcps solve.c parser.o subset.o cee.o schchprob.o partalloc.o solver.o normal.o $(LDFLAGS)
+	$(CC) -o gcps solve.c parser.o subset.o cee.o schchprob.o partalloc.o solver.o normal.o fraccee.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o implement.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o implement.o $(LDFLAGS)

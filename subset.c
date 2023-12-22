@@ -142,6 +142,41 @@ void copy_subset(struct subset* given_subset, struct subset* copy_subset) {
   }
 }
 
+struct subset complement_of_subset(struct subset* given_subset)  {
+  struct subset complement;
+  
+  complement.large_set_size = given_subset->large_set_size;
+  complement.subset_size = given_subset->large_set_size - given_subset->subset_size;
+  complement.indicator = malloc(given_subset->large_set_size * sizeof(int));
+  for (int i = 1; i <= given_subset->large_set_size; i++) {
+    complement.indicator[i-1] = 1 - given_subset->indicator[i-1];
+  }
+
+  return complement;
+}
+
+int is_nullset(struct subset* my_set)  {
+  for (int i = 1; i <= my_set->large_set_size; i++) {
+    if (my_set->indicator[i-1] == 1) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void add_element(struct subset* my_set, int new_elt) {
+  if (new_elt < 0 || new_elt > my_set->large_set_size) {
+    printf("Attempt to add out-of-range element to set.");
+    exit(0);
+  }
+  if (my_set->indicator[new_elt-1] == 1) {
+    printf("Attempt to add existing element to set.\n");
+    exit(0);
+  }
+  my_set->subset_size++;
+  my_set->indicator[new_elt-1] = 1;
+}
+
 int subsets_are_same(struct subset* first, struct subset* second) {
   if (first->large_set_size != second->large_set_size) {
     return 0;
@@ -189,6 +224,30 @@ struct index index_of_subset(struct subset* my_subset) {
   for (i = 1; i <= my_subset->subset_size; i++) {
     k++;
     while (my_subset->indicator[k-1] == 0) {
+      k++;
+    }
+    my_index.indices[i-1] = k;
+  }
+  
+  return my_index;
+}
+
+struct index index_of_complement(struct subset* my_subset) {
+  int i, k;
+  struct index my_index;
+
+  if (my_subset->subset_size == my_subset->large_set_size) {
+    printf("Taking the index of an emptyset is not permitted.\n");
+    exit(0);	    
+  }
+  
+  my_index.no_elements = my_subset->large_set_size - my_subset->subset_size;
+  
+  my_index.indices = malloc(my_index.no_elements * sizeof(int));
+  k = 0;
+  for (i = 1; i <= my_index.no_elements; i++) {
+    k++;
+    while (my_subset->indicator[k-1] == 1) {
       k++;
     }
     my_index.indices[i-1] = k;
@@ -256,6 +315,19 @@ int indices_are_same(struct index* first, struct index* second) {
   return 1;
 }
 
+int index_has_element(struct index* my_ind, int elt) {
+  if (my_ind->no_elements == 0) {
+    return 0;
+  }
+  for (int j = 1; j <= my_ind->no_elements; j++) {
+    if (my_ind->indices[j-1] == elt) {
+      return 1;
+    }
+  }
+  return 0;
+
+}
+
 int first_precedes_second(struct index* first, struct index* second) {
   if (first->no_elements < second->no_elements) {
     return 1;
@@ -287,6 +359,17 @@ struct index* copy_of_index(struct index* given_index) {
   }
 
   return copy;
+}
+
+struct index index_of_fullset(int large_set_size) {
+  struct index full_index;
+  full_index.no_elements = large_set_size;
+  full_index.indices = malloc(large_set_size * sizeof(int));
+  for (int i = 1; i <= large_set_size; i++) {
+    full_index.indices[i-1] = i;
+  }
+
+  return full_index;
 }
 
 struct index singleton_index(int j) {
@@ -531,7 +614,10 @@ void print_unordered_list(struct unordered_subset_list* my_list) {
 int length_of_unordered_list(struct unordered_subset_list* my_list) {
   int length = 0;
   if (my_list->node_index == NULL) {
-    return 0;
+    length = 0;
+  }
+  else {
+    length = 1;
   }
   struct unordered_subset_list* probe = my_list;
   while (probe->next != NULL) {
@@ -543,7 +629,7 @@ int length_of_unordered_list(struct unordered_subset_list* my_list) {
 
 int element_of_list_set(struct unordered_subset_list* my_list, int set_no, int elt_no) {
   int k = 1;
-  
+
   struct unordered_subset_list* probe = my_list;
   while (k < set_no) {
     probe = probe->next;
@@ -554,13 +640,18 @@ int element_of_list_set(struct unordered_subset_list* my_list, int set_no, int e
 }
 
 void add_subset_to_unordered_list(struct unordered_subset_list* my_list, struct index* my_index) {
-  struct unordered_subset_list* probe = my_list;
-  while (probe->next != NULL) {
-    probe = probe->next;
+  if (my_list->node_index == NULL) {
+    my_list->node_index = copy_of_index(my_index);    
   }
-  probe->next = malloc(sizeof(struct unordered_subset_list));
-  (probe->next)->next = NULL;
-  (probe->next)->node_index = copy_of_index(my_index);
+  else {
+    struct unordered_subset_list* probe = my_list;
+    while (probe->next != NULL) {
+      probe = probe->next;
+    }
+    probe->next = malloc(sizeof(struct unordered_subset_list));
+    (probe->next)->next = NULL;
+    (probe->next)->node_index = copy_of_index(my_index);
+  }
 }
 
 
@@ -605,6 +696,20 @@ void print_subset_list(struct subset_list* my_list) {
   }
   else {
     struct subset_list* probe = my_list;
+    print_index(probe->node_index); 
+    while (probe->next != NULL) {
+      print_index(probe->next->node_index); 
+      probe = probe->next;
+    }
+  }
+}
+
+void print_unordered_subset_list(struct unordered_subset_list* my_list) {
+  if (length_of_unordered_list(my_list) == 0) {
+    printf("null_list");
+  }
+  else {
+    struct unordered_subset_list* probe = my_list;
     print_index(probe->node_index); 
     while (probe->next != NULL) {
       print_index(probe->next->node_index); 

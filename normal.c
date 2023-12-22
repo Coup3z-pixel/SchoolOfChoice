@@ -9,6 +9,15 @@ double min(double a, double b) {
   }
 }
 
+double max(double a, double b) {
+  if (a > b) {
+    return a;
+  }
+  else {
+    return b;
+  }
+}
+
 int is_integer(double nmbr) {
   if (nmbr - floor(nmbr) < 0.00001 || ceil(nmbr) - nmbr < 0.00001) {
     return 1;

@@ -24,7 +24,7 @@ struct input_sch_ch_prob make_toy_sch_ch_prob() {
   }
 
   return my_scp;
-}
+} 
 
 void copy_sch_ch_prob(struct sch_ch_prob* my_scp, struct sch_ch_prob* copy) {
   int i,j,k;

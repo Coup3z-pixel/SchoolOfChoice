@@ -30,6 +30,10 @@ void print_partial_alloc(struct partial_alloc* my_partial_alloc);
 
 void print_pure_alloc(struct pure_alloc my_pure_alloc);
 
+void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, double delta);
+
+void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, double delta);
+
 struct partial_alloc allocate_until_new_time(struct sch_ch_prob* my_scp,
 					     double new_time_remaining);
 
@@ -39,6 +43,12 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
 double* school_sums(struct partial_alloc* my_alloc);
 
 int is_feasible_allocation(struct sch_ch_prob* my_scp, struct partial_alloc* my_alloc);
+
+struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
+					 struct subset* J_subset);
+
+struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
+					  struct subset* J_subset, struct subset* P_subset);
 
 
 #endif /* PARTALLOC_H */

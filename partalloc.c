@@ -98,6 +98,29 @@ void destroy_partial_alloc(struct partial_alloc my_partial_alloc) {
   free(my_partial_alloc.allocations);
 }
 
+void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, double delta) {
+  int i;
+
+  int nst = my_alloc->no_students;
+
+  for (i = 1; i <= nst; i++) {
+    my_alloc->allocations[i-1][favorites[i-1]-1] += delta;
+  }
+}
+
+void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, double delta) {
+  int i, j;
+
+  int nst = feasible_guide->no_students;
+  int nsc = feasible_guide->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      feasible_guide->allocations[i-1][j-1] += theta[i-1][j-1] * delta;
+    }
+  }
+}
+
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
 			     struct index* stu_index,struct index* sch_index) {
   int i,j;
@@ -200,5 +223,66 @@ int is_feasible_allocation(struct sch_ch_prob* my_scp, struct partial_alloc* my_
   }
 
   return 1;
+}
+
+struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
+					 struct subset* J_subset) {
+  int i, j;
+
+  int nsc = feasible_guide->no_schools;
+  int new_nst = J_subset->subset_size;
+
+  struct partial_alloc new_guide;
+
+  new_guide.no_students = new_nst;
+  new_guide.no_schools = nsc;
+
+  int old_std_no = 0;
+  new_guide.allocations = malloc(new_nst * sizeof(double*));
+  for (i = 1; i <= new_nst; i++) {
+    new_guide.allocations[i] = malloc(nsc * sizeof(double));
+    old_std_no++;
+    while (J_subset->indicator[old_std_no-1] == 0) {
+      old_std_no++;
+    }
+    for (j = 1; j <= nsc; j++) {
+      new_guide.allocations[i-1][j-1] = feasible_guide->allocations[old_std_no-1][j-1];
+    }
+  }
+  
+  return new_guide;
+}
+
+struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
+					  struct subset* J_subset, struct subset* P_subset) {
+  int i, j, old_std_no, old_sch_no;
+
+  int new_nst = feasible_guide->no_students - J_subset->subset_size;
+  int new_nsc = feasible_guide->no_schools - P_subset->subset_size;
+
+  struct partial_alloc new_guide;
+
+  new_guide.no_students = new_nst;
+  new_guide.no_schools = new_nsc;
+
+  old_std_no = 0;
+  new_guide.allocations = malloc(new_nst * sizeof(double*));
+  for (i = 1; i <= new_nst; i++) {
+    old_sch_no = 0;
+    new_guide.allocations[i] = malloc(new_nsc * sizeof(double));
+    old_std_no++;
+    while (J_subset->indicator[old_std_no-1] == 1) {
+      old_std_no++;
+    }
+    for (j = 1; j <= new_nsc; j++) {
+      old_sch_no++;
+      while (P_subset->indicator[old_sch_no-1] == 1) {
+	old_sch_no++;
+      }
+      new_guide.allocations[i-1][j-1] = feasible_guide->allocations[old_std_no-1][old_sch_no-1];
+    }
+  }
+  
+  return new_guide;
 }
 

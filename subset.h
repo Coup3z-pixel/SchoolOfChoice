@@ -36,17 +36,25 @@ struct subset nullset(int large_set_size);
 
 struct subset fullset(int large_set_size);
 
+int is_nullset(struct subset* my_set);
+
+void add_element(struct subset* my_set, int new_elt);
+
 int subsets_are_same(struct subset* first, struct subset* second);
 
 int subsets_are_disjoint(struct subset* first, struct subset* second);
 
 void copy_subset(struct subset* given_subset, struct subset* copy_subset);
 
+struct subset complement_of_subset(struct subset* given_subset);
+
 void complement(struct subset* given_subset, struct subset* comp);
 
 struct subset singleton_subset(int elmnt, int large_size);
 
 struct index index_of_subset(struct subset* my_subset);
+
+struct index index_of_complement(struct subset* my_subset);
 
 struct subset subset_of_index(struct index* my_index, int large_set_size);
 
@@ -61,11 +69,15 @@ void print_index_of_subset(struct subset* my_subset);
 
 int indices_are_same(struct index* first, struct index* second);
 
+int index_has_element(struct index* my_ind, int elt);
+
 int first_precedes_second(struct index* first, struct index* second);
 
 int* indices_of_elements(struct subset* my_subset);
 
 struct index* copy_of_index(struct index* given_index);
+
+struct index index_of_fullset(int large_set_size);
 
 struct index singleton_index(int j);
 
@@ -113,6 +125,8 @@ int is_empty_list(struct subset_list* my_list);
 void destroy_subset_list(struct subset_list* my_list);
 
 void print_subset_list(struct subset_list* my_list);
+
+void print_unordered_subset_list(struct unordered_subset_list* my_list);
 
 int maximum_set_size(struct subset_list* my_list);
 
