@@ -1,5 +1,5 @@
 #include "solver.h"
-#include "fraccee.h"
+#include "gcps_solver.h"
 #include "parser.h"
 
 int main(int argc, char const *argv[])
