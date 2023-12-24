@@ -216,13 +216,17 @@ int push_relabel(struct frac_cee* input, struct partial_alloc* max_flow_alloc) {
   }
 
   /* Report the result */
-  
+
+  max_flow_alloc->no_students = nst;
+  max_flow_alloc->no_schools = nsc;
+  max_flow_alloc->allocations = malloc(nst * sizeof(double*));
   for (i = 1; i <= nst; i++) {
-      for (j = 1; j <= nsc; j++) {
+    max_flow_alloc->allocations[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
       max_flow_alloc->allocations[i-1][j-1] = preflows[i][nst+j]; 
     }
   }
-  
+
   flow_value = 0.0;
   for (i = 1; i <= nst; i++) {
     flow_value+=preflows[0][i];

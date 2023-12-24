@@ -21,13 +21,6 @@ void get_alpha(struct frac_cee* working_cee, struct index* alpha) {
   }
 }
 
-void destroy_alpha(struct index* alpha, int nst) {    
-    for (int i = 1; i <= nst; i++) {
-      destroy_index(alpha[i-1]);
-    }
-    free(alpha);
-}
-
 void get_favorites(struct frac_cee* working_cee, int** preferences, int* favorites) {
   int i, done, probe;
 
@@ -138,9 +131,6 @@ void revise_theta(int** theta, struct index* alpha, int o_h,
     theta[J_students[g-1]-1][P_schools[g-1]-1]--;
     theta[J_students[g-1]-1][P_schools[g]-1]++;
   }
-
-  free(P_schools);
-  free(J_students);
 }
 
 void next_J_h(struct subset* next_J_subset, struct subset* J_subset, struct subset* P_subset,
@@ -205,7 +195,8 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
   int nst = feasible_guide->no_students;
   int nsc = feasible_guide->no_schools;
 
-  add_element(P_subset,sch);
+  *P_subset = singleton_subset(sch, nsc);
+  *J_subset = nullset(nst);
 
   struct index first_P_index;
   first_P_index = index_of_subset(P_subset);
@@ -265,10 +256,8 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
 					 struct subset* J_subset, struct frac_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
 					 struct index* alpha, int* favorites) {
-  /*
   int nst = feasible_guide->no_students;
   int nsc = feasible_guide->no_schools;
-  */
   
   int* o_h = malloc(sizeof(int));
   
@@ -288,8 +277,11 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
     revise_theta(theta, alpha, *o_h, feasible_guide, working_cee,
 		 J_increments, P_increments, favorites);
 
-    remove_all_elements(J_subset);
-    remove_all_elements(P_subset); 
+    destroy_subset(*J_subset);
+    destroy_subset(*P_subset);
+
+    *J_subset = nullset(nsc);
+    *P_subset = nullset(nst);
   }
 
   free(o_h);
@@ -485,7 +477,7 @@ void decrement_working_cee(struct frac_cee* working_cee, int* favorites, double 
 }
 
 void destroy_GCPS_allocation_stuff(int nst, struct subset* P_subset, struct subset* J_subset,
-				   int** theta, int* favorites, 
+				   int** theta, int* favorites, struct index* alpha,
 				   struct frac_scp* working_scp) {
   int i;
   
@@ -497,6 +489,10 @@ void destroy_GCPS_allocation_stuff(int nst, struct subset* P_subset, struct subs
   }
   free(theta);
   free(favorites);
+  for (i = 1; i <= nst; i++) {
+    destroy_index(alpha[i-1]);
+  }
+  free(alpha);
   destroy_frac_scp(*working_scp);
 }
 
@@ -515,6 +511,7 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
   copy_frac_scp(input, &working_scp);
 
   struct index* alpha;
+  alpha = malloc(nst * sizeof(struct index));
   
   int* favorites;
   favorites = malloc(nst * sizeof(int));
@@ -534,13 +531,11 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
   while (before_split) {
 
     if ((working_scp.cee).time_remaining < 0.000001) {
-      destroy_GCPS_allocation_stuff(nst, &P_subset, &J_subset, theta, favorites, 
+      destroy_GCPS_allocation_stuff(nst, &P_subset, &J_subset, theta, favorites, alpha,
 				    &working_scp);
       return final_alloc;
     }
 
-  
-    alpha = malloc(nst * sizeof(struct index));
     get_alpha(&(working_scp.cee), alpha);
 
     get_favorites(&(working_scp.cee), input->preferences, favorites);
@@ -549,8 +544,6 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
     
     massage_theta_or_find_critical_pair(theta, &P_subset, &J_subset, &(working_scp.cee),
 					feasible_guide, alpha, favorites);
-
-    destroy_alpha(alpha, nst);
     
     if (!is_nullset(&P_subset)) {
       before_split = 0;
@@ -603,7 +596,7 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
     destroy_index(P_index);
   }
 
-  destroy_GCPS_allocation_stuff(nst, &P_subset, &J_subset, theta, favorites, 
+  destroy_GCPS_allocation_stuff(nst, &P_subset, &J_subset, theta, favorites, alpha,
 				&working_scp);
   return final_alloc;
 }
@@ -617,7 +610,9 @@ struct partial_alloc GCPS_allocation(struct frac_scp* input) {
 
   struct partial_alloc final_alloc = GCPS_allocation_with_guide(input,&feasible_guide);
 
-  destroy_partial_alloc(feasible_guide); 
+  destroy_partial_alloc(feasible_guide);
+
+  printf("\nWe got to the end!\n");
 
   return final_alloc;
 }

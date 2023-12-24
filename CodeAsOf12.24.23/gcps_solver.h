@@ -7,9 +7,7 @@
 
 #include "push_relabel.h"
 
-void get_alpha(struct frac_cee* working_cee, struct index* alpha, int* upcount);
-
-void destroy_alpha(struct index* alpha, int nst, int* downcount);
+void get_alpha(struct frac_cee* working_cee, struct index* alpha);
 
 void get_favorites(struct frac_cee* working_cee, int** preferences, int* favorites);
 
@@ -66,12 +64,11 @@ double time_until_trajectory_change(int** theta, int* favorites,
 void decrement_working_cee(struct frac_cee* working_cee, int* favorites, double delta);
 
 void destroy_GCPS_allocation_stuff(int nst, struct subset* P_subset, struct subset* J_subset,
-				   int** theta, int* favorites, 
+				   int** theta, int* favorites, struct index* alpha,
 				   struct frac_scp* working_scp);
 
 struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
-						struct partial_alloc* feasible_guide,
-						int* upcount, int* downcount); 
+						struct partial_alloc* feasible_guide); 
 
 struct partial_alloc GCPS_allocation(struct frac_scp* input); 
 

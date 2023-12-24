@@ -38,8 +38,6 @@ struct subset fullset(int large_set_size);
 
 int is_nullset(struct subset* my_set);
 
-void remove_all_elements(struct subset* my_set);
-
 void add_element(struct subset* my_set, int new_elt);
 
 int subsets_are_same(struct subset* first, struct subset* second);
@@ -53,10 +51,6 @@ struct subset complement_of_subset(struct subset* given_subset);
 void complement(struct subset* given_subset, struct subset* comp);
 
 struct subset singleton_subset(int elmnt, int large_size);
-
-void becomes_nullset(struct subset* my_set);
-
-void becomes_singleton(struct subset* my_set, int elmnt);
 
 struct index index_of_subset(struct subset* my_subset);
 

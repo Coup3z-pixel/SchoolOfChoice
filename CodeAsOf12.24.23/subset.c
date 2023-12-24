@@ -45,19 +45,6 @@ struct subset singleton_subset(int elmt, int large_size) {
   return singleton;
 }
 
-void becomes_nullset(struct subset* my_set) {
-  for (int i = 1; i <= my_set->large_set_size; i++) {
-    my_set->indicator[i-1] = 0;
-  }
-}
-
-void becomes_singleton(struct subset* my_set, int elmnt) {
-  for (int i = 1; i <= my_set->large_set_size; i++) {
-    my_set->indicator[i-1] = 0;
-  }
-  my_set->indicator[elmnt-1] = 1;
-}
-
 struct square_matrix matrix_of_zeros(int dim) {  
   int j, k;
   struct square_matrix zero_matrix;
@@ -175,13 +162,6 @@ int is_nullset(struct subset* my_set)  {
     }
   }
   return 1;
-}
-
-void remove_all_elements(struct subset* my_set) {
-  my_set->subset_size = 0;
-  for (int i = 1; i <= my_set->large_set_size; i++) {
-    my_set->indicator[i-1] = 0;
-  }
 }
 
 void add_element(struct subset* my_set, int new_elt) {
