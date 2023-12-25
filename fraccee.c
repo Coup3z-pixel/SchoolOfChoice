@@ -137,6 +137,7 @@ struct frac_cee make_toy_frac_cee() {
   }
 
   my_frac.maximums[1][1] = 0.0;
+  my_frac.maximums[1][2] = 0.0;
   
   return my_frac;
 }
@@ -147,13 +148,13 @@ struct frac_scp make_toy_frac_scp() {
 
   my_scp.no_eligible_schools = malloc(4 * sizeof(int));
   my_scp.no_eligible_schools[0] = 3;
-  my_scp.no_eligible_schools[1] = 2;
+  my_scp.no_eligible_schools[1] = 1;
   my_scp.no_eligible_schools[2] = 3;
   my_scp.no_eligible_schools[3] = 3;
 
   my_scp.preferences = malloc(4 * sizeof(int*));
   my_scp.preferences[0] = malloc(3 * sizeof(int));
-  my_scp.preferences[1] = malloc(2 * sizeof(int));
+  my_scp.preferences[1] = malloc(1 * sizeof(int));
   my_scp.preferences[2] = malloc(3 * sizeof(int));
   my_scp.preferences[3] = malloc(3 * sizeof(int));
 
@@ -163,7 +164,6 @@ struct frac_scp make_toy_frac_scp() {
   my_scp.preferences[3][0] = 1;
 
   my_scp.preferences[0][1] = 2;
-  my_scp.preferences[1][1] = 3;
   my_scp.preferences[2][1] = 2;
   my_scp.preferences[3][1] = 2;
 
@@ -247,7 +247,7 @@ struct frac_scp critical_sub_frac_scp(struct frac_scp* my_scp, struct subset* J_
   for (i = 1; i <= nst; i++) {
     new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
     for (k = 1; k <= new_scp.no_eligible_schools[i-1]; k++) {
-      new_scp.preferences[i-1][k-1] = my_scp->preferences[J_index.indices[i-1]-1][k];
+      new_scp.preferences[i-1][k-1] = my_scp->preferences[J_index.indices[i-1]-1][k-1];
     }
   }
 
@@ -291,7 +291,7 @@ struct frac_cee crit_compl_sub_frac_cee(struct frac_cee* my_cee, struct subset* 
     new_cee.quotas[j-1] = my_cee->quotas[P_index.indices[j-1]-1];
     for (k = 1; k <= my_cee->no_students; k++) {
       if (J_subset->indicator[k-1] == 1) {
-	new_cee.quotas[j-1] -= my_cee->maximums[k][P_index.indices[j-1]-1];
+	new_cee.quotas[j-1] -= my_cee->maximums[k-1][P_index.indices[j-1]-1];
       }
     }
   }

@@ -282,7 +282,6 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
   compute_increments_and_o_h(J_subset, P_subset, J_increments, P_increments,
 			     feasible_guide, working_cee,
 			     alpha, theta, favorites, sch, o_h);
-   
   
   if (*o_h != 0) {
     revise_theta(theta, alpha, *o_h, feasible_guide, working_cee,
@@ -326,7 +325,7 @@ void massage_theta_or_find_critical_pair(int** theta, struct subset* P_subset,
       }
     }
     else {
-      
+
       mas_theta_or_find_crit_pair_for_sch(j, theta, P_subset, J_subset, working_cee,
 					  feasible_guide, alpha, favorites);      
       j = 1;
@@ -549,7 +548,6 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
     
     massage_theta_or_find_critical_pair(theta, &P_subset, &J_subset, &(working_scp.cee),
 					feasible_guide, alpha, favorites);
-
     destroy_alpha(alpha, nst);
     
     if (!is_nullset(&P_subset)) {
@@ -571,11 +569,15 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
 
   if (J_subset.subset_size > 0) {
     struct frac_scp left_scp = critical_sub_frac_scp(&working_scp, &J_subset);
+
     struct partial_alloc left_feas_guide = left_feasible_guide(feasible_guide, &J_subset);
     struct partial_alloc left_increment = GCPS_allocation_with_guide(&left_scp,&left_feas_guide);
+
     J_index = index_of_subset(&J_subset);
     P_index = index_of_fullset(nsc);
+    
     increment_partial_alloc(&final_alloc, &left_increment, &J_index, &P_index);
+
     destroy_frac_scp(left_scp);
     destroy_partial_alloc(left_feas_guide);
     destroy_partial_alloc(left_increment);
@@ -584,14 +586,15 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
   }
 
   if (J_subset.subset_size < J_subset.large_set_size) {
+
     struct frac_scp right_scp = crit_compl_sub_frac_scp(&working_scp, &J_subset, &P_subset);
-    
+
     struct partial_alloc right_feas_guide = right_feasible_guide(feasible_guide,
 								 &J_subset,&P_subset);
-    
+
     struct partial_alloc right_increment = GCPS_allocation_with_guide(&right_scp,
 								      &right_feas_guide);
-        
+
     J_index = index_of_complement(&J_subset);    
     P_index = index_of_complement(&P_subset);
     

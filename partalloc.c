@@ -245,7 +245,7 @@ struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
   int old_std_no = 0;
   new_guide.allocations = malloc(new_nst * sizeof(double*));
   for (i = 1; i <= new_nst; i++) {
-    new_guide.allocations[i] = malloc(nsc * sizeof(double));
+    new_guide.allocations[i-1] = malloc(nsc * sizeof(double));
     old_std_no++;
     while (J_subset->indicator[old_std_no-1] == 0) {
       old_std_no++;
