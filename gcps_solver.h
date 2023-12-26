@@ -13,6 +13,9 @@ void destroy_alpha(struct index* alpha, int nst, int* downcount);
 
 void get_favorites(struct frac_cee* working_cee, int** preferences, int* favorites);
 
+void compute_fully_allocated(int* fully_allocated, struct frac_cee* working_cee,
+			     struct partial_alloc* feasible_guide);
+
 void initialize_theta(int** theta, struct partial_alloc* feasible_guide, int* favorites);
 
 
@@ -30,7 +33,7 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
 				struct partial_alloc* feasible_guide,
 				struct frac_cee* working_cee,
 				struct index* alpha, int** theta, int* favorites,
-				int sch, int* o_h);
+				int* fully_allocated, int sch, int* o_h);
 
 void revise_theta(int** theta, struct index* alpha, int o_h, 
 		  struct partial_alloc* feasible_guide,
@@ -41,12 +44,17 @@ void revise_theta(int** theta, struct index* alpha, int o_h,
 void mas_theta_or_find_crit_pair_for_sch(int j, int** theta, struct subset* P_subset,
 					 struct subset* J_subset, struct frac_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
-					 struct index* alpha, int* favorites);
+					 struct index* alpha, int* favorites,
+					 int* fully_allocated);
 
 void massage_theta_or_find_critical_pair(int** theta, struct subset* P_subset,
 					 struct subset* J_subset, struct frac_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
-					 struct index* alpha, int* favorites);
+					 struct index* alpha, int* favorites,
+					 int* fully_allocated);
+  
+int theta_is_valid(int** theta, struct frac_cee* working_cee, struct partial_alloc* feasible_guide,
+		   struct index* alpha, int* favorites, int* fully_allocated);
 
 double time_until_some_max_exhaustion(int* favorites, struct frac_cee* working_cee);
 
@@ -70,8 +78,7 @@ void destroy_GCPS_allocation_stuff(int nst, struct subset* P_subset, struct subs
 				   struct frac_scp* working_scp);
 
 struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
-						struct partial_alloc* feasible_guide,
-						int* upcount, int* downcount); 
+						struct partial_alloc* feasible_guide); 
 
 struct partial_alloc GCPS_allocation(struct frac_scp* input); 
 

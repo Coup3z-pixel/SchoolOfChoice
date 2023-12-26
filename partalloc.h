@@ -51,5 +51,6 @@ struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
 struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
 					  struct subset* J_subset, struct subset* P_subset);
 
+int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second);
 
 #endif /* PARTALLOC_H */

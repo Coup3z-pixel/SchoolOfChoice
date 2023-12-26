@@ -16,6 +16,12 @@ void get_alpha(struct frac_cee* working_cee, struct index* alpha) {
 	alpha_subset.subset_size++;
       }
     }
+
+    if (is_nullset(&alpha_subset)) {
+      printf("The alpha for agent %d is empty.\n",i);
+      exit(0);
+    }
+    
     alpha[i-1] = index_of_subset(&alpha_subset);
     destroy_subset(alpha_subset);
   }
@@ -44,6 +50,29 @@ void get_favorites(struct frac_cee* working_cee, int** preferences, int* favorit
       else {
 	probe++;
       }
+    }
+  }
+}
+
+void compute_fully_allocated(int* fully_allocated, struct frac_cee* working_cee,
+			     struct partial_alloc* feasible_guide) {
+  int i, j;
+  
+  double school_sum;
+
+  int nst = working_cee->no_students;
+  int nsc = working_cee->no_schools;
+  
+  for (j = 1; j <= nsc; j++) {
+    school_sum = 0.0;
+    for (i = 1; i <= nst; i++) {
+      school_sum += feasible_guide->allocations[i-1][j-1];
+    }
+    if (school_sum > working_cee->quotas[j-1] - 0.000001) {
+      fully_allocated[j-1] = 1;
+    }
+    else {
+      fully_allocated[j-1] = 0;
     }
   }
 }
@@ -100,9 +129,7 @@ void revise_theta(int** theta, struct index* alpha, int o_h,
     done = 0;
     l = 1;
     while (!done) {
-
-      i = element_of_list_set(J_increments,g,l);
-      
+      i = element_of_list_set(J_increments,g,l);      
       if (index_has_element(&(alpha[i-1]),current_o) &&
 	  (feasible_guide->allocations[i-1][current_o-1] <
 	   working_cee->maximums[i-1][current_o-1] - 0.000001 ||
@@ -120,7 +147,7 @@ void revise_theta(int** theta, struct index* alpha, int o_h,
     l = 1;
     while (!done) {
       j = element_of_list_set(P_increments,g,l);
-      if (alpha[current_i-1].indices[j-1] &&
+      if (index_has_element(&(alpha[current_i-1]),j) &&
 	  (feasible_guide->allocations[current_i-1][j-1] > 0.000001 ||
 	   theta[current_i-1][j-1] > 1 ||
 	   (theta[current_i-1][j-1] > 0 && j != favorites[i-1]))) {
@@ -197,7 +224,7 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
 				struct partial_alloc* feasible_guide,
 				struct frac_cee* working_cee,
 				struct index* alpha, int** theta, int* favorites,
-				int sch, int* o_h) {
+				int* fully_allocated, int sch, int* o_h) {
   int i, k;
 
   int done = 0;
@@ -244,13 +271,11 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
 
 	for (k = 1; k <= next_P_index.no_elements; k++) {
 	  int sch_no = next_P_index.indices[k-1];
-	  double seats_in_feas_guide = 0.0;
 	  int theta_sum = 0;
 	  for (i = 1; i <= nst; i++) {
-	    seats_in_feas_guide += feasible_guide->allocations[i-1][sch_no-1];
 	    theta_sum += theta[i-1][sch_no-1];
 	  }
-	  if (seats_in_feas_guide < working_cee->quotas[sch_no-1] || theta_sum < 0) {	    
+	  if (!fully_allocated[sch_no-1] || theta_sum < 0) {	    
 	    done = 1;
 	    *o_h = sch_no;
 	  }
@@ -264,7 +289,8 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
 void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_subset,
 					 struct subset* J_subset, struct frac_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
-					 struct index* alpha, int* favorites) {
+					 struct index* alpha, int* favorites,
+					 int* fully_allocated) {
   /*
   int nst = feasible_guide->no_students;
   int nsc = feasible_guide->no_schools;
@@ -281,7 +307,7 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
 
   compute_increments_and_o_h(J_subset, P_subset, J_increments, P_increments,
 			     feasible_guide, working_cee,
-			     alpha, theta, favorites, sch, o_h);
+			     alpha, theta, favorites, fully_allocated, sch, o_h);
   
   if (*o_h != 0) {
     revise_theta(theta, alpha, *o_h, feasible_guide, working_cee,
@@ -299,41 +325,140 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
 void massage_theta_or_find_critical_pair(int** theta, struct subset* P_subset,
 					 struct subset* J_subset, struct frac_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
-					 struct index* alpha, int* favorites) {
-  int i, j, done, theta_sum;
-  double school_sum;
+					 struct index* alpha, int* favorites,
+					 int* fully_allocated) {
+  int i, j, done, found, theta_sum;
 
   int nst = feasible_guide->no_students;
   int nsc = feasible_guide->no_schools;
 
-  done = 0;
-  j = 1;
-  while (!done) {
-    theta_sum = 0;
-    for (i = 1; i <= nst; i++) {
-      theta_sum+=theta[i-1][j-1];
-    }
-    school_sum = 0.0;
-    for (i = 1; i <= nst; i++) {
-      school_sum+=feasible_guide->allocations[i-1][j-1];
-    }
-    
-    if (school_sum < working_cee->quotas[j-1] || theta_sum <= 0) {
-      j++;
-      if (j == nsc+1) {
-	done = 1;
+  /*
+
+    for (j = 1; j <= nsc; j++) {
+    if (fully_allocated[j-1]) {
+      theta_sum = 0;
+      for (i = 1; i <= nst; i++) {
+	theta_sum += theta[i-1][j-1];
+      }
+      if (theta_sum > 0) {
+	old_excess_sum += theta_sum;
       }
     }
-    else {
+  }
+  */
 
+  done = 0;
+  while (!done) {
+
+    j = 1;
+    found = 0;
+    while (!found) {
+      if (j == nsc+1) {
+	found = 1;
+      }
+      else {
+	if (!fully_allocated[j-1]) {
+	  j++;
+	}
+	else {
+	  theta_sum = 0;
+	  for (i = 1; i <= nst; i++) {
+	    theta_sum+=theta[i-1][j-1];
+	  }
+	  if (theta_sum > 0) {
+	    found = 1;
+	  }
+	  else {
+	    j++;
+	  }
+	}
+      }
+    }
+
+    if (j == nsc+1) {
+      done = 1;
+    }
+    else {
       mas_theta_or_find_crit_pair_for_sch(j, theta, P_subset, J_subset, working_cee,
-					  feasible_guide, alpha, favorites);      
-      j = 1;
+					  feasible_guide, alpha, favorites, fully_allocated);
+      
       if (!is_nullset(P_subset)) {
 	done = 1;
-      } 
+      }
+      /*
+      else {
+	for (j = 1; j <= nsc; j++) {
+	  if (fully_allocated[j-1]) {
+	    theta_sum = 0;
+	    for (i = 1; i <= nst; i++) {
+	      theta_sum += theta[i-1][j-1];
+	    }
+	    if (theta_sum > 0) {
+	      new_excess_sum += theta_sum;
+	    }
+	  }
+	}
+      }
+      */
     }
   }
+}
+  
+int theta_is_valid(int** theta, struct frac_cee* working_cee, struct partial_alloc* feasible_guide,
+		   struct index* alpha, int* favorites, int* fully_allocated) {
+  int i, j;
+
+  int nst = working_cee->no_students;
+  int nsc = working_cee->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      if (!index_has_element(&(alpha[i-1]),j) && theta[i-1][j-1] != 0) {
+	printf("Nonzero theta of i = %d for ineligible school j = %d.\n",i,j);
+	printf("The working_cee is \n");
+	print_frac_cee(working_cee);
+	return 0;
+      }
+      if (feasible_guide->allocations[i-1][j-1] < 0.000001 && theta[i-1][j-1] < 0) {
+	printf("Negative theta of zero allocation.\n");
+	return 0;
+      }
+      if (feasible_guide->allocations[i-1][j-1] < 0.000001 && favorites[i-1] == j &&
+	  theta[i-1][j-1] < 1) {
+	printf("Nonpositive theta of zero allocation of favorite.\n");
+	return 0;
+      }
+      if (feasible_guide->allocations[i-1][j-1] > working_cee->maximums[i-1][j-1] -0.000001 && 
+	  theta[i-1][j-1] > 0) {
+	printf("Positive theta in spite of max allocation.\n");
+	return 0;
+      }
+    }
+  }
+
+  for (i = 1; i <= nst; i++) {
+    int sum = 0;
+    for (j = 1; j <= nsc; j++) {
+      sum += theta[i-1][j-1];
+    }
+    if (sum != 0) {
+      printf("The sum of theta for agent %d is not zero.\n",i);
+    }
+  }
+
+  for (j = 1; j <= nsc; j++) {
+    int total_theta = 0;
+    for (i = 1; i <= nst; i++) {
+      total_theta += theta[i-1][j-1];
+    }
+      
+    if (fully_allocated[j-1] && total_theta > 0) {
+      printf("Positive theta_sum for fully allocated school %d.\n", j);
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 double time_until_some_max_exhaustion(int* favorites, struct frac_cee* working_cee) {
@@ -401,12 +526,14 @@ double time_until_feasible_guide_not_feasible(int** theta, struct frac_cee* work
 
   school_quota_min = working_cee->time_remaining;
   for (j = 1; j<= nsc; j++) {
+    double unallocated_quota = working_cee->quotas[j-1];
     slope = 0;
     for (i = 1; i <= nst; i++) {
+      unallocated_quota -= feasible_guide->allocations[i-1][j-1];
       slope+=theta[i-1][j-1];
     }
     if (slope > 0) {
-      temp_min = working_cee->quotas[j-1]/slope;
+      temp_min = unallocated_quota/slope;      
       school_quota_min = min(school_quota_min, temp_min);
     }
   }
@@ -501,7 +628,6 @@ void destroy_GCPS_allocation_stuff(int nst, struct subset* P_subset, struct subs
 
 struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
 						struct partial_alloc* feasible_guide) {
-  
   int i;
   
   int nst = (input->cee).no_students;
@@ -529,8 +655,15 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
   P_subset = nullset(nsc);
   J_subset = nullset(nst);
 
-  int before_split = 1;  
+  int before_split = 1;
+  int little_count = 0;
   while (before_split) {
+
+    little_count++;
+    if (little_count > 20) {
+      printf("We have excessive little_count and are quitting.\n");
+      exit(0);
+    }
 
     if ((working_scp.cee).time_remaining < 0.000001) {
       destroy_GCPS_allocation_stuff(nst, &P_subset, &J_subset, theta, favorites, 
@@ -543,12 +676,24 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
     get_alpha(&(working_scp.cee), alpha);
 
     get_favorites(&(working_scp.cee), input->preferences, favorites);
-    
+
     initialize_theta(theta, feasible_guide, favorites);
     
+    int* fully_allocated = malloc(nsc * sizeof(int));
+    compute_fully_allocated(fully_allocated,&(working_scp.cee),feasible_guide);
+    
     massage_theta_or_find_critical_pair(theta, &P_subset, &J_subset, &(working_scp.cee),
-					feasible_guide, alpha, favorites);
+					feasible_guide, alpha, favorites, fully_allocated);
+
+    if (is_nullset(&P_subset) && !theta_is_valid(theta, &(working_scp.cee), feasible_guide,
+						 alpha, favorites, fully_allocated)) {
+      printf("We have an invalid theta.\n");
+      exit(0);
+    }
+    
     destroy_alpha(alpha, nst);
+  
+    free(fully_allocated);  
     
     if (!is_nullset(&P_subset)) {
       before_split = 0;
@@ -556,11 +701,8 @@ struct partial_alloc GCPS_allocation_with_guide(struct frac_scp* input,
     else {
       double delta = time_until_trajectory_change(theta, favorites,&(working_scp.cee),
 						  feasible_guide);
-      
       augment_partial_alloc(&final_alloc, favorites, delta);
-
       adjust_feasible_guide(feasible_guide, theta, favorites, delta);
-      
       decrement_working_cee(&(working_scp.cee), favorites, delta);
     }
   }
@@ -620,7 +762,7 @@ struct partial_alloc GCPS_allocation(struct frac_scp* input) {
 
   struct partial_alloc final_alloc = GCPS_allocation_with_guide(input,&feasible_guide);
 
-  destroy_partial_alloc(feasible_guide); 
+  destroy_partial_alloc(feasible_guide);
 
   return final_alloc;
 }

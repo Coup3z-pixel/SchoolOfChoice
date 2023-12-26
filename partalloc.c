@@ -294,3 +294,21 @@ struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
   return new_guide;
 }
 
+int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second) {
+  int i, j;
+
+  int nst = first->no_students;
+  int nsc = first->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      if (first->allocations[i-1][j-1] < second->allocations[i-1][j-1] - 0.000001 ||
+	  first->allocations[i-1][j-1] > second->allocations[i-1][j-1] + 0.000001) {
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+

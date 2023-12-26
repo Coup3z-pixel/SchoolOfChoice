@@ -3,23 +3,27 @@
 struct input_sch_ch_prob make_toy_sch_ch_prob() {
   int i,j;
   struct input_sch_ch_prob my_scp;
+   
   my_scp.cee = make_toy_cee();
 
-  my_scp.no_eligible_schools = malloc(my_scp.cee.no_students * sizeof(int));
-  for (i = 1; i <= my_scp.cee.no_students; i++) {
-    my_scp.no_eligible_schools[i-1] = my_scp.cee.no_schools;
+  int nst = my_scp.cee.no_students;
+  int nsc = my_scp.cee.no_schools;
+
+  my_scp.no_eligible_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    my_scp.no_eligible_schools[i-1] = nsc;
   }
 
-  my_scp.preferences = malloc(my_scp.cee.no_students * sizeof(int*));
-  for (i = 1; i <= my_scp.cee.no_students; i++) {
-    my_scp.preferences[i-1] = malloc(my_scp.no_eligible_schools[i-1]*sizeof(int));
-    for (j = 1; j <= my_scp.no_eligible_schools[i-1]; j++) {
+  my_scp.preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    my_scp.preferences[i-1] = malloc(nsc * sizeof(int));
+    for (j = 1; j <= nsc; j++) {
       my_scp.preferences[i-1][j-1] = j;
     }
   }
 
-  my_scp.priority_threshold = malloc(my_scp.cee.no_schools * sizeof(int));
-  for (j = 1; j <= my_scp.cee.no_schools; j++) {
+  my_scp.priority_threshold = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
     my_scp.priority_threshold[j-1] = 1;
   }
 

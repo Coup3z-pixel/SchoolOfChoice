@@ -39,6 +39,12 @@ struct frac_cee make_toy_frac_cee();
 
 struct frac_scp make_toy_frac_scp();
 
+struct frac_cee frac_cee_from_double_cee(struct double_cee* my_cee);
+
+struct frac_scp frac_scp_from_sch_ch_prob(struct sch_ch_prob* my_scp);
+
+struct frac_scp frac_scp_from_input_sch_ch_prob(struct input_sch_ch_prob* my_scp);
+
 struct partial_alloc zero_alloc_for_frac(struct frac_cee* my_cee);
 
 struct frac_cee critical_sub_frac_cee(struct frac_cee* my_cee, struct subset* J_subset);

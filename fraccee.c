@@ -174,6 +174,78 @@ struct frac_scp make_toy_frac_scp() {
   return my_scp;
 }
 
+struct frac_cee frac_cee_from_double_cee(struct double_cee* my_cee) {
+  int i, j;
+  
+  struct frac_cee new_cee;
+
+  int nst = my_cee->no_students;
+  int nsc = my_cee->no_schools;
+
+  new_cee.no_students = nst;
+  new_cee.no_schools = nsc;
+
+  new_cee.quotas = malloc(nsc * sizeof(double));
+  for (j = 1; j <= nsc; j++) {
+    new_cee.quotas[j-1] = my_cee->quotas[j-1];
+  }
+
+  new_cee.maximums = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    new_cee.maximums[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
+      if (my_cee->priority[i-1][j-1] > 0) {
+	new_cee.maximums[i-1][j-1] = 1.0;
+      }
+      else {
+	new_cee.maximums[i-1][j-1] = 0.0;
+      }
+    }
+  }
+
+  new_cee.time_remaining = 1.0;
+
+  return new_cee;
+}
+
+struct frac_scp frac_scp_from_sch_ch_prob(struct sch_ch_prob* my_scp) {
+  int i, j;
+  
+  struct frac_scp new_scp;
+
+  new_scp.cee = frac_cee_from_double_cee(&(my_scp->cee));
+
+  int nst = new_scp.cee.no_students;
+
+  new_scp.no_eligible_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    new_scp.no_eligible_schools[i-1] = my_scp->no_eligible_schools[i-1];
+  }
+
+  new_scp.preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
+    for (j = 1; j <= new_scp.no_eligible_schools[i-1]; j++) {
+      new_scp.preferences[i-1][j-1] = my_scp->preferences[i-1][j-1];
+    }
+  }
+
+  return new_scp;
+}
+
+
+struct frac_scp frac_scp_from_input_sch_ch_prob(struct input_sch_ch_prob* my_scp) {
+  struct sch_ch_prob first_scp = sch_ch_prob_from_input(my_scp);
+  
+  struct sch_ch_prob second_scp = reduced_sch_ch_prob(&first_scp);
+  destroy_sch_ch_prob(first_scp);
+
+  struct frac_scp new_scp = frac_scp_from_sch_ch_prob(&second_scp);
+  destroy_sch_ch_prob(second_scp);
+  
+  return new_scp;
+}
+
 struct partial_alloc zero_alloc_for_frac(struct frac_cee* my_cee) {
   int i,j;
   struct partial_alloc my_partial_alloc;
