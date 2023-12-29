@@ -93,24 +93,24 @@ This document provides a brief introduction to the software package GCPS Schools
 
 \section{Introduction}
 
-In the paper ``An Efficient School Choice Mechanism Based on a
-Generalization of Hall's Marriage Theorem'' (joint with Shino Takayama
-and Yuki Tamura) we describe a new algorithm for school choice, along
-with its theoretical foundations.  This algorithm has been implemented
-(using the C programming language) in the software package \emph{GCPS
-  Schools} as an executable \texttt{gcps}, which passes from a school
-choice problem (as described below) to a matrix specifying, for each
-student-school pair, the probability that the student is assigned to
-the school.  The software package also contains two other executables
-\texttt{purify} and \texttt{make\_ex}.  The first of these passes from
-a matrix of assignment probabilities to a random pure assignment whose
-probability distribution averages to the given matrix of
-probabilities.  The second program generates example school choice
-problems of the sort that might occur in large school districts.
-These programs provide the basic computational resources required to
-apply our mechanism, and perhaps in some cases they will suffice.
-However, our primary hope is that the underlying code will be a useful
-starting point for further software development.
+In the paper ``An Efficient, Computationally Tractable School Choice
+Mechanism'' (joint with Shino Takayama and Yuki Tamura) we describe a
+new algorithm for school choice, along with its theoretical
+foundations.  This algorithm has been implemented (using the C
+programming language) in the software package \emph{GCPS Schools} as
+an executable \texttt{gcps}, which passes from a school choice problem
+(as described below) to a matrix specifying, for each student-school
+pair, the probability that the student is assigned to the school.  The
+software package also contains two other executables \texttt{purify}
+and \texttt{make\_ex}.  The first of these passes from a matrix of
+assignment probabilities to a random pure assignment whose probability
+distribution averages to the given matrix of probabilities.  The
+second program generates example school choice problems of the sort
+that might occur in large school districts.  These programs provide
+the basic computational resources required to apply our mechanism, and
+perhaps in some cases they will suffice.  However, the primary hope is
+that the underlying code will be a useful starting point for further
+software development.
 
 This document describes these programs, from the point of view of a
 user.  It doesn't assume that the reader has already read our paper,
@@ -152,15 +152,15 @@ The priority thresholds of the schools are
 
 \medskip
 
-Our input files begin with a comment between \texttt{/*} and
-\texttt{*/}.  This is purely for your convenience, and the comment can
-be of any length, and provide whatever information is useful to you,
-but it is mandatory insofar as the computer will insist that the first
-two characters of the file are \texttt{/*} and will only start
-extracting information after it sees the \texttt{*/}.  The computer
-divides the remainder into ``generalized white space'' (in addition to
-spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}', and
-`\texttt{,}' are treated as white space) and ``tokens,'' which are
+\emph{GCPS Schools} input files begin with a comment between
+\texttt{/*} and \texttt{*/}.  This is purely for your convenience.
+The comment can be of any length, and provide whatever information is
+useful to you, but it is mandatory insofar as the computer will insist
+that the first two characters of the file are \texttt{/*}, and it will
+only start extracting information after it sees the \texttt{*/}.  The
+computer divides the remainder into ``generalized white space'' (in
+addition to spaces, tabs, and new lines, `\texttt{(}', `\texttt{)}',
+and `\texttt{,}' are treated as white space) and ``tokens,'' which are
 sequences of characters without any of the generalized white space
 characters.  Tokens are either prescribed words, numbers, or student
 tags (a student number followed by `\texttt{:}') and everything must
@@ -203,7 +203,15 @@ The collection of information provided by an input file is a
 
 What the software does (primarily) is compute a matrix of assignment
 probabilities.  For our particular example \texttt{gcps} gives the
-following output.  (Here and below we are leaving out the sample comment.)
+output shown below.  (Here and below we are leaving out the sample
+comment.)  Note that the sum of the entries in each row is 1 and the
+sum of the entries in each school's column is that school's quota.  In
+general the sum of the quotas may exceed the number of students, in
+which case we require that the sum of the entries in each school's
+column does not exceed that school's quota. An assignment of
+probabilities with these properties --- each student's total
+assignment is 1 and no school is overassigned --- is a \emph{feasible
+allocation}.
 \medskip
 \begin{obeylines}\texttt{
 The allocation is:
@@ -216,14 +224,6 @@ The allocation is:
 \end{obeylines} \noindent
 
 \smallskip
-Note that the sum of the entries in each row is 1 and the sum of the
-entries in each school's column is that school's quota.  In general
-the sum of the quotas may exceed the number of students, in which case
-we require that the sum of the entries in each school's column does
-not exceed that school's quota. An assignment of probabilities with
-these properties --- each student's total assignment is 1 and no
-school is overassigned --- is a \emph{feasible allocation}.  
-
 Our mechanism is based on the ``simultaneous eating'' algorithm of
 \cite{bm01} for probabilistic allocation of objects, as generalized by
 \cite{balbuzanov22jet}.  In our example each student consumes
@@ -302,8 +302,18 @@ subproblems until a feasible allocation has been fully computed.
 \section{\texttt{purify}} \label{sec:Implementation}
 
 Leaving out the initial comment, the output of \texttt{gcps} is a
-matrix of assignment probabilities, as shown in the example below.
-(Now, to minimize confusion, the schools are $A$, $B$, and $C$.)
+matrix of assignment probabilities, as shown again below.
+(Now, to minimize confusion, the schools are $A$, $B$, and $C$.)  
+Generating a random deterministic assignment with a probability
+distribution that averages to this matrix is called
+\emph{implementation} by \cite{bckm13aer}.  The executable
+\texttt{purify} reads a feasible matrix $m$ of assignment
+probabilities from a file \texttt{allocate.mat}, which must have the
+form of the output of \texttt{gcps}, and it produces a random
+deterministic allocation with a suitable distribution, using an
+algorithm of \cite{bckm13aer}, as it applies to our somewhat simpler
+framework.
+
 
 \begin{obeylines}\texttt{
 \ \ \ \ \ $A$:    \     $B$:  \      $C$:
@@ -315,16 +325,6 @@ matrix of assignment probabilities, as shown in the example below.
 \end{obeylines} \noindent
 
 \medskip
-Generating a random deterministic assignment with a probability
-distribution that averages to this matrix is called
-\emph{implementation} by \cite{bckm13aer}.  The executable
-\texttt{purify} reads a feasible matrix $m$ of assignment
-probabilities from a file \texttt{allocate.mat}, which must have the
-form of the output of \texttt{gcps}, and it produces a random
-deterministic allocation with a suitable distribution, using an
-algorithm of \cite{bckm13aer}, as it applies to our somewhat simpler
-framework.
-
 We can illustrate the algorithm using the feasible allocation shown
 above.  We consider a cyclic path alternating between students and
 schools, say $1 \to C \to 3 \to A \to 1$, such that the entries of the

@@ -15,19 +15,9 @@ struct index {
   int* indices;
 };
 
-struct square_matrix {
-  int dimension;
-  int** entries;
-};
-
-struct unordered_subset_list {
+struct index_list {
   struct index* node_index;
-  struct unordered_subset_list* next;
-};
-
-struct subset_list {
-  struct index* node_index;
-  struct subset_list* next;
+  struct index_list* next;
 };
 
 void print_vector_of_ints(int* vector, int dim);
@@ -77,8 +67,6 @@ int indices_are_same(struct index* first, struct index* second);
 
 int index_has_element(struct index* my_ind, int elt);
 
-int first_precedes_second(struct index* first, struct index* second);
-
 int* indices_of_elements(struct subset* my_subset);
 
 struct index* copy_of_index(struct index* given_index);
@@ -89,95 +77,27 @@ struct index singleton_index(int j);
 
 struct index index_with_element_added(struct index* my_index, int j);
 
-struct index index_of_subset_from_indices_list(struct index* my_index, int* list_of_indices);
+struct index* reverse_of_correspondence_graph(struct index* my_list, int domain_no, int range_no);
 
 void destroy_subset(struct subset my_subset);
 
 void destroy_index(struct index my_index);
 
 
-struct square_matrix matrix_of_zeros(int dim);
+struct index_list* initialized_index_list(); 
 
-struct square_matrix matrix_of_ones(int dim);
+int index_list_is_empty(struct index_list* my_list);
 
-struct square_matrix submatrix(struct square_matrix* big_matrix, struct subset* my_subset);
+void destroy_index_list(struct index_list* my_list);
 
-int is_connected(struct subset* my_subset, struct square_matrix* related);
+void print_index_list(struct index_list* my_list);
 
-void print_square_matrix(struct square_matrix* my_matrix);
+int length_of_index_list(struct index_list* my_list);
 
-void destroy_square_matrix(struct square_matrix my_matrix);
+int element_of_list_set(struct index_list* my_list, int set_no, int elt_no);
 
+void add_index_to_index_list(struct index_list* my_list, struct index* my_index);
 
-struct unordered_subset_list* initialized_unordered_list(); 
-
-int unordered_list_is_empty(struct unordered_subset_list* my_list);
-
-void destroy_unordered_list(struct unordered_subset_list* my_list);
-
-void print_unordered_list(struct unordered_subset_list* my_list);
-
-int length_of_unordered_list(struct unordered_subset_list* my_list);
-
-int element_of_list_set(struct unordered_subset_list* my_list, int set_no, int elt_no);
-
-void add_subset_to_unordered_list(struct unordered_subset_list* my_list, struct index* my_index);
-
-
-struct subset_list* initialized_subset_list(); 
-
-int is_empty_list(struct subset_list* my_list);
-
-void destroy_subset_list(struct subset_list* my_list);
-
-void print_subset_list(struct subset_list* my_list);
-
-void print_unordered_subset_list(struct unordered_subset_list* my_list);
-
-int maximum_set_size(struct subset_list* my_list);
-
-void add_subset(struct subset_list* my_list, struct index* my_index);
-
-void remove_subset(struct subset_list* my_list, struct index* my_index);
-
-int list_contains_index(struct subset_list* my_list, struct index* my_index);
-
-struct subset_list*  copy_of_subset_list(struct subset_list* my_list);
-
-void add_second_list_to_first(struct subset_list* first, struct subset_list* second);
-
-int first_list_contains_second(struct subset_list* first, struct subset_list* second);
-
-int lists_are_the_same(struct subset_list* first, struct subset_list* second);
-
-void add_subsets_of_subset_to_list(struct subset_list* big_list, struct subset* the_subset,
-				   struct subset_list* list_to_add);
-
-int list_contains_index(struct subset_list* my_list, struct index* my_index);
-
-struct subset_list* nonempty_subsets(struct index* my_index);
-
-struct subset_list* reduced_subset_list(struct subset_list* my_list, struct subset* my_subset);
-
-struct subset_list* immediate_supersets(struct index* my_index, struct square_matrix* related);
-
-struct subset_list* immediate_supersets_of_list(struct subset_list* my_list,
-						struct square_matrix* related);
-
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related,
-					 int depth);
-
-struct subset_list* supersets_of_subsets(struct index* my_index, struct square_matrix* related,
-					 int depth);
-
-struct subset_list* expanded_list(struct subset_list* my_list, struct square_matrix* related);
-
-int* properly_ordered_candidate_list(struct subset* my_subset, struct square_matrix* related);
-
-int new_is_qualified(int j, struct square_matrix* related, int* candidate_list, int probe);
-
-int new_first_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
-
-int new_next_subset(struct subset* my_subset, struct square_matrix* related, int set_size);
+void print_index_list(struct index_list* my_list);
 
 #endif /* SUBSET_H */

@@ -1,4 +1,3 @@
-#include "solver.h"
 #include "gcps_solver.h"
 #include "parser.h"
 
@@ -11,45 +10,27 @@ int main(int argc, char const *argv[])
   destroy_input_sch_ch_prob(input_scp);
   
   /*  print_frac_scp(&input_frac_scp); */
+
+  int* segments = malloc(sizeof(int));
+  *segments = 0;
+  int* splits = malloc(sizeof(int));
+  *splits = 0;
+  int* pivots = malloc(sizeof(int));
+  *pivots = 0;
+  int* h_sum = malloc(sizeof(int));
+  *h_sum = 0;
   
-  struct partial_alloc gcps_alloc = GCPS_allocation(&input_frac_scp);
-  print_partial_alloc(&gcps_alloc);
-  
+  struct partial_alloc gcps_alloc = GCPS_allocation(&input_frac_scp, segments, splits,
+						    pivots, h_sum);
+  /*  print_partial_alloc(&gcps_alloc); */
+
+  printf("There were %d segments, %d splits, and %d pivots, and h_sum was %d.\n",
+	 *segments, *splits, *pivots, *h_sum);
+
+  free(segments);
+  free(pivots);
+  free(h_sum);
   destroy_frac_scp(input_frac_scp);
-
-  /*  struct sch_ch_prob new_sch_ch_prob = sch_ch_prob_from_input(&input_scp); */
-
-  /*
-  
-  struct sch_ch_prob red_sch_ch_prob = reduced_sch_ch_prob(&new_sch_ch_prob);
-  destroy_sch_ch_prob(new_sch_ch_prob); 
-  struct partial_alloc solution = GCPS_schools_solver_top_level(&red_sch_ch_prob);
-  destroy_sch_ch_prob(red_sch_ch_prob);
-
-  if (!partial_allocs_are_same(&gcps_alloc,&solution)) {
-    printf("YIKES!! We have different allocations from the two algorithms.\n");
-  }
-  */
-  
-  /*  destroy_partial_alloc(gcps_alloc); */
-  /*  destroy_partial_alloc(solution); */
-
-  /*
-  struct input_sch_ch_prob my_sch_ch_prob = sch_ch_prob_from_file();
-  
-  struct sch_ch_prob new_sch_ch_prob = sch_ch_prob_from_input(&my_sch_ch_prob);
-  destroy_input_sch_ch_prob(my_sch_ch_prob);
-  
-  struct sch_ch_prob red_sch_ch_prob = reduced_sch_ch_prob(&new_sch_ch_prob);
-  destroy_sch_ch_prob(new_sch_ch_prob); 
-
-  struct partial_alloc solution = GCPS_schools_solver_top_level(&red_sch_ch_prob);
-
-  print_partial_alloc(&solution);  
-
-  destroy_sch_ch_prob(red_sch_ch_prob); 
-  destroy_partial_alloc(solution);
-  */
 
   return 0;
 }

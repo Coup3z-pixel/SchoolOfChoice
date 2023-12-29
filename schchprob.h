@@ -45,20 +45,4 @@ struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp);
 struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* given_scp, 
 				   struct subset* stu_subset, struct subset* sch_subset);
 
-double time_remaining_of_gmc_equality(struct sch_ch_prob* my_scp,struct subset* school_subset,
-				      int level, int* target_level,
-				      struct subset* eating_students,
-				      struct subset* captive_students,
-				      struct subset* overallocated_schools,
-				      int* exit_status);
-
-double time_rem_after_first_gmc_eq(struct sch_ch_prob* my_scp, 
-				   int level, int* target_level, int depth,
-				   struct subset* crit_stu_subset,
-				   struct subset* crit_sch_subset,
-				   struct subset* overallocated_schools,
-				   struct subset_list* observed_overallocated_sets,
-				   struct subset_list* known_facets,
-				   int* exit_status);
-
 #endif /* SCHCHPROB_H */

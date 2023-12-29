@@ -32,8 +32,8 @@ void print_pure_alloc(struct pure_alloc my_pure_alloc);
 
 void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, double delta);
 
-void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, int* favorites,
-			   double delta);
+void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, struct index* alpha,
+			   int* favorites, double delta);
 
 struct partial_alloc allocate_until_new_time(struct sch_ch_prob* my_scp,
 					     double new_time_remaining);

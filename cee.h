@@ -35,19 +35,5 @@ struct double_cee double_cee_from_int_cee(struct int_cee* my_cee);
 
 struct double_cee make_toy_double_cee();
 
-void sub_double_cee(struct double_cee* given_cee, struct double_cee* sub_cee,
-		    int no_stu, int no_sch, int* stu_index, int* sch_index);
-
-int* popular_schools(struct double_cee* my_cee, double time_remaining);
-
-void remove_unpopular_schools(struct square_matrix* raw_related, int* popular);
-
-struct square_matrix raw_related_matrix(struct double_cee* my_cee);
-
-struct square_matrix related_matrix(struct double_cee* my_cee, double time_remaining);
-
-/* int minimum_gmc_inequality(struct double_cee* my_cee, struct subset* school_subset); */
-
-/* int gmc_holds(struct double_cee* my_cee); - This can be reimplemented without next_subset. */
 
 #endif /* CEE_H */

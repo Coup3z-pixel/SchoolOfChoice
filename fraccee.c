@@ -331,7 +331,7 @@ struct frac_cee crit_compl_sub_frac_cee(struct frac_cee* my_cee, struct subset* 
 					struct subset* P_subset) {
   struct frac_cee new_cee;
   
-  int i, j, k, count;
+  int i, j, k;
 
   struct subset J_compl, P_compl;
   J_compl = complement_of_subset(J_subset);
@@ -339,18 +339,6 @@ struct frac_cee crit_compl_sub_frac_cee(struct frac_cee* my_cee, struct subset* 
   struct index J_index, P_index;
   J_index = index_of_subset(&J_compl);
   P_index = index_of_subset(&P_compl);
-  
-  int* reverse_P_index = malloc(my_cee->no_schools * sizeof(int));
-  count = 0;
-  for (j = 1; j <= my_cee->no_schools; j++) {
-    if (P_compl.indicator[j-1] == 1) {
-      count++;
-      reverse_P_index[j-1] = count;
-    }
-    else {
-      reverse_P_index[j-1] = 0;
-    }
-  }
 
   int nst = J_compl.subset_size;
   int nsc = P_compl.subset_size;
@@ -383,7 +371,6 @@ struct frac_cee crit_compl_sub_frac_cee(struct frac_cee* my_cee, struct subset* 
   destroy_subset(P_compl);
   destroy_index(J_index);
   destroy_index(P_index);
-  free(reverse_P_index);
 
   /*  print_frac_cee(&(new_cee)); */
   
@@ -404,7 +391,7 @@ struct frac_scp crit_compl_sub_frac_scp(struct frac_scp* my_scp, struct subset* 
   struct index J_index, P_index;
   J_index = index_of_subset(&J_compl);
   P_index = index_of_subset(&P_compl);
-  
+
   int* reverse_P_index = malloc(my_scp->cee.no_schools * sizeof(int));
   count = 0;
   for (j = 1; j <= my_scp->cee.no_schools; j++) {
@@ -416,6 +403,7 @@ struct frac_scp crit_compl_sub_frac_scp(struct frac_scp* my_scp, struct subset* 
       reverse_P_index[j-1] = 0;
     }
   }
+  
 
   int nst = J_compl.subset_size;
   int nsc = P_compl.subset_size;
@@ -447,7 +435,7 @@ struct frac_scp crit_compl_sub_frac_scp(struct frac_scp* my_scp, struct subset* 
   destroy_subset(P_compl);
   destroy_index(J_index);
   destroy_index(P_index);
-  free(reverse_P_index);
+  free(reverse_P_index); 
 
   /*  print_frac_scp(&new_scp); */
 
