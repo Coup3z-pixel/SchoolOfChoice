@@ -1,21 +1,5 @@
 #include "partalloc.h"
 
-struct partial_alloc zero_partial_alloc(struct double_cee* my_cee) {
-  int i,j;
-  struct partial_alloc my_partial_alloc;
-  my_partial_alloc.no_students = my_cee->no_students;
-  my_partial_alloc.no_schools = my_cee->no_schools;
-  
-  my_partial_alloc.allocations = malloc(my_cee->no_students * sizeof(double*));
-  for (i = 1; i <= my_partial_alloc.no_students; i++) {
-    my_partial_alloc.allocations[i-1] = malloc(my_cee->no_schools * sizeof(double));
-    for (j = 1; j <= my_partial_alloc.no_schools; j++) {
-      my_partial_alloc.allocations[i-1][j-1] = 0.0; 
-    }
-  }
-  
-  return my_partial_alloc;
-}
 
 void destroy_pure_alloc(struct pure_alloc my_pure_alloc) {
   int i;
@@ -114,7 +98,6 @@ void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, st
   int i, j, k;
 
   int nst = feasible_guide->no_students;
-  int nsc = feasible_guide->no_schools;
 
   for (i = 1; i <= nst; i++) {
     for (k = 1; k <= alpha[i-1].no_elements; k++) {
@@ -139,32 +122,6 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
   }
 }
 
-struct partial_alloc allocate_until_new_time(struct sch_ch_prob* my_scp,
-					     double new_time_remaining) {
-  int i,j;
-  struct partial_alloc my_partial_alloc;
-  
-  my_partial_alloc.no_students = my_scp->cee.no_students;
-  my_partial_alloc.no_schools = my_scp->cee.no_schools;
-  
-  my_partial_alloc.allocations = malloc(my_scp->cee.no_students * sizeof(double*));
-  for (i = 1; i <= my_partial_alloc.no_students; i++) {
-    my_partial_alloc.allocations[i-1] = malloc(my_scp->cee.no_schools * sizeof(double));
-    for (j = 1; j <= my_partial_alloc.no_schools; j++) {
-      if (my_scp->preferences[i-1][0] == j) {
-	my_partial_alloc.allocations[i-1][j-1] = my_scp->time_remaining - new_time_remaining;
-	my_scp->cee.quotas[j-1] -= (my_scp->time_remaining - new_time_remaining);
-      }
-      else {
-	my_partial_alloc.allocations[i-1][j-1] = 0.0;
-      }
-    }
-  }
-
-  my_scp->time_remaining = new_time_remaining;
-  
-  return my_partial_alloc;
-}
 
 double* school_sums(struct partial_alloc* my_alloc) {
   int i, j;
@@ -176,60 +133,6 @@ double* school_sums(struct partial_alloc* my_alloc) {
     }
   }
   return sums;
-}
-
-int is_feasible_allocation(struct sch_ch_prob* my_scp, struct partial_alloc* my_alloc) {
-  int i, j, answer;
-  double st_total, sc_total;
-
-  int nst = my_alloc->no_students;
-  int nsc = my_alloc->no_schools;
-
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++ ) {
-      if (my_alloc->allocations[i-1][j-1] < -0.000001) {
-	printf("We have a negative allocation.\n");
-	return 0;
-      }
-      if (my_alloc->allocations[i-1][j-1] > 1.000001) {
-	printf("We have an allocation above 1.\n");
-	return 0;
-      }
-    }
-  }
-
-  answer = 1;
-  for (i = 1; i <= nst; i++) {
-    st_total = 0.0;
-    for (j = 0; j <= nsc; j++) {
-      st_total += my_alloc->allocations[i-1][j-1];
-    }
-    if (st_total < my_scp->time_remaining - 0.000001) {
-      printf("Student %d is underallocated.\n",i);
-      answer = 0;
-      return 0;
-    }
-    if (st_total > my_scp->time_remaining + 0.000001) {
-      printf("Student %d is overallocated.\n",i);
-      answer = 0;
-    }
-  }
-  if (answer == 0) {
-    return 0;
-  }
-
-  for (j = 1; j <= nsc; j++) {
-    sc_total = 0.0;
-    for (i = 1; i <= nst; i++) {
-      sc_total += my_alloc->allocations[i-1][j-1];
-    }
-    if (sc_total > (my_scp->cee).quotas[j-1]) {
-      printf("We have an overallocated school.\n");
-      return 0;
-    }
-  }
-
-  return 1;
 }
 
 struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
@@ -312,5 +215,23 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
   }
 
   return 1;
+}
+
+
+struct partial_alloc zero_alloc_for_process_scp(struct process_cee* my_cee) {
+  int i,j;
+  struct partial_alloc my_partial_alloc;
+  my_partial_alloc.no_students = my_cee->no_students;
+  my_partial_alloc.no_schools = my_cee->no_schools;
+  
+  my_partial_alloc.allocations = malloc(my_cee->no_students * sizeof(double*));
+  for (i = 1; i <= my_partial_alloc.no_students; i++) {
+    my_partial_alloc.allocations[i-1] = malloc(my_cee->no_schools * sizeof(double));
+    for (j = 1; j <= my_partial_alloc.no_schools; j++) {
+      my_partial_alloc.allocations[i-1][j-1] = 0.0; 
+    }
+  }
+  
+  return my_partial_alloc;
 }
 

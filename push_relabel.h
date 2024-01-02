@@ -5,8 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fraccee.h"
 
+
+
+#include "normal.h"
+#include "subset.h"
+#include "cee.h"
+#include "schchprob.h"
+#include "partalloc.h"
 
 int push_is_valid(int source, int target,
 		  double** capacities, double** preflows, double* excess, int* labels);
@@ -18,6 +24,6 @@ int relabel_is_valid(int node, double** capacities, double** preflows,
 
 void relabel(int node, double** capacities, double** preflows, int* labels, int nst, int nsc);
 
-int push_relabel(struct frac_cee* input, struct partial_alloc* max_flow_alloc);
+int push_relabel(struct process_cee* input, struct partial_alloc* max_flow_alloc);
 
 #endif /* PUSH_RELABEL_H */

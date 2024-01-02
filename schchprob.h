@@ -4,45 +4,38 @@
 #include "cee.h"
 
 struct input_sch_ch_prob {
-  struct int_cee cee;
+  struct input_cee cee;
   int* no_eligible_schools; /* for each student, the number of eligible schools */
   int** preferences; /* each student's list of eligible schools, from best to worst */
   int* priority_threshold; /* the schools' minimum priorities */
 };
 
-struct sch_ch_prob {
-  struct double_cee cee;
+struct process_scp {
+  struct process_cee cee;
   int* no_eligible_schools; /* for each student, the number of eligible schools */
   int** preferences; /* each student's list of eligible schools, from best to worst */
-  int* priority_threshold; /* the schools' minimum priorities */
-  double time_remaining;
 };
 
-struct input_sch_ch_prob make_toy_sch_ch_prob();
-
-void copy_sch_ch_prob(struct sch_ch_prob* my_scp, struct sch_ch_prob* copy);
-
-void destroy_sch_ch_prob(struct sch_ch_prob my_scp);
 
 void destroy_input_sch_ch_prob(struct input_sch_ch_prob my_scp);
 
-void print_sch_ch_prob(struct sch_ch_prob* my_scp);
+void destroy_process_scp(struct process_scp my_scp);
 
 void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp);
 
-/* The next function converts the obvious ints to doubles, and sets 
-   time_remaining to 1.0. */
+void print_process_scp(struct process_scp* my_proc);
 
-struct sch_ch_prob sch_ch_prob_from_input(struct input_sch_ch_prob* my_scp);
+void copy_process_scp(struct process_scp* my_scp, struct process_scp* copy);
 
-/* The next function sets the priority of student i at school j to 0
-   if the input priority is 0 or less than the school's priority
-   threshold, and 1 otherwise.  It resets each school's priority
-   threshold to 1. */
+struct input_sch_ch_prob make_toy_sch_ch_prob();
 
-struct sch_ch_prob reduced_sch_ch_prob(struct sch_ch_prob* my_scp);
+struct process_scp make_toy_process_scp();
 
-struct sch_ch_prob sub_sch_ch_prob(struct sch_ch_prob* given_scp, 
-				   struct subset* stu_subset, struct subset* sch_subset);
+struct process_scp process_scp_from_input(struct input_sch_ch_prob* my_scp);
+
+struct process_scp critical_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset);
+
+struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
+					struct subset* P_subset);
 
 #endif /* SCHCHPROB_H */

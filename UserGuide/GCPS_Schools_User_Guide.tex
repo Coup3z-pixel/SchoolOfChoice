@@ -504,19 +504,19 @@ importance of travel costs one can increase
 \texttt{idiosyncratic\_std\_dev}.
 
 This illustrates an important point concerning the relationship
-between this software and its users.  Most softwares have interfaces
-with the user that neither require nor allow the user to edit the
-source code, but to create such an interface here would be
-counterproductive. It would add complexity to the source code that had
-nothing to do with the underlying algorithms.  More importantly, the
-main purpose of this software is to provide a starting point for the
-user's own programming effort in adapting it to the particular
-requirements and idiosyncratic features of the user's school choice
-setting.  Our algorithms are not very complicated, and someone
-familiar with C should hopefully not have a great deal of difficulty
-figuring out what is going on and then bending it to her purposes.
-Starting to look at and edit the source code as soon as possible is a
-first step down that road.
+between this software and its users.  Most softwares you are familiar
+with have interfaces with the user that neither require nor allow the
+user to edit the source code, but to create such an interface here
+would be counterproductive. It would add complexity to the source code
+that had nothing to do with the underlying algorithms.  More
+importantly, the main purpose of this software is to provide a
+starting point for the user's own programming effort in adapting it to
+the particular requirements and idiosyncratic features of the user's
+school choice setting.  Our algorithms are not very complicated, and
+someone familiar with C should hopefully not have a great deal of
+difficulty figuring out what is going on and then bending it to her
+purposes.  Starting to look at and edit the source code as soon as
+possible is a first step down that road.
 
 
 \section{Finer Priorities} \label{sec:Priorities}
@@ -621,142 +621,6 @@ development of a version of \texttt{gcps} that can accept parameter
 inputs, without editing the source code.  This should be a simple task
 for an experienced C programmer.)
 
-Whether it is a good idea to use priorities as the Chinese do is an
-extremely complex question.  On the one hand there is an obvious sense
-in which it is desirable to provide the best resources to those who
-can extract the greatest benefit.  On the other side, the Chinese
-system intensifies the intergenerational transmission of advantage,
-and there is some education research suggesting that average students
-benefit from having talented peers while talented students are not
-disadvantaged by having some peers who are ordinary. One could easily
-list numerous additional issues.  Balancing various concerns in
-practice requires information concerning what would actually happen
-under various policy alternatives.  Our mechanism provides a wide
-range of alternatives, for which outcomes from existing data can be
-easily computed.
-
-\section{What If There Are Many Schools?} \label{sec:ManySchools}
-
-As the algorithm was described above, it looked ahead, for each
-nonempty set of schools $P$, to determine the time at which it would
-become necessary to restrict further consumption of schools in $P$ to
-students in $J_P$.  This is not unduly burdensome if there are a
-moderate number of schools.  (For a ``toy'' example with 20 schools,
-hence over one million sets of schools, this form of the algorithm
-finishes in about 10 seconds.)  But some school choice problems have
-several dozen or even hundreds of schools, and will overwhelm the
-naive version of the algorithm described above.  There are several
-things that can be done about this.
-
-First, to help things along a bit, at each stage of the allocation
-process the computer looks for schools whose capacity will not be
-exceeded even if every student who ranks it receives all of their
-remaining probability from the school.  Such a school is said to be
-\emph{unpopular}.  An unpopular school will never be an element of a
-minimal critical set. A school is \emph{popular} if it is not
-unpopular
-
-Two schools are \emph{related} if there is a student who can attend
-either one.  For each student $i$ let $\alpha_i$ be the set of schools
-at which $i$ has priority one.  Formally, two schools are related if
-there is an $i$ such that both of the schools are elements of
-$\alpha_i$.  At each stage of the allocation process the computer
-computes a square matrix \texttt{related} whose rows and columns are
-indexed by the schools, such that $\text{\texttt{related[j][k]}} = 1$
-if $j$ and $k$ are both popular at that stage and $\alpha_j \cap
-\alpha_k \ne \emptyset$, or if $j = k$ and $j$ is popular, and
-otherwise $\text{\texttt{related[j][k]}} = 0$.  We think of
-\texttt{related} as encoding an undirected graph whose nodes are the
-popular schools, with an edge connecting $j$ and $k$ if and only if
-$\text{\texttt{related[j][k]}} = 1 = \text{\texttt{related[k][j]}}$.
-For any set of schools $P$ there is an induced subgraph whose set of
-nodes is $P$ and whose edges are the edges of the graph whose
-endpoints are both in $P$.
-
-An undirected graph is \emph{connected} if, for any pair of nodes $j$
-and $k$, there is a sequence of edges leading from $j$ to $k$.
-Suppose that $P$ is a set of schools such that the induced subgraph of
-\texttt{related} is not connected.  Then $P = P_1 \cup P_2$ where
-$P_1$ and $P_2$ are nonempty, $P_1 \cup P_2 = \emptyset$, and there is
-no path of edges leading from a school in $P_1$ to a school in $P_2$.
-In particular, there is no school in $P_1$ that is \texttt{related} to
-a school in $P_2$.  If $P$ is critical, then both $P_1$ and $P_2$ are
-critical, because every student in $J_P$ is either in $J_{P_1}$ or in
-$J_{P_2}$, so there are just enough remaining seats in $P_1$ to meet
-the remaining needs of students in $J_{P_1}$, and similarly for $P_2$.
-Therefore $P$ cannot be a \emph{minimal} critical set.
-
-At this point we have seen that in a search for a minimal critical
-set, it is only necessary to consider subsets $P$ of the set of
-popular schools such that the graph obtained by restricting
-\texttt{related} to $P$ is connected.  For large school choice
-problems the number of such sets can still be overwhelming.
-
-There is probably no algorithm that is guaranteed to compute the
-desired allocation, in a reasonable amount of time, for every possible
-problem, because it is certainly possible to concoct a problem for
-which there is a very large critical set.  What I have tried to do is
-to design \texttt{gcps} so that it will perform reasonably well, with
-very high probability, when its input is the sort of problem that
-comes from \texttt{make\_ex}, which we hope provides a satisfactory
-approximation of the sorts of problems that might arise in practice.
-
-Concretely, \texttt{gcps} begins by letting the schools fill up one by
-one, until it notices that some school $j$ has been overallocated,
-insofar as it does not have enough remaining capacity to serve those
-students who no longer have any feasible alternatives.  Since the
-process has arrived at an infeasible allocation, there must have been
-a point in the process where, for some set of schools $P$, the total
-remaining capacity of the schools in $P$ went below the total
-remaining demand of students who could no longer consume any school
-outside of $P$.
-
-We now restart the allocation process, this time watching out for
-criticality of sets of popular schools that one or two elements.  If
-such a set becomes critical, the process splits into two parts, one
-for the set and the students who can no longer consume schools outside
-this set, and the other for the other remaining schools and the other
-students. 
-
-The process might fail again because, even with more sets of schools
-being monitored, there still comes a time at which one of the sets we
-are monitoring does not have enough remaining capacity to meet the
-needs of the students who cannot consume schools outside this set.
-That is, looking at two element sets of schools did not resolve the
-issue.  In this event the next iteration of the allocation process
-watches out for criticality of sets of schools with three or fewer
-elements that are \texttt{related}-connected. If such a set becomes
-critical during this iteration, the first such set to become critical
-is added to a list of sets whose criticality is monitored in all
-future iterations of the allocation process.
-
-In general, we maintain a list of sets of schools that have proven
-relevant to the allocation process.  In each iteration of the process
-we monitor the criticality of \texttt{related}-connected sets of
-schools that consist of a subset of one of these sets and at most one
-other element.  In the event that the process fails because there
-comes a time at which some set $P$ of schools has insufficient
-capacity for the students who have no options outside $P$, the first
-response is to add $P$ to our list.  If this does not resolve the
-issue because even with more schools being monitored, there still
-comes a time at which $P$ has insufficient capacity, we run iterations
-of the process that monitor larger and larger supersets of subsets of
-$P$, until the issue is resolved.  This procedure is described in more
-precise detail in Subsection \ref{subsec:Solver} of the Appendix, and
-in the code itself.
-
-Several remarks are in order.  First, this procedure is an algorithm,
-in the sense that it is guaranteed to halt in finite time, because the
-collection of sets being monitored increases as the process
-progresses.  Since minimal critical sets can be arbitrarily large, it
-is almost certainly the case that its worst case running time is
-exponential.  Nevertheless, extremely large minimal critical sets seem to be
-rare events, and the procedure seems to work very well in practice.
-For example, it finishes in a few minutes on an example produced by
-\texttt{make\_ex} with 100 schools and 900 students.  Finally, there
-is room for further refinement of the procedure, and it is possible
-that there are variants that are much faster still.
-
 %%%------------------------------------------------------------------------------------
 %%%------------------------------------------------------------------------------------
 \bibliographystyle{agsm}
@@ -816,20 +680,21 @@ Assuming all is well, we issue the command \texttt{make} and see the text that t
 \begin{obeylines}
   \texttt{
     \%\% make
-    gcc -I. -c normal.c
+    gcc -I. -Wall -Wextra  -c normal.c
     gcc -o make\_ex example.c normal.o -lm
-    gcc -I. -c parser.c
-    gcc -I. -c subset.c
-    gcc -I. -c cee.c
-    gcc -I. -c schchprob.c
-    gcc -I. -c partalloc.c
-    gcc -I. -c solver.c
-    gcc -o gcps solve.c parser.o subset.o cee.o schchprob.o
-    \ \ partalloc.o solver.o normal.o -lm
-    gcc -I. -c implement.c
+    gcc -I. -Wall -Wextra  -c parser.c
+    gcc -I. -Wall -Wextra  -c subset.c
+    gcc -I. -Wall -Wextra  -c cee.c
+    gcc -I. -Wall -Wextra  -c schchprob.c
+    gcc -I. -Wall -Wextra  -c partalloc.c
+    gcc -I. -Wall -Wextra  -c push\_relabel.c
+    gcc -I. -Wall -Wextra  -c gcps\_solver.c
+    gcc -o gcps solve.c normal.o parser.o subset.o cee.o
+    \ \ schchprob.o partalloc.o push\_relabel.o gcps\_solver.o -lm
+    gcc -I. -Wall -Wextra  -c implement.c
     gcc -o purify purify.c normal.o parser.o subset.o partalloc.o
     \ \ implement.o -lm
-    }
+    } 
 \end{obeylines}
 \bigskip
 \noindent
@@ -853,7 +718,7 @@ leaves behind after a preexisting file has been edited. The command
 \texttt{make} again to see it all happen again.
 
 There are now the executables \texttt{make\_ex}, \texttt{gcps}, and
-\texttt{purify}.  On most Unix's these can invoked simply by typing
+\texttt{purify}.  On many Unix's these can invoked simply by typing
 the executable name on the command line, but it may be the case that,
 for security reasons, the current directory is not in the
 \texttt{path} (the list of directories that the command line looks in
@@ -937,10 +802,9 @@ experiment with different parameters for \texttt{make\_ex} by editing
 the file \texttt{example.c}, as described in Section \ref{sec:MakeEx},
 then running \texttt{make} again and going through the
 \texttt{make\_ex}-\texttt{gcps}- \texttt{purify} cycle.  This will
-give you an initial feel for how fast \texttt{gcps} is.  (When applied
-to small school choice problems, it's \textit{very} fast.)  But after
-reading the rest of this guide, you may well have your own ideas
-concerning what to do next.
+give you an initial feel for how fast \texttt{gcps} is.  (It's
+\textit{very} fast.)  But after reading the rest of this guide, you
+may well have your own ideas concerning what to do next.
 
 \section{About the Code} \label{app:Code}
 
@@ -1064,43 +928,48 @@ a subset of.  The second representation is given by \texttt{index}, in
 which \texttt{no\_elements} is the number of elements of the subset
 (not the containing set) and \texttt{indices} is a strictly increasing
 \texttt{no\_elements}-tuple of elements of $\{1, \ldots,
-\text{\texttt{large\_set\_size}}\}$.  The function
+\text{\texttt{large\_set\_size}}\}$.  The \texttt{index}
+representation can be much more efficient when we are dealing with
+little subsets of big sets.
+
+The function
 \texttt{index\_of\_subset} passes from the first to the second, and
 \texttt{subset\_of\_index} goes in the other direction.  (Since an
 \texttt{index} does not know the size of the set it is a subset of,
 that piece of data is a required argument.) There is no index
 representation of the empty set, and if \texttt{subset\_of\_index}
-receives the empty set as an argument, if will complain and halt the
+receives the empty set as an argument, it will complain and halt the
 program.
 
-A \texttt{square\_matrix} is a $\text{\texttt{dimension}} \times
-\texttt{dimension}$ matrix whose $(i,j)$ entry is an integer
-\texttt{entries[i-1][j-1]}.  In the most important use of this notion
-$$\text{\texttt{entries[i-1][j-1]}} =
-\text{\texttt{entries[j-1][i-1]}} \in \{0,1\}$$ for all $i$ and $j$,
-with $\text{\texttt{entries[i-1][j-1]}} = 0$ whenever
-$\text{\texttt{entries[i-1][i-1]}} = 0$ or
-$\text{\texttt{entries[j-1][j-1]}} = 0$.  Such a matrix represents an
-undirected graph whose nodes are the $i$ such that
-$\text{\texttt{entries[i-1][i-1]}} = 1$, with an edge between
-\texttt{i} and \texttt{j} if and only if
-$\text{\texttt{entries[i-1][j-1]}} = 1$.
-
-A \texttt{subset\_list} is a linked list of subsets in \texttt{index}
-form.  A \texttt{subset\_list} keeps the subsets in order from least
-to greatest.  The ordering of subsets is lexicographic, with smaller
-subsets preceeding larger subsets and subsets of the same size ordered
-according the element of least index, the element of second smallest
-index if the two subsets have the same element of least index, etc.
-The function \texttt{reduced\_subset\_list} returns the list of
-subsets in \texttt{my\_list} that are subsets of \texttt{my\_subset}.
+A \texttt{index\_list} is a linked list of subsets in \texttt{index}
+form.  
 
 Mostly the functions in \texttt{subset.h} have self explanatory
-titles, with code that is not hard to understand.  The most important
-and complex function is \texttt{next\_subset}, which is described
-later.
+titles, with code that is not hard to understand.  There may now be
+some functions that are not used elsewhere, as I have not made an
+effort to eliminate such functions when they may prove useful later,
+and are illustrative of what is possible.
 
 \subsection{\texttt{cee.h} and \texttt{cee.c}}
+
+The most general notion of a \emph{communal endowment economy} (CEE)
+has a finite set of \emph{agents}, a finite set of \emph{objects}, a
+vector of (nonegative) \emph{requirements} for the agents, a vector of
+(nonnegative) \emph{quotas} for the objects, and a matrix that
+specifies, for each agent and each object, the maximum amount of the
+object that the agent may consume.  A \emph{partial allocation} is
+matrix that specifies a nonnegative consumption of each object by each
+agent.  A partial allocation is \emph{feasible} if: a) no agent
+consumes more than the allowed quantity of any object; b) the sum of
+each agents allocation is her requirement; c) the sum of each object's
+allocations does not exceed the object's quota.
+
+In the context of school choice the agents are \emph{students} the
+objects are \emph{schools}, and each student's requirement is one.
+The most basic type 
+As the project has progressed, the types of school choice CEE that are encompassed has expanded.  
+
+\norev
 
 A school choice \emph{communal endowment economy} (CEE) consists of
 \texttt{no\_students} students, \texttt{no\_schools} schools, a
@@ -1117,9 +986,7 @@ are either $0$ or $1$; in Section \ref{sec:Priorities} we explained
 how to pass from more complicated priorities to binary priorities
 using priority thresholds.
 
-The computations of \texttt{popular\_schools} and
-\texttt{relatedness\_matrix} are straightforward, and were explained
-in Section \ref{sec:ManySchools}.  The function
+The function
 \texttt{sub\_double\_cee} computes the \texttt{sub\_cee} obtained from
 \texttt{given\_cee} by restricting to the set of students given by
 \texttt{stu\_index} and the set of schools given by
@@ -1309,8 +1176,7 @@ and \texttt{subset.c}.  This function depends of the matrix
 \texttt{related}, which encodes the undirected graph whose nodes are
 the schools that still might exhaust their capacities, with an edge
 between schools \texttt{i} and \texttt{j} if there is a student who
-might attend either one.  As we explained in Section
-\ref{sec:ManySchools}, a minimal critical set necessarily induces a
+might attend either one.  A minimal critical set necessarily induces a
 connected subgraph of \texttt{related}.  One could enumerate all the
 sets of schools of size \texttt{subset\_size} with this properties by
 first enumerating all the sets of schools that might still fill up of

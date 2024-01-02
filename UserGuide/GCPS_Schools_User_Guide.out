@@ -3,16 +3,15 @@
 \BOOKMARK [1][-]{section.3}{purify}{}% 3
 \BOOKMARK [1][-]{section.4}{make\137ex}{}% 4
 \BOOKMARK [1][-]{section.5}{Finer Priorities}{}% 5
-\BOOKMARK [1][-]{section.6}{What If There Are Many Schools?}{}% 6
-\BOOKMARK [1][-]{appendix.A}{Downloading and Setting Up}{}% 7
-\BOOKMARK [1][-]{appendix.B}{About the Code}{}% 8
-\BOOKMARK [2][-]{subsection.B.1}{normal.h and normal.c}{appendix.B}% 9
-\BOOKMARK [2][-]{subsection.B.2}{example.c}{appendix.B}% 10
-\BOOKMARK [2][-]{subsection.B.3}{parser.h and parser.c}{appendix.B}% 11
-\BOOKMARK [2][-]{subsection.B.4}{subset.h and subset.c}{appendix.B}% 12
-\BOOKMARK [2][-]{subsection.B.5}{cee.h and cee.c}{appendix.B}% 13
-\BOOKMARK [2][-]{subsection.B.6}{schchprob.h and schchprob.c}{appendix.B}% 14
-\BOOKMARK [2][-]{subsection.B.7}{partalloc.h and partalloc.c}{appendix.B}% 15
-\BOOKMARK [2][-]{subsection.B.8}{solver.h and solver.c}{appendix.B}% 16
-\BOOKMARK [2][-]{subsection.B.9}{implement.h and implement.c}{appendix.B}% 17
-\BOOKMARK [2][-]{subsection.B.10}{solve.c and purify.c}{appendix.B}% 18
+\BOOKMARK [1][-]{appendix.A}{Downloading and Setting Up}{}% 6
+\BOOKMARK [1][-]{appendix.B}{About the Code}{}% 7
+\BOOKMARK [2][-]{subsection.B.1}{normal.h and normal.c}{appendix.B}% 8
+\BOOKMARK [2][-]{subsection.B.2}{example.c}{appendix.B}% 9
+\BOOKMARK [2][-]{subsection.B.3}{parser.h and parser.c}{appendix.B}% 10
+\BOOKMARK [2][-]{subsection.B.4}{subset.h and subset.c}{appendix.B}% 11
+\BOOKMARK [2][-]{subsection.B.5}{cee.h and cee.c}{appendix.B}% 12
+\BOOKMARK [2][-]{subsection.B.6}{schchprob.h and schchprob.c}{appendix.B}% 13
+\BOOKMARK [2][-]{subsection.B.7}{partalloc.h and partalloc.c}{appendix.B}% 14
+\BOOKMARK [2][-]{subsection.B.8}{solver.h and solver.c}{appendix.B}% 15
+\BOOKMARK [2][-]{subsection.B.9}{implement.h and implement.c}{appendix.B}% 16
+\BOOKMARK [2][-]{subsection.B.10}{solve.c and purify.c}{appendix.B}% 17

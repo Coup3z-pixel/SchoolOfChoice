@@ -17,8 +17,8 @@ all: make_ex gcps purify
 make_ex: example.c normal.o
 	$(CC) -o make_ex example.c normal.o $(LDFLAGS)
 
-gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o fraccee.o push_relabel.o gcps_solver.o
-	$(CC) -o gcps solve.c parser.o subset.o cee.o schchprob.o partalloc.o normal.o fraccee.o push_relabel.o gcps_solver.o $(LDFLAGS)
+gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o gcps_solver.o
+	$(CC) -o gcps solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o gcps_solver.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o implement.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o implement.o $(LDFLAGS)
@@ -35,9 +35,6 @@ subset.o: subset.h subset.c
 
 cee.o: cee.h cee.c
 	$(CC) $(CFLAGS) -c cee.c
-
-fraccee.o: fraccee.h fraccee.c
-	$(CC) $(CFLAGS) -c fraccee.c
 
 push_relabel.o: push_relabel.h push_relabel.c
 	$(CC) $(CFLAGS) -c push_relabel.c

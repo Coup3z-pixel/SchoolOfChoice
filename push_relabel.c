@@ -80,7 +80,7 @@ void relabel(int node, double** capacities, double** preflows, int* labels, int 
   labels[node] = min+1;
 }
 
-int push_relabel(struct frac_cee* input, struct partial_alloc* max_flow_alloc) {
+int push_relabel(struct process_cee* input, struct partial_alloc* max_flow_alloc) {
   int satisfies_gmc, done;
   
   int i, j, k, l;
