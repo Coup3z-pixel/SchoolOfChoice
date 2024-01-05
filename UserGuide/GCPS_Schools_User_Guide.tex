@@ -41,13 +41,17 @@
 \newcommand{\In}{\mathbb{Z}}
 
 \newcommand{\bare}{\overline{e}}
+\newcommand{\bark}{{\overline k}}
 \newcommand{\barl}{\overline{l}}
+\newcommand{\barp}{\overline{p}}
+\newcommand{\bart}{{\overline t}}
 
 \newcommand{\bq}{\mathbf{q}}
 
 \newcommand{\cE}{\mathcal{E}}
 \newcommand{\cH}{\mathcal{H}}
 \newcommand{\cM}{\mathcal{M}}
+\newcommand{\cO}{\mathcal{O}}
 \newcommand{\cP}{\mathcal{P}}
 \newcommand{\cX}{\mathcal{X}}
 
@@ -66,9 +70,7 @@
 \newcommand{\tn}{{\tilde n}}
 
 \newcommand{\tB}{{\tilde B}}
-
-\newcommand{\bark}{{\overline k}}
-\newcommand{\bart}{{\overline t}}
+\newcommand{\tP}{{\tilde P}}
 
 \newcommand{\varep}{\varepsilon}
 
@@ -962,35 +964,44 @@ matrix that specifies a nonnegative consumption of each object by each
 agent.  A partial allocation is \emph{feasible} if: a) no agent
 consumes more than the allowed quantity of any object; b) the sum of
 each agents allocation is her requirement; c) the sum of each object's
-allocations does not exceed the object's quota.
+allocations does not exceed the object's quota.  In the context of
+school choice the agents are \emph{students}, the objects are
+\emph{schools}, each student's requirement is one, and each school has
+\emph{quota}, which is the number of seats it can fill.
 
-In the context of school choice the agents are \emph{students} the
-objects are \emph{schools}, and each student's requirement is one.
-The most basic type 
-As the project has progressed, the types of school choice CEE that are encompassed has expanded.  
+In the software, a CEE is part of the algorithm's input, and CEE's
+also occur as the allocation unfolds, so two CEE structs are defined
+in \texttt{cee.h}, \texttt{input\_cee} and \texttt{process\_cee}.  An
+\texttt{input\_cee} has a matrix \texttt{priority} that specifies a
+nonnegative integer for each student-school pair.  At the most basic
+level the \texttt{priority} for a student-school pair would be $1$ if
+the student was eligible to attend the school and weakly preferred it
+to her safe school.  But this matrix presents an opportunity to encode
+the priority of each student at each school, which we can use to
+reduce to the more basic level, as we explain below.
 
-\norev
+In \texttt{process\_cee} the quotas and \texttt{maximums} for each
+student-school pair are floating point numbers, and there is an
+additional number \texttt{time\_remaining} that encodes the amount of
+time that remains for allocation for a \texttt{process\_cee}.  The
+\texttt{maximums} will often either agree with \texttt{time\_remaining} or be
+zero, but the algorithm allows them to be in between.
 
-A school choice \emph{communal endowment economy} (CEE) consists of
-\texttt{no\_students} students, \texttt{no\_schools} schools, a
-specification of \texttt{quotas} (i.e., capacities) for the schools,
-and a matrix \texttt{priority} specifying a nonnegative integer
-\texttt{priority[i-1][j-1]} for each student \texttt{i} and each
-school \texttt{j}.  When a CEE occurs as a part of an input, the
-\texttt{quotas} are usually integers, but partially allocated CEE's
-are used in the computations, when the remaining unallocated
-\texttt{quotas} are floating point numbers.  For this reason there are
-\texttt{int\_cee}'s and \texttt{double\_cee}'s.  Some of the more
-advanced functions in \texttt{cee.h} are specific to priorities that
-are either $0$ or $1$; in Section \ref{sec:Priorities} we explained
-how to pass from more complicated priorities to binary priorities
-using priority thresholds.
-
-The function
-\texttt{sub\_double\_cee} computes the \texttt{sub\_cee} obtained from
-\texttt{given\_cee} by restricting to the set of students given by
-\texttt{stu\_index} and the set of schools given by
-\texttt{sch\_index}.
+With \texttt{maximums} that are strictly between $0$ and
+\texttt{time\_remaining} the notion of a \emph{critical pair} becomes
+a bit more complex.  A pair $(J,P)$ consisting of a set of students
+$J$ and a set of schools $P$ is \emph{critical} if the only way to
+meet the requirement of the agents in $J$ is to give each student in
+$J$ her maximum of each of the schools outside $P$, and to give all of
+the seats in schools in $P$ only to students in $J$.  When the pair
+$(J,P)$ becomes critical for the CEE of as yet unallocated resources,
+the computation recursively descends to two subprocesses, one for the
+agents in $J$ and all the resources that they might possibly consume
+(which is the minimum needed to meet their requirements) and the other
+for students in the complement of $J$ and schools in the complement of
+$P$.  The functions \texttt{critical\_sub\_process\_cee} and
+\texttt{crit\_compl\_sub\_process\_cee} compute the CEE's of these
+subprocesses.
 
 \subsection{\texttt{schchprob.h} and \texttt{schchprob.c}}
 
@@ -1003,196 +1014,101 @@ school is at or above the school's priority threshold. A student's
 going from best to worst.  For convenience we keep track of each
 student's number of eligible schools.
 
-The underlying CEE may be either an \texttt{int\_cee} or a
-\texttt{double\_cee}.  Typically the input school choice problem has
-an \texttt{int\_cee}, and \texttt{double\_cee}'s are used in computing
-an allocation, so there are \texttt{input\_sch\_ch\_prob}'s, which
-have \texttt{int\_cee}'s, and \texttt{sch\_ch\_prob}'s, which have
-\texttt{double\_cee}'s.  A \texttt{sch\_ch\_prob} is typically what
-remains to be allocated after a certain time, so it has a member
-\texttt{time\_remaining}.
+There are two types of school choice problem, \texttt{input\_scp} and
+\texttt{process\_scp}, which differ according to whether the
+underlying CEE is an \texttt{inpu\_cee} or a \texttt{process\_cee},
+and whether the schools have \texttt{priority\_threshold}'s.
 
-The function \texttt{sch\_ch\_prob\_from\_input} takes an
-\texttt{input\_sch\_ch\_prob} as input and passes to a
-\texttt{sch\_ch\_prob} by converting the quotas from integers to
-floating point numbers, and by setting \texttt{time\_remaining} to
-1.0.  The function \texttt{reduced\_sch\_ch\_prob} passes from a
-\texttt{sch\_ch\_prob} with general priorities and priority thresholds
-to one in which the priorities of student \texttt{i} at school
-\texttt{j} is one if \texttt{i} is eligible to attend school
-\texttt{j} and zero otherwise, and the priority thresholds of all
-schools are one, as described in Section \ref{sec:Priorities}.
+The function \texttt{process\_scp\_from\_input} passes from an
+\texttt{input\_sch\_ch\_prob} to a derived \texttt{sch\_ch\_prob}.  It
+converts the quotas from integers to floating point numbers, and its
+sets \texttt{time\_remaining} to 1.0.  For each student and school,
+the student's \texttt{maximums} at the school is $1.0$ if the input
+\texttt{priority} is not less than the school's
+\texttt{priority\_threshold}, and positive (that is, the
+\texttt{priority} and the \texttt{priority\_threshold} are not both
+zero) and otherwise it is $0.0$.  For each student the
+\texttt{no\_eligible\_schools} of the output \texttt{process\_scp} is
+the \texttt{no\_eligible\_schools} of the input \texttt{input\_scp}
+less the number of schools with positive input \texttt{priority} that
+was below the school's threshold, and the output \texttt{preferences}
+are the input \texttt{preferences} restricted to the remaining
+schools.
 
-During the allocation process, when a GMC inequality for a set $P$ of
-schools is encountered, there is a smaller allocation problem for $P$
-and the set $J_P$ of students who, at that point in the process, are
-not eligible for any schools outside of $P$.  There is a similar
-allocation problem for the complements $P^c$ and $J_P^c$ of $P$ and
-$J_P$, and the continuation of the allocation process is the sum of
-the allocation processes for these subproblems.  The function
-\texttt{sub\_sch\_ch\_prob} constructs the subproblem for $J_P =
-\text{\texttt{stu\_subset}}$ and $P = \text{\texttt{sch\_subset}}$ and
-the subproblem for $J_P^c = \text{\texttt{stu\_compl}}$ and $P^c =
-\text{\texttt{sch\_compl}}$.  
-
-The function \texttt{time\_re\_after\_first\_gmc\_eq} computes the time
-remaining if the allocation process continues until the GMC inequality
-for \texttt{school\_subset} and \texttt{captive\_students} holds with
-equality or the unit interval of time is exhausted, ignoring all other
-constraints.  It may happen that the GMC inequality for these sets has
-already been violated.  In this case the argument
-\texttt{overallocated\_schools} is set equal to
-\texttt{school\_subset}, and the current attempt at computing an
-allocation is abandoned as quickly as possible, then restarted after
-the list of schools being monitored has been adjusted by adding
-\texttt{overallocated\_schools} to it.
-
-The function \texttt{time\_remaining\_after\_first\_gmc\_eq} considers
-all the school subsets in \texttt{known\_facets} and
-\texttt{observed\_overallocated\_sets}, and all \texttt{related}
-connected subsets with \texttt{depth} or few elements.  For each such
-set of schools \texttt{time\_remaining\_of\_gmc\_eq} is applied to
-that set and the set of students who cannot be assigned further
-probability in schools outside that set.  It returns the maximum of
-these quantities while setting the pointees of
-\texttt{crit\_stu\_subset} and \texttt{crit\_sch\_subset} to subsets
-that attain the maximum.
+Using \texttt{critical\_sub\_process\_cee} and
+\texttt{crit\_compl\_sub\_process\_cee}, the functions
+\texttt{critical\_sub\_process\_scp} and
+\texttt{crit\_compl\_sub\_process\_scp} compute the derived
+\texttt{process\_scp}'s when a pair $(J,P)$ becomes critical.  In the
+\texttt{process\_scp} given by \texttt{crit\_compl\_sub\_process\_scp}
+the quotas of schools in the complement of $P$ are reduced by the
+\texttt{maximums} for these schools of the students in $J$.
 
 \subsection{\texttt{partalloc.h} and \texttt{partalloc.c}}
 
 In a \texttt{partial\_alloc} for \texttt{no\_students} students and
 \texttt{no\_schools} schools, \texttt{allocations} is a matrix that
-specifies an allocation \texttt{allocations[i-1][j-1]} of school
-\texttt{j} to student \texttt{i} for each \texttt{i} and \texttt{j}.
-A \texttt{pure\_alloc} has the same structure, but now
+specifies an amount \texttt{allocations[i-1][j-1]} of school
+\texttt{j} to student \texttt{i}, i.e., a probability that $i$
+receives a set in $j$, for each \texttt{i} and \texttt{j}.  A
+\texttt{pure\_alloc} has the same structure, but now
 \texttt{allocations[i-1][j-1]} is an integer that should be zero or
 one, and for each student \texttt{i} there should be exactly one
 school \texttt{j} such that \texttt{allocations[i-1][j-1]} is one.
 
-The function
-\texttt{allocate\_until\_new\_time} creates a \texttt{partial\_alloc}
-in which each student receives
-$$\text{\texttt{my\_scp->time\_remaining}} -
-\text{\texttt{new\_time\_remaining}}$$ units of her favorite school
-and none of any other school.  Increasing a \texttt{base} partial
-allocation by adding an \texttt{increment} partial allocation to it is
-what \texttt{increment\_partial\_alloc} does.  The function
-\texttt{school\_sums} returns an array of \texttt{double} that
-specifies, for each school, the total amount of it that has been
-allocated in \texttt{my\_alloc}.
+A \texttt{partial\_alloc} is \emph{feasible} if the total amount
+assigned to each student is $1$ and the total assigned amount of each
+school is not more than the school's quota.  A \texttt{partial\_alloc}
+is \emph{possible} if it is (component-wise) less than or equal to
+some feasible allocation.  The algorithm we are implementing
+allocates, at unit speed, increments of each student's favorite school
+to her until it encounters some face of the polytope of possible
+allocations, at which point some pair $(J,P)$ is critical and there is
+recursive descent to subproblems, as described above.
 
-\subsection{\texttt{solver.h} and \texttt{solver.c}} \label{subsec:Solver}
+The detection of faces of the polytope of possible allocations is
+aided by keeping track of a feasible allocation, called the
+\texttt{feasible\_guide}, that is (component-wise) greater than or
+equal to the allocation we are computing.  The allocation we are
+computing, and \texttt{feasible\_guide}, are piecewise linear
+functions of time, and the algorithm moves from one endpoint of a
+linear piece to another by computing a direction \texttt{theta} of
+motion for \texttt{feasible\_guide}, then finding the maximum amount
+of time \texttt{delta} that the allocation can be increased by adding
+favorites to the allocation while moving \texttt{feasible\_guide}
+according to \texttt{theta} before some constraint becomes binding.
+The functions \texttt{augment\_partial\_alloc} and
+\texttt{adjust\_feasible\_guide} adjust the computed allocation and
+\texttt{feasible\_guide} accordingly.
 
-The files \texttt{solver.h} and \texttt{solver.c} contain the top
-level of code that defines the executable \texttt{gcps}.  The function
-\texttt{GCPS\_schools\_solver\_top\_level} repeatedly attempts to find
-the desired allocation by initiating a computation in which
-\texttt{GCPS\_schools\_solver} calls itself recursively.
+When a pair $(J,P)$ becomes critical the \texttt{feasible\_guide}'s of
+the derived subproblems are obtained from \texttt{feasible\_guide} by
+restriction, using the functions \texttt{left\_feasible\_guide} and
+\texttt{right\_feasible\_guide}.  After the allocations of the
+subproblems have been computed, the function
+\texttt{increment\_partial\_alloc} combines them with the allocation
+for the larger problem that has already been computed.
 
-The subset list \texttt{known\_facets} is a list of sets of schools
-that have been critical during some attempt.  An attempt can fail in two
-ways.  First, it can encounter a critical set
-\texttt{new\_critical\_set} of schools that has not been observed
-before, in which case the \texttt{index} of
-\texttt{new\_critical\_set} is added to \texttt{known\_facets} and the
-next attempt begins.  The other possibility is that at some point the
-computation discovers that a set \texttt{overallocated\_schools} of
-schools has allocated its seats to an extent such that it can no
-longer meet the needs of the students who cannot attend schools
-outside the set.  The \texttt{index} of
-\texttt{overallocated\_schools} is added to the list
-\texttt{observed\_overallocated\_sets}, and another attempt is
-initiated.
+\subsection{\texttt{push\_relabel.h} and \texttt{push\_relabel.c}}
+\label{subsec:PushRelabel}
 
-Observing an \texttt{overallocated\_schools} means that the allocation
-process went past some GMC inequality, and it is necessary to find this
-inequality before the process can succeed.  The integer parameter
-\texttt{depth} is the maximal size of sets (in addition to those in
-\texttt{known\_facets} and \texttt{observed\_overallocated\_sets})
-that are examined when looking for either the next
-\texttt{new\_critical\_set} or an \texttt{overallocated\_set}, which
-may or may not be one that has already been seen.  Each time an
-attempt returns an \texttt{overallocated\_set} that has been seen
-before, \texttt{depth} is increased by one.  When an attempt returns a
-\texttt{new\_critical\_set}, \texttt{depth} is reset to $1$.
+The push-relabel algorithm of \cite{GoTa88} is implemented in
+\texttt{push\_relabel.h} and \texttt{push\_relabel.c}.  The code
+straightforwardly follows the description of the algorithm in Appendix
+\ref{sec:Algorithms}, and the best way to approach it is to read that
+description, then examine the code.
 
-Searching over sets of size \texttt{depth} throughout the entire
-search process can be extremely burdensome, and it is natural to
-expect that the missing \texttt{new\_critical\_set} can be found near
-the end of the allocation process as it currently stands.  The
-variable \texttt{level} is the depth of recursion, i.e., the number of
-times \texttt{GCPS\_schools\_solver} has called itself. The maximum
-set size searched over is set to \texttt{depth} only when
-$$\text{\texttt{max\_level}} - \text{\texttt{depth}} \le
-\text{\texttt{level}} \le \text{\texttt{max\_level}},$$ where
-\texttt{max\_level} is the \texttt{level} at which the
-\texttt{overallocated\_set} is found.
+\subsection{\texttt{gcps\_solver.h} and \texttt{gcps\_solver.c}}
+\label{subsec:Solver}
 
-We now turn to the description of \texttt{GCPS\_schools\_solver}. The
-key function applied here is
-\texttt{time\_rem\_after\_first\_gmc\_eq}, which is
-coded in \texttt{schchprob.h} and \texttt{schchprob.h}. The main
-purpose of this function is to compute the amount of time that will
-remain if the allocation continues allocating the favorite school to
-each student until there is a critical set of schools or an
-overallocated set of schools, among the sets of schools that are
-searched over.  A side effect of this function is to compute the
-critical or overallocated set.  If the critical set has not been
-observed before, or if there is an overallocated set, the process
-reports this back to the instance of \texttt{GCPS\_schools\_solver}
-that called it, or to \texttt{GCPS\_schools\_solver\_top\_level}, by
-returning a partial allocation that will be discarded.
-
-Otherwise \texttt{GCPS\_schools\_solver} allocates up until the
-computed time, and it then splits the remaining allocation problem
-into two subproblems, and calls itself on each of these. The first
-``left'' subproblem relates to the critical set \texttt{sch\_subset}
-and the set \texttt{stu\_subset} of students who are no longer able to
-consume any school outside of this set.  The second ``right''
-subproblem is obtained by restricting to the complements
-\texttt{stu\_compl} and \texttt{sch\_compl} of these sets.  For each
-of these subproblems the result may be either a
-\texttt{new\_critical\_set} or an \texttt{overallocated\_set}, or it
-may be a complete allocation for the subproblem.
-
-When we look at the coding of
-\texttt{time\_rem\_after\_first\_gmc\_eq} in
-\texttt{schchprob.c}, we see that it scans over a collection of sets
-of schools. For each set it asks how long the allocation process could
-allocate the favorite school to each student before that set becomes
-critical.  If the amount of time is negative, then the set is
-overallocated.  If it finds an overallocated set of schools, it
-reports that set and sets \texttt{exit\_status} to $2$.  If there is
-no overalllocated school, then it reports the maximum time remaining
-after some set becomes critical, and a set of schools that attains
-this maximum, setting \texttt{exit\_status} to $1$ if that set's
-\texttt{index} is not already in \texttt{known\_facets}.
-
-The collection of sets that \texttt{time\_rem\_after\_first\_gmc\_eq}
-scans over consists of the sets in \texttt{known\_facets} and
-\texttt{observed\_overallocated\_sets}, and the sets generated by the
-function \texttt{next\_subset}, which is coded in \texttt{subset.h}
-and \texttt{subset.c}.  This function depends of the matrix
-\texttt{related}, which encodes the undirected graph whose nodes are
-the schools that still might exhaust their capacities, with an edge
-between schools \texttt{i} and \texttt{j} if there is a student who
-might attend either one.  A minimal critical set necessarily induces a
-connected subgraph of \texttt{related}.  One could enumerate all the
-sets of schools of size \texttt{subset\_size} with this properties by
-first enumerating all the sets of schools that might still fill up of
-size \texttt{subset\_size}, then asking for each one whether it
-induces a connected subgraph of \texttt{related}, but when the set of
-schools is large, this is very laborious.  Instead
-\texttt{next\_subset} takes advantage of the fact that each set of
-schools that induces a connected subgraph has a unique ordering in
-which the first school is the least (according to the numbering of the
-schools) school in the set, the second school is the least among the
-remainder that is connected to the first, the third is the least in
-the remainder that is connected to either the first or the second, and
-so forth.  These orderings of schools can be ordered
-lexicographically, and \texttt{next\_subset} passes from a set to the
-next set in this ordering.  The code that does this is intricate, and
-perhaps the most difficult part of the code to understand.
+The files \texttt{gcps\_solver.h} and \texttt{gcps\_solver.c}
+implement the algorithm for computing the GCPS allocation.  This
+algorithm is also described in Appendix \ref{sec:Algorithms}, and
+again the best way to approach it is examine the code only after the
+description has been read and understood.  In this case it is best to
+work backwards from the ends of \texttt{gcps\_solver.h} and
+\texttt{gcps\_solver.c}, because that follows a top-down understanding
+of how the algorithm is implemented.
 
 \subsection{\texttt{implement.h} and \texttt{implement.c}}
 
@@ -1252,7 +1168,339 @@ supervises the whole process.
 The files \texttt{solve.c} and \texttt{purify.c} contain the
 \texttt{main} functions of the executables \texttt{gcps} and
 \texttt{purify} respectively.  These \texttt{main} functions are
-simple and straightforward.
+mostly simple and straightforward.
+
+In \texttt{solve.c} there are \texttt{int*} variables
+\texttt{segments}, \texttt{splits}, \texttt{pivots}, and
+\texttt{h\_sum}.  These are, respectively, the number of linear
+segments of the piecewise linear function $(p,\barp)$ described in
+Appendix \ref{sec:Algorithms}, the number of time the algorithm
+descends recursively to two derived subproblems, the number of times
+that the algorithm modifies $\theta$, as described iin Appendix
+\ref{sec:Algorithms}, and the sum of the indices $h$ that arise in
+paths $i_0,j_1, i_1, \ldots, i_h, j_h$ that are used to pivot.  These
+provide interesting information about the algorithm's performance, and
+there is a sample print statement below for them.
+
+\section{The Principal Algorithms} \label{sec:Algorithms}
+
+In this appendix we provide brief descriptions of the two principal
+algorithms.  These are intended mainly to help the reader figure out
+what is going on in the code.  For more information the reader is
+referred to the papers that are the sources of these algorithms.
+
+\subsection{Push-Relabel}
+
+This subsection describes the push-relabel algorithm of \cite{GoTa88}.
+We first describe the general setting of networks and flows, then we
+describe the algorithm, and in the next subsection we describe the
+specialized setting in which it is applied in our software.
+
+Let $(N,A)$ be a directed graph ($N$ is a finite set of \emph{nodes}
+and $A \subset N \times N$ is a set of \emph{arcs}) with distinct
+distinguished nodes $s$ and $t$, called the \emph{source} and
+\emph{sink} respectively.  We assume that $(n,s), (t, n) \notin A$ for
+all $n \in N$.
+
+A \emph{preflow} is a function $f \colon N \times N \to \Re$ such that:
+\begin{enumerate}
+  \item[(a)] for all $n$ and $n'$,  if $(n,n') \notin A$, then $f(n,n') \le 0$.
+  \item[(b)] for all $n$ and $n'$,  $f(n,n') = - f(n',n)$ (antisymmetry); 
+  \item[(c)] $\sum_{n' \in N} f(n',n) \ge 0$ for all $n \in N \setminus \{s,t\}$. 
+\end{enumerate}
+If neither $(n,n')$ nor $(n',n)$ is in $A$, then (a) and (b) imply
+that $f(n,n') = 0$.  Note that $f(s,n), f(n,t) \ge 0$ for all $n \in
+N$.  In conjunction with the other requirements, (c) can be understood
+as saying that for each $n$ other than $s$ and $t$, the total flow
+into $n$ is greater than or equal to the total flow out.
+
+A preflow $f$ is a \emph{flow} if $\sum_{n' \in N} f(n,n') = 0$ for
+all $n \in N \setminus \{s,t\}$.  In this case antisymmetry and this
+condition imply that
+$$0 = \sum_{n' \in N}\sum_{n \in N} f(n,n') = \sum_{n \in N} f(n,s) + \sum_{n' \in N} f(n,t),$$
+so we may define \emph{value} of $f$ to be
+$$|f| = \sum_{n \in N} f(s,n) = \sum_{n \in N} f(n,t).$$
+
+A \emph{capacity} is a function $c \colon N \times N \to [0,\infty]$
+such that $c(n,n') = 0$ whenever $(n,n') \notin A$.  A \emph{cut} is a
+set $S \subset N$ such that $s \in S$ and $t \in S^c$ where $S^c = N
+\setminus S$ is the complement.  For a capacity $c$, the
+\emph{capacity} of $S$ is
+$$c(S) = \sum_{(n,n') \in S \times S^c} c(n,n').$$
+
+A preflow $f$ is \emph{bounded} by a capacity $c$ if $f(n,n') \le
+c(n,n')$ for all $(n,n')$.  It is intuitive, and not hard to prove
+formally, that if $f$ is a flow bounded by $c$ abd $S$ is a cut for
+$c$, then $|f| \le c(S)$, so the maximum value of any flow is not
+greater than the minimum capacity of a cut.  The max-flow min-cut
+theorem \citep{FoFu56} asserts that these two quantities are equal.
+
+The computational problems of finding the maximum flow or a minimal
+cut for a network $(N,A)$ and a capacity $c$ are very well studied,
+and many algorithms have been developed.  The push-relabel algorithm
+is relatively simple, and certainly fast enough for our purposes.
+(The literature continues to advance, and algorithms (e.g.,
+\cite{CKLGS22}) with better asymptotic worst case bounds have been
+developed.)
+  
+Let $f \colon N \times N \to \Re$ be a preflow that is bounded by $c$.
+The \emph{excess} of $f$ at $n$ is $$e_f(n) = \sum_{n' \in N} f(n',n).$$
+Of course $e_f(n) \ge 0$, and $f$ is a flow if and only if $e_f(n) =
+0$ for all $n \in N \setminus \{s,t\}$.  The \emph{residual capacity}
+of $(n,n')$ is $$r_f(n,n') = c(n,n') - f(n,n').$$  We say that $(n,n')$
+is a \emph{residual edge} if $r_f(n,n') > 0$.  This can happen either
+because $c(n,n') > f(n,n') \ge 0$ or because $f(n,n') < 0$.
+
+A \emph{valid labelling} for $f$ and $c$ is a function $d \colon N \to
+\{0,1,2,\ldots\} \cup \{\infty\}$ such that $d(t) = 0$ and $d(n) \le
+d(n') + 1$ whenever $(n,n')$ is a residual edge.  We say that $n \in N
+\setminus \{s,t\}$ is \emph{active} for $f$ and $d$ if $d(n) < \infty$
+and $e_f(n) > 0$.
+
+The algorithm is initialized by setting $d(s) = |N|$, $d(n) = 0$ for
+all other $n$, $f(s,n) = c(s,n)$ for all $n$ such that $(s,n) \in A$,
+and setting $f(n,n') = 0$ for all other $n$ and $n'$.  The algorithm
+then consists of repeatedly applying the following two
+\emph{elementary operations}, in any order, until there is no longer
+any valid application of them:
+\begin{enumerate}
+  \item[(a)] $\mathrm{Push}(n,n')$ is valid if $n$ is active, $(n,n')
+    \in A_f$ and $d(n') = d(n) - 1$.  The operation resets $f(n,n')$
+    to $f(n,n') + \delta$ and $f(n',n)$ to $f(n',n) - \delta$ where
+    $\delta = \min\{e_f(n),r_f(n,n')\}$.
+  \item[(b)] $\mathrm{Relabel}(n)$ is valid if $n$ is active and $d(n)
+    \le d(n')$ for all $n'$ such that $(n,n') \in A_f$.  The operation
+    resets $d(n)$ to $\infty$ if there is no $n'$ such that $(n,n')
+    \in A_f$ (this never actually happens) and otherwise it resets
+    $d(n)$ to $1 + \min_{n' : (n,n') \in A_f} d(n')$.
+\end{enumerate}
+One intuitive understanding of the algorithm is that we imagine excess
+as water flowing downhill, so that $d(n)$ can be thought of as a
+height, (Goldberg and Tarjan offer a somewhat different intuition in
+which $d$ is a measure of distance.) We think of $\mathrm{Push}(n,n')$
+as moving $\delta$ units of excess from a node $n$ to an adjacent node
+$n'$ that is one step lower.  The operation $\mathrm{Relabel}(n)$ is
+valid when there is excess ``trapped'' at $n$, and this operation
+increases $d(n)$ to the largest value allowed by the definition of a
+valid labelling, which is the smallest value such that there is a
+neighboring node the excess can flow to.
+
+Based on the description above, it is not obvious that the
+push-relabel algorithm is, in fact, an algorithm in the sense of
+always terminating, nor is it obvious that it can only terminate at a
+maximum flow.  Goldberg and Tarjan's proofs of these facts are subtle
+and interesting, and their paper is recommended to the curious reader.
+
+\subsection{School Choice Communal Endowment Economies}
+
+A \emph{school choice communal endowment economy} (CEE) is a quadruple
+$E = (I,O,q,g)$ in which $I$ is a nonempty finite set of
+\emph{students}, $O$ is a nonempty finite set of \emph{schools}, $q
+\in \Re_+^O$, and $g \in \Re_+^{I \times O}$.  For $i \in I$ and $j
+\in O$ we say that $q_j$ is the \emph{quota} of $j$, and that $g_{ij}$
+is \emph{$i$'s $j$-max}.
+
+We apply the push-relabel algorithm to a particular directed graph
+$(N_E,A_E)$ in which the set of nodes is $$N_E = \{s\} \cup I \cup O
+\cup \{t\}.$$ For $i \in I$ and $j \in O$ let $a_i = (s,i)$, $a_{ij} =
+(i,j)$, and $a_j = (j,t)$, and let
+$$A_E = \{\, a_i : i \in I \,\} \cup \{\, a_{ij} : i \in I, j \in O
+\,\} \cup \{\, a_j : j \in O \,\}.$$ Let $c_E$ be the capacity in
+which $c_E(a_i) = 1$ for all $i$, $c_E(a_{ij}) = g_{ij}$ for all $i$
+and $j$, and $c_E(a_j) = q_j$ for all $j$.  It turns out that when the
+push-relabel algorithm is applied to a graph of this form, it is
+possible to speed it up by initializing $d$ by setting $d(s) = 2|O| +
+2$ and $d(n) = 0$ for all other $n$.  Roughly (this is not the place
+to explain the details) this works because $2|O| + 2$ is an upper
+bound on the number of nodes on a simple (no repeating nodes) path
+from $s$ to $t$ when $|O| \le |I|$.
+
+An \emph{allocation} for $E$ is a matrix $p \in \Re_+^{I \times O}$.
+A \emph{partial allocation} for $E$ is an allocation $p$ such that
+$\sum_j p_{ij} \le 1$ for all $i$, $\sum_i p_{ij} \le q_j$ for all
+$j$, and $p_{ij} \le g_{ij}$ for all $i$ and $j$. A \emph{feasible
+allocation} is a partial allocation $m$ such that $\sum_j m_{ij} =
+1$ for all $i$.  A \emph{possible allocation} is an allocation $p$
+such that there is a feasible allocation $m$ such that $p \le m$.  
+
+If $p$ is an allocation, there is a unique flow $f_p$ such that
+$f_p(a_{ij}) = p_{ij}$ for all $i$ and $j$ that has $f_p(a_i) = \sum_j
+p_{ij}$ for all $i$ and $f_p(a_j) = \sum_i p_{ij}$ for all
+$j$. Evidently $p$ is a feasible allocation if and only if $f_p$ is
+bounded by $c_E$ and $f_p(a_i) = 1$ for all $i$, which is the case if
+and only if $|f_p| = |I|$.  Conversely, if $f$ is a flow bounded by
+$c_E$ with $|f| = |I|$ and thus $f(a_i) = 1$ for all $i$, then setting
+$p_{ij} = f(a_{ij})$ gives a feasible allocation $p$.  Thus there is a
+feasible allocation if and only if the maximum value of a flow bounded
+by $c_E$ is $|I|$.  Although our primary use of the push-relabel
+algorithm is to compute a feasible allocation, it also provides an
+efficient method of determining whether a feasible allocation exists.
+
+\subsection{Computing the GCPS Allocation}
+
+We now describe how the GCPS allocation is computed.  We work with
+a fixed school choice CEE $E = (I,O,q,g)$ and a profile $\succ \; =
+(\succ_i)_{i \in I}$ of strict preferences over $O$. Let
+$Q$ be the set of feasible allocations, and let $R$ be the set of
+possible allocations. The allocation procedure is a piecewise linear function $p
+\colon [0,1] \to R$ with $p(0) = 0$, $p(t) \in R \setminus Q$ for all
+$t < 1$, and $p(1) \in Q$.  The \emph{GCPS allocation}
+is $$GCPS(E,\succ) = p(1).$$
+
+At each moment the trajectory of $p$ increases, at unit speed, each
+student's assignment of her favorite school, among those that are
+still available to her, while leaving other allocations fixed.  This
+direction is adjusted when an student $i$'s assignment of an school
+$j$ reaches $g_{ij}$, and when $p$ arrives at one of the facets of
+$R$.  Suppose that $t^*$ is the first time such that $p(t^*)$ is in a
+facet of $R$, so that there is a minimal critical pair $(J,P)$ for the
+residual CEE, which we denote by $E - p(t^*)$. The GCPS allocation has
+a recursive definition: for $t \in [t^*,1]$, $p(t)$ is, by definition,
+the sum of $p(t^*)$ and the results of applying the allocation
+procedure to the derived CEE's obtained by restricting $E - p(t^*)$ to
+$J$ and $P$ and to the complements of $J$ and $P$, as described
+earlier.
+
+The main computational challenge is to detect when $p$ arrives at one
+of the facets of $R$.  During the computation our algorithm computes
+an auxilary piecewise linear function $\barp \colon [0,1] \to Q$ such
+that $p(t) \le \barp(t)$ for all $t$.  We use the push-relabel
+algorithm to compute $\barp(0)$.
+
+The combined function $(p,\barp)$ is piecewise linear, and $[0,1]$ is
+a finite union of intervals $[t_0,t_1], [t_1, t_2], \ldots, [t_{K-1},
+  t_K]$, where $t_0 = 0$ and $t_K = 1$, such that on each interval
+$[t_k,t_{k+1}]$ the derivative of $(p,\barp)$ is constant.  Suppose
+that we have already computed $p(t_k)$ and $\barp(t_k)$.  For each
+student $i$ we compute the set $\alpha_i(t_k)$ of schools that are still
+possible for $i$, and we determine her $\succ_i$-favorite element
+$e_i^k$.  Let $\theta^k \in \In^{I \times O}$ be the matrix such that
+$\theta^k_{ij} = 1$ if $o = e_i^k$, and otherwise $\theta^k_{ij} = 0$.
+
+There are now two possibilities.  The first is that there is some $t'
+> t_k$ such that $p(t_k) + \theta^k(t - t_k) \in R$ for all $t \in
+[t_k,t']$.  In this case we will find a $\theta \in \In^{I \times O}$
+such that for some $t' > t_k$ and all $t \in [t_k,t']$, $\barp(t_k) +
+\theta(t - t_k) \in Q$ and $$p(t_k) + \theta^k(t - t_k) \le \barp(t_k)
++ \theta(t - t_k). \eqno{(*)}$$ Now $t_{k+1}$ is the first time after
+$t_k$ such that one of the following holds: a) $p_{ie_i^k}(t_{k+1}) =
+g_{ie_i^k}$ for some $i$; b) $\barp(t_k) + \theta(t - t_k) \notin Q$
+for $t > t_{k+1}$; c) ($*$) does not hold for $t > t_{k+1}$.  For $t
+\in [t_k,t_{k+1}]$ we have determined that $p(t) = p(t_k) + \theta^k(t
+- t_k)$, and we set $\barp(t) = \barp(t_k) + \theta(t - t_k)$.  Having
+determined $p(t_{k+1})$ and $\barp(t_{k+1})$, we can repeat the
+process.
+
+The second possibility is that it is not possible to continue $p$, as
+described above, without leaving $R$, because there is a critical pair
+$(J,P)$ for the residual economy at time $t_k$.  In this case we find
+such a pair, then descend recursively to the computation of the GCPS
+allocations of derived subeconomies.
+
+We now describe an algorithm that determines which of these
+possibilities holds, In the first case it finds a satisfactory
+$\theta$, and in the second case it finds a suitable $(J,P)$.
+
+Suppose that there is a $\theta \in \In^{I \times O}$ such that for
+there exists a $t' > t_k$ such that for all $t \in [t_k,t']$, ($*$)
+holds and $\barp(t_k) + \theta(t - t_k) \in Q$.  Together these
+conditions imply that $p(t_k) + \theta^k(t - t_k) \in R$, so the first
+possibility above holds, and we can use $\theta$ to define the
+continuation of $\barp$.  The algorithm may be thought of as a search
+for such a $\theta$.
+
+For a given $\theta$, a $t' > 0$ as above exists if and only if
+$\theta$ satisfies the following conditions:
+\begin{enumerate} 
+  \item[(a)] For each $i$ and $j$:
+    \begin{enumerate}
+      \item[(i)] If $o \notin \alpha_i$, then $\theta_{ij} = 0$.
+      \item[(ii)] If $\barp_{ij}(t_k) = p_{ij}(t_k)$, then $\theta_{ij} \ge 0$, and if, in addition, $o = e^k_i$, then $\theta_{ij} \ge 1$.
+      \item[(iii)] If $\barp_{ij}(t_k) = g_{ij}$, then $\theta_{ij} \le 0$.
+    \end{enumerate}
+  \item[(b)] For each $i$, $\sum_j \theta_{ij} = 0$.
+  \item[(c)] For each $j$, if $\sum_i \barp_{ij}(t_k) = q_j$, then $\sum_i \theta_{ij} \le 0$.
+\end{enumerate}
+
+
+Our search for a suitable $\theta$ begins by defining an initial
+$\theta \in \In^{I \times O}$ as follows.  For each $i$, if
+$\barp_{ie^k_i}(t_k) > p_{ie^k_i}(t_k)$, then we set $\theta_{ij} = 0$
+for all $j$.  If $\barp_{ie^k_i} = p_{ie^k_i}(t_k)$, then we set
+$\theta_{ie^k_i} = 1$, we set $\theta_{ij_i} = -1$ for some $j_i \ne
+e^k_i$ such that $\barp_{ij_i}(t_k) > p_{ij_i}(t_k)$, and we set
+$\theta_{ij} = 0$ for all other $j$.  Evidently $\theta$ satisfies (a)
+and (b).
+
+Let $$\tP = \{\, o : \text{$\sum_i \barp_{ij}(t_k) = q_{o}$ and
+  $\sum_i \theta_{ij} > 0$} \,\}.$$ If $\sum_{j \in \tP} \sum_i
+\theta_{ij} \le 0$, then (c) holds.  Suppose that this is not the
+case.  We now describe a construction that may or may not be possible.
+When it is possible, it passes from $\theta$ to a $\theta' \in \In^{I
+  \times O}$ satisfying (a) and (b) such that if $\tP' = \{\, o :
+\text{$\sum_i \barp_{ij}(t_k) = q_{j_h}$ and $\sum_i \theta'_{ij} >
+  0$} \,\}$, then $$\sum_{j \in \tP'} \sum_i \theta'_{ij} = \sum_{j
+  \in \tP} \sum_i \theta_{ij} - 1.$$ Repeating this construction will
+eventually produce an element of $\In^{I \times O}$ satisfying
+(a)--(c) unless, at some point, the construction becomes impossible.
+
+Choose $j_0 \in \tP$, and let $P_0 = \{j_0\}$.  We define sets
+$J_1,P_1, J_2, P_2, \ldots$ inductively.  If $P_{h-1}$ is given, let
+$J_h = \bigcup_{j \in P_{h-1}} J_h(j)$ where
+$$J_h(j) = \{\, i : \text{$j \in \alpha_i$ and if $\barp_{ij}(t_k) =
+  p_{ij}(t_k)$, then $\theta_{ij} > 0$ and $\theta_{ij} > 1$ if $o =
+  e^\succ_i$} \,\}.$$ If $J_h$ is given, let $P_h = \bigcup_{i \in
+  J_h} P_h(i)$ where
+$$P_h(i) = \{\, j \in \alpha_i : \text{$\theta_{ij} < 0$ if
+  $\barp_{ij}(t_k) = g_{ij}$} \,\}.$$
+
+Suppose that for some $h$ there is an $j_h \in P_h \setminus P_{h-1}$
+such that either $\sum_i \barp_{ij_h} < q_{j_h}$ or $\sum_i
+\theta_{ij_h} < 0$. We can find a $i_h \in J_h$ such that $j_h \in
+J_h(i_h)$, then find an $j_{h-1} \in P_{h-1}$ such that $i_h \in
+J_h(j_{h-1})$, and so forth. Define $\theta'$ by
+setting $$\theta'_{i_gj_{g-1}} = \theta_{i_gj_{g-1}} - 1 \quad
+\text{and} \quad \theta'_{i_gj_g} = \theta_{i_gj_g} + 1$$ for $g = 1,
+\ldots, h$ and $\theta'_{ij} = \theta_{ij}$ for all other $(i,j)$.
+
+It is easy to see that $\theta'$ satisfies (a), because $\theta'_{ij}$
+differs from $\theta_{ij}$ only when the difference is permitted,
+according to (i)--(iii).  For each $i$, $\sum_j \theta'_{ij} = \sum_j
+\theta_{ij}$, either by construction if $i = i_g$ for some $g$, or
+because $\theta'_{ij} = \theta_{ij}$ for all $j$.  Since $\theta$
+satisfies (b), $\theta'$ also satisfies (b).
+
+For $o \notin \{j_0, \ldots, j_h\}$ we have $\theta'_{ij} =
+\theta_{ij}$ for all $i$ and thus $\sum_i \theta'_{ij} = \sum_i
+\theta_{ij}$.  For each $g = 1, \ldots, h-1$ we have $\sum_i
+\theta'_{ij_g} = \sum_i \theta_{ij_g}$ by construction.  Clearly $\sum_i
+\theta'_{ij_0} = \sum_i \theta_{ij_0} - 1$ and $\sum_i \theta'_{ij_h}
+= \sum_i \theta_{ij_h} + 1$.  Since either $\sum_i \barp_{ij_h} <
+q_{j_h}$ or $\sum_i \theta'_{ij_h} \le 0$, $\theta'$ has all desired
+properties.
+
+It is impossible to construct $\theta'$ in this manner if there is no
+$h$ and $j_h \in P_h \setminus P_{h-1}$ such that $\sum_i \barp_{ij_h}
+< q_{j_h}$ or $\sum_i \theta_{ij_h} < 0$.  Supposing that this is the
+case, let $J = \bigcup_h J_h$ and $P = \bigcup_h P_h$.  We have
+$\sum_i \barp_{ij}(t_k) = q_j$ for all $j \in P$.  If $j \in P$ and $i
+\notin J$, then $\barp_{ij}(t_k) = p_{ij}(t_k)$.  If $i \in J$ and $o
+\notin P$, then $\barp_{ij}(t_k) = g_{ij}$ if $j \in \alpha_i
+\setminus P$, and $\barp_{ij}(t_k) = g_{ij} = 0$ if $o \notin
+\alpha_i$. Thus $\barp(t_k) - p(t_k)$ is a feasible allocation for $E
+- p(t_k)$ that gives all of the resources in $P$ to students in $J$,
+and it gives $g_{ij} - p_{ij}(t_k)$ to $i \in J$ whenever $j \in O
+\setminus P$. Clearly any feasible allocation also has these
+properties, so $(J,P)$ is a critical pair for $E - p(t_k)$.
+
+Summarizing, the algorithm repeatedly extends $p$ and $\barp$ to
+intervals such as $[t_k,t_{k+1}]$ until $p(t_k)$ satisfies the GMC
+equality for a pair $(J,P)$, at which point it descends
+recursively. If $p(t_k)$ does not satisfy such a GMC inequality, it
+finds a $\theta$ satisfying (a)--(c) by beginning with a $\theta$ that
+satisfies (a) and (b) and repeatedly adjusting it until it also
+satisfies (c).
+
 
 \end{appendix}
 

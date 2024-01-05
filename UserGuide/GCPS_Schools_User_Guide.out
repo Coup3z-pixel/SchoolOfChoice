@@ -12,6 +12,11 @@
 \BOOKMARK [2][-]{subsection.B.5}{cee.h and cee.c}{appendix.B}% 12
 \BOOKMARK [2][-]{subsection.B.6}{schchprob.h and schchprob.c}{appendix.B}% 13
 \BOOKMARK [2][-]{subsection.B.7}{partalloc.h and partalloc.c}{appendix.B}% 14
-\BOOKMARK [2][-]{subsection.B.8}{solver.h and solver.c}{appendix.B}% 15
-\BOOKMARK [2][-]{subsection.B.9}{implement.h and implement.c}{appendix.B}% 16
-\BOOKMARK [2][-]{subsection.B.10}{solve.c and purify.c}{appendix.B}% 17
+\BOOKMARK [2][-]{subsection.B.8}{push\137relabel.h and push\137relabel.c}{appendix.B}% 15
+\BOOKMARK [2][-]{subsection.B.9}{gcps\137solver.h and gcps\137solver.c}{appendix.B}% 16
+\BOOKMARK [2][-]{subsection.B.10}{implement.h and implement.c}{appendix.B}% 17
+\BOOKMARK [2][-]{subsection.B.11}{solve.c and purify.c}{appendix.B}% 18
+\BOOKMARK [1][-]{appendix.C}{The Principal Algorithms}{}% 19
+\BOOKMARK [2][-]{subsection.C.1}{Push-Relabel}{appendix.C}% 20
+\BOOKMARK [2][-]{subsection.C.2}{School Choice Communal Endowment Economies}{appendix.C}% 21
+\BOOKMARK [2][-]{subsection.C.3}{Computing the GCPS Allocation}{appendix.C}% 22

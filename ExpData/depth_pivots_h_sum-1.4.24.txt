@@ -1,0 +1,56 @@
+This file contains data from an experiment conducted on January 4
+2024, on the number of events of various sorts during the computation.
+(After a bug was found, it had to be redone, so it corrects data from
+a couple days ago.)  The four events were:
+
+1.  Computation of linear segments of the combined function (p,barp).
+
+2.  Splits into two subeconomies when a critical pair is encountered.
+
+3.  Pivots, which are times that theta is modified, corresponding to
+invocations of mas_theta_or_find_crit_pair_for_sch.
+
+4.  In each pivot there is a sequence p_0, i_1, p_1, ... , i_h, p_h.
+The number h_sum is the sum over all pivots of the number h.
+
+The main concern was to learn how fast these numbers increase as the
+number of schools increases, and as the number of students per school
+increases.  Here is the data:
+
+        	 segments   splits    pivots   h_sum
+
+sch10stu10.scp         33        7       372     542
+sch10stu20.scp         68        7      1596    2275
+sch10stu30.scp         77        7      3468    4888
+sch10stu40.scp        123        7      6780   10280
+sch10stu50.scp        129        7     10224   14651
+sch10stu60.scp        143        7     12885   17221
+sch10stu70.scp        209        8     19782   28272
+sch10stu80.scp        256        8     29553   43179
+sch10stu90.scp        230        7     35178   54779
+sch10stu100.scp       270        7     37227   58825
+
+sch10stu10.scp         33        7       372     542
+sch20stu10.scp         58       14      1140    1689
+sch30stu10.scp         98       20      2499    4399
+sch40stu10.scp        159       30      5594    9128
+sch50stu10.scp        169       34      9538   14471
+sch60stu10.scp        188       40     11253   16371
+sch70stu10.scp        200       45     14260   21243
+sch80stu10.scp        260       55     19289   28084
+sch90stu10.scp        296       61     29952   38886
+sch100stu10.scp       286       62     27033   40506
+
+Preliminary Conclusions
+
+1.  Holding the number of schools fixed, and increasing the number of
+students per school, or holding the number of students per school
+fixed and increasing the number of schools:
+      a. The number of segments increases roughly linearly.
+      b. The number of pivots per segments increases roughly linearly.
+
+2.  The average length of the pivot paths are always between 1 and 2.
+
+3.  I tried choosing the initial theta more cleverly, by having the
+school assigned negative one be one that is fully allocated and has
+positive total theta, when possible, but this had no effect.
