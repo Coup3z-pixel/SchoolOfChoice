@@ -9,8 +9,15 @@ CC=gcc
 # may need to replace the -static-libsan with -static-libasan.)  When
 # there are no more bugs, we want speed.
 
+# For Mac OS we use
+
 CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 LDFLAGS= -fsanitize=address -static-libsan -lm
+
+# For Linux (where we also get memory leak checking) we use
+
+# CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
+# LDFLAGS= -fsanitize=address -static-libasan -lm
 
 all: make_ex gcps purify
 
