@@ -40,6 +40,9 @@ void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, doubl
 void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, struct index* alpha,
 			   int* favorites, double delta);
 
+struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide,
+					    struct subset* J_subset, struct subset* P_subset);
+
 struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
 					 struct subset* J_subset);
 

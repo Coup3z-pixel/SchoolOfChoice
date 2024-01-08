@@ -22,12 +22,10 @@ int main(int argc, char const *argv[])
   
   struct partial_alloc gcps_alloc = GCPS_allocation(&input_process_scp, segments, splits,
 						    pivots, h_sum);
-  print_partial_alloc(&gcps_alloc); 
+  /*  print_partial_alloc(&gcps_alloc); */
 
-  /*
   printf("There were %d segments, %d splits, and %d pivots, and h_sum was %d.\n",
 	 *segments, *splits, *pivots, *h_sum);
-	 */
 
   free(segments);
   free(splits);

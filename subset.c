@@ -120,12 +120,21 @@ struct subset complement_of_subset(struct subset* given_subset)  {
 }
 
 int is_nullset(struct subset* my_set)  {
-  for (int i = 1; i <= my_set->large_set_size; i++) {
-    if (my_set->indicator[i-1] == 1) {
-      return 0;
-    }
+  if (my_set->subset_size == 0) {
+    return 1;
   }
-  return 1;
+  else {
+    return 0;
+  }
+}
+
+int is_fullset(struct subset* my_set)  {
+  if (my_set->subset_size == my_set->large_set_size) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 void remove_all_elements(struct subset* my_set) {
@@ -362,26 +371,29 @@ struct index index_with_element_added(struct index* my_index, int j) {
   return new_index;
 }
 
-struct index* reverse_of_correspondence_graph(struct index* my_list, int domain_no, int range_no) {
-  int i, j;
+struct index* reverse_of_correspondence_graph(struct index* my_list,
+					      struct index* active_range_elts,
+					      int no_domain_elts) {
+  int i, k;
   
-  struct subset next_subset = nullset(domain_no);
+  struct subset next_subset = nullset(no_domain_elts);
   
-  struct index* new_list = malloc(range_no * sizeof(struct index));
+  struct index* new_list = malloc(active_range_elts->no_elements * sizeof(struct index));
 
-  for (j = 1; j <= range_no; j++) {
+  for (k = 1; k <= active_range_elts->no_elements; k++) {
     becomes_nullset(&next_subset);
-    for (i = 1; i <= domain_no; i++) {
-      if (index_has_element(&(my_list[i-1]),j) && next_subset.indicator[i-1] == 0) {
+    for (i = 1; i <= no_domain_elts; i++) {
+      if (index_has_element(&(my_list[i-1]),active_range_elts->indices[k-1])
+	  && next_subset.indicator[i-1] == 0) {
 	next_subset.subset_size++;
 	next_subset.indicator[i-1] = 1;
       }
     }
     
-    new_list[j-1] = index_of_subset(&next_subset);
+    new_list[k-1] = index_of_subset(&next_subset);
   }
 
-  free(next_subset.indicator);
+  destroy_subset(next_subset);
 
   return new_list;
 }
@@ -475,6 +487,22 @@ void add_index_to_index_list(struct index_list* my_list, struct index* my_index)
     (probe->next)->next = NULL;
     (probe->next)->node_index = copy_of_index(my_index);
   }
+}
+
+struct subset union_of_indices(struct index* my_list, int large_set_size, int list_length) {
+  int i, k;
+  
+  struct subset my_union = nullset(large_set_size);
+  
+  for (i = 1; i <= list_length; i++) {
+    for (k = 1; k <= my_list[i-1].no_elements; k++) {
+      if (my_union.indicator[my_list[i-1].indices[k-1]-1] == 0) {
+	add_element(&my_union,my_list[i-1].indices[k-1]);
+      }
+    }
+  }
+
+  return my_union;  
 }
 
 

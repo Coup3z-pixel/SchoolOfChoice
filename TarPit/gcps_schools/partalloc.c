@@ -135,40 +135,12 @@ double* school_sums(struct partial_alloc* my_alloc) {
   return sums;
 }
 
-struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
-					 struct subset* J_subset) {
-  int i, j;
-
-  int nsc = feasible_guide->no_schools;
-  int new_nst = J_subset->subset_size;
-
-  struct partial_alloc new_guide;
-
-  new_guide.no_students = new_nst;
-  new_guide.no_schools = nsc;
-
-  int old_std_no = 0;
-  new_guide.allocations = malloc(new_nst * sizeof(double*));
-  for (i = 1; i <= new_nst; i++) {
-    new_guide.allocations[i-1] = malloc(nsc * sizeof(double));
-    old_std_no++;
-    while (J_subset->indicator[old_std_no-1] == 0) {
-      old_std_no++;
-    }
-    for (j = 1; j <= nsc; j++) {
-      new_guide.allocations[i-1][j-1] = feasible_guide->allocations[old_std_no-1][j-1];
-    }
-  }
-  
-  return new_guide;
-}
-
-struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
-					  struct subset* J_subset, struct subset* P_subset) {
+struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide,
+					    struct subset* J_subset, struct subset* P_subset) {
   int i, j, old_std_no, old_sch_no;
 
-  int new_nst = feasible_guide->no_students - J_subset->subset_size;
-  int new_nsc = feasible_guide->no_schools - P_subset->subset_size;
+  int new_nst = J_subset->subset_size;
+  int new_nsc = P_subset->subset_size;
 
   struct partial_alloc new_guide;
 
@@ -184,17 +156,41 @@ struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
   for (i = 1; i <= new_nst; i++) {
     old_sch_no = 0;
     old_std_no++;
-    while (J_subset->indicator[old_std_no-1] == 1) {
+    while (J_subset->indicator[old_std_no-1] == 0) {
       old_std_no++;
     }
     for (j = 1; j <= new_nsc; j++) {
       old_sch_no++;
-      while (P_subset->indicator[old_sch_no-1] == 1) {
+      while (P_subset->indicator[old_sch_no-1] == 0) {
 	old_sch_no++;
       }
       new_guide.allocations[i-1][j-1] = feasible_guide->allocations[old_std_no-1][old_sch_no-1];
     }
   }
+
+  return new_guide;
+}
+
+struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
+					 struct subset* J_subset) {
+  struct subset all_schools = fullset(feasible_guide->no_schools);
+
+  struct partial_alloc new_guide = reduced_feasible_guide(feasible_guide, J_subset, &all_schools);
+
+  destroy_subset(all_schools);
+
+  return new_guide;
+}
+
+struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
+					  struct subset* J_subset, struct subset* P_subset) {
+  struct subset J_compl = complement_of_subset(J_subset);
+  struct subset P_compl = complement_of_subset(P_subset);
+
+  struct partial_alloc new_guide = reduced_feasible_guide(feasible_guide, &J_compl, &P_compl);
+
+  destroy_subset(J_compl);
+  destroy_subset(P_compl);
 
   return new_guide;
 }

@@ -148,6 +148,60 @@ struct process_cee make_toy_process_cee() {
   return my_proc;
 }
 
+struct subset nonnull_schools(struct process_cee* my_cee) {
+  
+  int nsc = my_cee->no_schools;
+
+  struct subset nonnull = nullset(nsc);
+  for (int j = 1; j <= nsc; j++) {
+    if (my_cee->quotas[j-1] > 0.000001) {
+      add_element(&nonnull,j);
+    }
+  }
+
+  return nonnull;
+}
+
+struct process_cee cee_without_null_schools(struct process_cee* my_cee, struct subset* nonnull)  {
+  int i, j, k, count;
+  
+  struct process_cee new_cee;
+
+  int nst = my_cee->no_students;
+  int nsc = nonnull->subset_size;
+
+  new_cee.no_students = nst;
+  new_cee.no_schools = nsc;
+
+  int* old_sch_no = malloc(nsc * sizeof(int));
+  count = 0;
+  for (j = 1; j <= my_cee->no_schools; j++) {
+    if (nonnull->indicator[j-1] == 1) {
+      count++;
+      old_sch_no[count - 1] = j;
+    }
+  }
+
+  new_cee.quotas = malloc(nsc * sizeof(double));
+  for (k = 1; k <= nsc; k++) {
+    new_cee.quotas[k-1] = my_cee->quotas[old_sch_no[k-1]-1];
+  }
+
+  new_cee.maximums = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    new_cee.maximums[i-1] = malloc(nsc * sizeof(double));
+    for (k = 1; k <= nsc; k++) {
+      new_cee.maximums[i-1][k-1] = my_cee->maximums[i-1][old_sch_no[k-1]-1];
+    }
+  }
+
+  free(old_sch_no);
+  
+  new_cee.time_remaining = my_cee->time_remaining;
+
+  return new_cee;
+}
+
 struct process_cee process_cee_from_input_cee(struct input_cee* my_cee) {
   int i, j;
   

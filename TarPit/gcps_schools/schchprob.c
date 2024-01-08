@@ -293,7 +293,6 @@ struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct
     }
   }
   
-
   int nst = J_compl.subset_size;
   int nsc = P_compl.subset_size;
 
@@ -309,7 +308,7 @@ struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct
 	new_scp.no_eligible_schools[i-1]++;
       }
     }
-    new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int*));
+    new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
     count = 0;
     for (l = 1; l <= my_scp->no_eligible_schools[J_index.indices[i-1]-1]; l++) {
       if (P_compl.indicator[my_scp->preferences[J_index.indices[i-1]-1][l-1]-1] == 1) {
@@ -325,8 +324,6 @@ struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct
   destroy_index(J_index);
   destroy_index(P_index);
   free(reverse_P_index); 
-
-  /*  print_process_scp(&new_scp); */
 
   return new_scp;    
 }

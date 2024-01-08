@@ -28,6 +28,8 @@ struct subset fullset(int large_set_size);
 
 int is_nullset(struct subset* my_set);
 
+int is_fullset(struct subset* my_set);
+
 void remove_all_elements(struct subset* my_set);
 
 void add_element(struct subset* my_set, int new_elt);
@@ -77,7 +79,9 @@ struct index singleton_index(int j);
 
 struct index index_with_element_added(struct index* my_index, int j);
 
-struct index* reverse_of_correspondence_graph(struct index* my_list, int domain_no, int range_no);
+struct index* reverse_of_correspondence_graph(struct index* my_list,
+					      struct index* active_range_elts,
+					      int no_domain_elts);
 
 void destroy_subset(struct subset my_subset);
 
@@ -97,6 +101,8 @@ int length_of_index_list(struct index_list* my_list);
 int element_of_list_set(struct index_list* my_list, int set_no, int elt_no);
 
 void add_index_to_index_list(struct index_list* my_list, struct index* my_index);
+
+struct subset union_of_indices(struct index* my_list, int large_set_size, int list_length);
 
 void print_index_list(struct index_list* my_list);
 

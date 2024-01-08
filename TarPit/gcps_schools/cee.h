@@ -40,6 +40,10 @@ struct process_cee make_toy_process_cee();
 
 struct process_cee process_cee_from_input_cee(struct input_cee* my_cee);
 
+struct subset nonnull_schools(struct process_cee* my_cee);
+
+struct process_cee cee_without_null_schools(struct process_cee* my_cee, struct subset* nonnull);
+
 struct process_cee critical_sub_process_cee(struct process_cee* my_cee, struct subset* J_subset);
 
 struct process_cee crit_compl_sub_process_cee(struct process_cee* my_cee, struct subset* J_subset,
