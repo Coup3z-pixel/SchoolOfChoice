@@ -3,69 +3,95 @@
 
 #include "normal.h"
 
-int main() {
-  int no_schools = 2;
-  int no_students_per_school = 3;
-  int school_capacity = 4;
-  double school_valence_std_dev = 1.0;
-  double idiosyncratic_std_dev = 1.0;
+int main(int argc, char *argv[]) {
+  int nsc, no_students_per_school, school_capacity;
+  double school_valence_std_dev, idiosyncratic_std_dev;
+  
+  if (argc != 1 && argc != 6) {
+    printf("The number of arguments is wrong.\n");
+    exit(0);
+  }
+  
+  if (argc == 1) {
+    nsc = 2;
+    no_students_per_school = 3;
+    school_capacity = 4;
+    school_valence_std_dev = 1.0;
+    idiosyncratic_std_dev = 1.0;
+  }
+
+  if (argc == 6) {
+    nsc = atoi(argv[1]);
+    no_students_per_school = atoi(argv[2]);
+    school_capacity = atoi(argv[3]);
+    if (nsc == 0 || no_students_per_school == 0 || school_capacity == 0) {
+      printf("The first three command line arguments (after make_ex) must be integers > 0.\n");
+      exit(0);
+    }
+    school_valence_std_dev = atof(argv[4]);
+    idiosyncratic_std_dev = atof(argv[5]);
+    if (school_valence_std_dev < 0.000001 || idiosyncratic_std_dev < 0.000001) {
+      printf("The last two command line arguments must be positive floats > 0.0.\n");
+      exit(0);
+    }
+  }
   
   int i, j, k;
   
-  int no_students = no_schools * no_students_per_school;
-  double* location = malloc(no_students * sizeof(double));
-  for (i = 1; i <= no_students; i++) {
+  int nst = nsc * no_students_per_school;
+  double* location = malloc(nst * sizeof(double));
+  for (i = 1; i <= nst; i++) {
     location[i-1] = (double)i/no_students_per_school;
   }
-
-  double** distance = malloc(no_students * sizeof(double*));
-  for (i = 1; i <= no_students; i++) {
-    distance[i-1] = malloc(no_schools * sizeof(double));
-    for (j = 1; j <= no_schools; j++) {
+  
+  double** distance = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    distance[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
       double a = location[i-1];
       double b = (double)j;
-      double c = (double)no_schools;
+      double c = (double)nsc;
       distance[i-1][j-1] = min(min(fabs(a - b), fabs(a - b - c)),fabs(a - b + c));
     }
   }
   
-  double* valence = malloc(no_schools * sizeof(double));
-  for (j = 1; j <= no_schools; j++) {
+  double* valence = malloc(nsc * sizeof(double));
+  for (j = 1; j <= nsc; j++) {
     valence[j-1] = school_valence_std_dev * normal();
   }
 
-  double** utility = malloc(no_students * sizeof(double*));
-  for (i = 1; i <= no_students; i++) {
-    utility[i-1] = malloc(no_schools * sizeof(double));
-    for (j = 1; j <= no_schools; j++) {
+  double** utility = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    utility[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
       utility[i-1][j-1] = valence[j-1] + idiosyncratic_std_dev * normal() - distance[i-1][j-1];
     }
   }
 
-  int* safe_school = malloc(no_students * sizeof(int));
+  int* safe_school = malloc(nst * sizeof(int));
   i = 1;
-  safe_school[i-1] = no_schools;
+  safe_school[i-1] = nsc;
   while (2 * i < no_students_per_school) {
     i++;
-    safe_school[i-1] = no_schools;
+    safe_school[i-1] = nsc;
   }
-  for (j = 1; j < no_schools; j++) {
+  for (j = 1; j < nsc; j++) {
     for (k = 1; k <= no_students_per_school; k++) {
       i++;
       safe_school[i-1] = j;
     }
   }
-  while (i < no_students) {
+  while (i < nst) {
     i++;
-    safe_school[i-1] = no_schools;
+    safe_school[i-1] = nsc;
   }
 
-  int** priority = malloc(no_students * sizeof(int*));
-  int* no_ranked_schools = malloc(no_students * sizeof(int));
-  for (i = 1; i <= no_students; i++) {
-    priority[i-1] = malloc(no_schools * sizeof(int));
+  int** priority = malloc(nst * sizeof(int*));
+  int* no_ranked_schools = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    priority[i-1] = malloc(nsc * sizeof(int));
     no_ranked_schools[i-1] = 0;
-    for (j = 1; j <= no_schools; j++) {
+    for (j = 1; j <= nsc; j++) {
       if (utility[i-1][safe_school[i-1] - 1] <= utility[i-1][j-1]) {
 	priority[i-1][j-1] = 1;
 	no_ranked_schools[i-1]++;
@@ -76,11 +102,11 @@ int main() {
     }
   }
 
-  int** preferences = malloc(no_students * sizeof(int*));
-  for (i = 1; i <= no_students; i++) {
+  int** preferences = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
     preferences[i-1] = malloc(no_ranked_schools[i-1] * sizeof(int));
     int no_already_ranked = 0;
-    for (j = 1; j <= no_schools; j++) {
+    for (j = 1; j <= nsc; j++) {
       if (utility[i-1][safe_school[i-1] - 1] <= utility[i-1][j-1]) {
 	if (no_already_ranked == 0) {
 	  preferences[i-1][0] = j;
@@ -88,7 +114,7 @@ int main() {
 	}
 	else {
 	  k = no_already_ranked;
-	  while (utility[i-1][j-1] > utility[i-1][preferences[i-1][k-1]-1] && k > 0) {
+	  while (k > 0 && utility[i-1][j-1] > utility[i-1][preferences[i-1][k-1]-1]) {
 	    preferences[i-1][k] = preferences[i-1][k-1];  /* Oh no! Bubble sort */
 	    k--;
 	  }
@@ -99,29 +125,28 @@ int main() {
     }
   }
 
-
-  printf("/* This file was generated by make_ex with %i schools, %i students per school, capacity %i for all\n", no_schools, no_students_per_school, school_capacity);
+  printf("/* This file was generated by make_ex with %i schools, %i students per school, capacity %i for all\n", nsc, no_students_per_school, school_capacity);
   printf("schools, school valence standard deviation %1.2f, and idiosyncratic standard deviation %1.2f. */\n",school_valence_std_dev,idiosyncratic_std_dev);
-  printf("There are %i students and %i schools\n",no_students,no_schools);
+  printf("There are %i students and %i schools\n",nst,nsc);
   printf("The vector of quotas is (");
-  for (j = 1; j < no_schools; j++) {
+  for (j = 1; j < nsc; j++) {
     printf("%i,",school_capacity);
   }
   printf("%i)\n",school_capacity);
   printf("The priority matrix is\n");
-  for (i = 1; i <= no_students; i++) {
-    for (j = 1; j <= no_schools; j++) {
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
       printf("    %i",priority[i-1][j-1]);
     }
     printf("\n");
   }
   printf("The students numbers of ranked schools are\n(");
-  for (i = 1; i < no_students; i++) {
+  for (i = 1; i < nst; i++) {
     printf("%i,",no_ranked_schools[i-1]);
   }
-  printf("%i)\n",no_ranked_schools[no_students - 1]);
+  printf("%i)\n",no_ranked_schools[nst - 1]);
   printf("The preferences of the students are");
-  for (i = 1; i <= no_students; i++) {
+  for (i = 1; i <= nst; i++) {
     printf("\n%i:",i);
     if (i < 10) {
       printf(" ");
@@ -131,35 +156,35 @@ int main() {
     }
   }
   printf("\nThe priority thresholds of the schools are\n");
-  for (j = 1; j <= no_schools; j++) {
+  for (j = 1; j <= nsc; j++) {
     printf("1   ");
   }
   printf("\n");
 
   free(location);
   
-  for (i = 1; i <= no_students; i++) {
+  for (i = 1; i <= nst; i++) {
     free(distance[i-1]);
   }
   free(distance);
 
   free(valence);
   
-  for (i = 1; i <= no_students; i++) {
+  for (i = 1; i <= nst; i++) {
     free(utility[i-1]);
   }
   free(utility);
 
   free(safe_school);
   
-  for (i = 1; i <= no_students; i++) {
+  for (i = 1; i <= nst; i++) {
     free(priority[i-1]);
   }
   free(priority);
 
   free(no_ranked_schools);
   
-  for (i = 1; i <= no_students; i++) {
+  for (i = 1; i <= nst; i++) {
     free(preferences[i-1]);
   }
   free(preferences);

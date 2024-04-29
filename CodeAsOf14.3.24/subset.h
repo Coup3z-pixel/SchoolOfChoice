@@ -50,8 +50,6 @@ void becomes_nullset(struct subset* my_set);
 
 void becomes_singleton(struct subset* my_set, int elmnt);
 
-int* subset_element_numbers(struct subset* my_subset);
-
 struct index index_of_subset(struct subset* my_subset);
 
 struct index index_of_complement(struct subset* my_subset);

@@ -35,6 +35,11 @@ struct partial_alloc zero_alloc_for_process_scp(struct process_cee* my_cee);
 
 double* school_sums(struct partial_alloc* my_alloc);
 
+void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, double delta);
+
+void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, struct index* alpha,
+			   int* favorites, double delta);
+
 struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide,
 					    struct subset* J_subset, struct subset* P_subset);
 

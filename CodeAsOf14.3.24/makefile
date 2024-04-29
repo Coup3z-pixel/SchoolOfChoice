@@ -1,7 +1,7 @@
 CC=gcc
 
-# CFLAGS=-I. -Wall -Wextra 
-# LDFLAGS=-lm
+CFLAGS=-I. -Wall -Wextra 
+LDFLAGS=-lm
 
 # AddressSanitizer is very useful for debugging, but it slows down
 # execution.  So, when you are doing code development, comment out the
@@ -11,8 +11,8 @@ CC=gcc
 
 # For Mac OS we use
 
-CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
-LDFLAGS= -fsanitize=address -static-libsan -lm
+# CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
+# LDFLAGS= -fsanitize=address -static-libsan -lm
 
 # For Linux (where we also get memory leak checking) we use
 
@@ -24,8 +24,8 @@ all: make_ex gcps purify
 make_ex: example.c normal.o
 	$(CC) -o make_ex example.c normal.o $(LDFLAGS)
 
-gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o pivot.o endpoint.o gcps_solver.o
-	$(CC) -o gcps solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o pivot.o endpoint.o gcps_solver.o $(LDFLAGS)
+gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o gcps_solver.o
+	$(CC) -o gcps solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o gcps_solver.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o implement.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o implement.o $(LDFLAGS)
@@ -45,12 +45,6 @@ cee.o: cee.h cee.c
 
 push_relabel.o: push_relabel.h push_relabel.c
 	$(CC) $(CFLAGS) -c push_relabel.c
-
-pivot.o: pivot.h pivot.c
-	$(CC) $(CFLAGS) -c pivot.c 
-
-endpoint.o: endpoint.h endpoint.c
-	$(CC) $(CFLAGS) -c endpoint.c
 
 gcps_solver.o: gcps_solver.h gcps_solver.c
 	$(CC) $(CFLAGS) -c gcps_solver.c

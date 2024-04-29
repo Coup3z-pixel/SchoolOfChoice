@@ -337,12 +337,12 @@ void check_student_tag(FILE *fp, char next) {
   }
 }
 
-struct input_sch_ch_prob sch_ch_prob_from_file(const char filename[]) {
+struct input_sch_ch_prob sch_ch_prob_from_file() {
   struct input_sch_ch_prob my_sch_ch_prob;
 
   FILE *fp;
 
-  if (!(fp = fopen(filename, "r"))) {
+  if (!(fp = fopen("schools.scp", "r"))) {
     printf("ERROR: the file schools.scp does not exist.\n");
     exit(0);
   }
@@ -541,13 +541,13 @@ void check_students_fourth(FILE *fp, char next) {
   }
 }
 
-struct partial_alloc allocation_from_file(const char filename[]) {
+struct partial_alloc allocation_from_file() {
   struct partial_alloc allocation;
 
   FILE *fp;
 
-  if (!(fp = fopen(filename, "r"))) {
-    printf("ERROR: the file %s does not exist.\n", filename);
+  if (!(fp = fopen("allocate.mat", "r"))) {
+    printf("ERROR: the file allocate.mat does not exist.\n");
     exit(0);
   }
 

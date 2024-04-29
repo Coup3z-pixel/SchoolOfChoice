@@ -1,4 +1,6 @@
-#include "push_relabel.h"
+#include "gcps_solver.h"
+
+/* COMBINATORIC CALCULATIONS */
 
 
 void get_alpha(struct process_cee* working_cee, struct index* alpha) {
@@ -137,72 +139,18 @@ int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites) {
   return theta;
 }
 
-int get_theta_sum(int** theta, int nst, int j) {
-  int theta_sum = 0;
-  for (int i = 1; i <= nst; i++) {
-    theta_sum += theta[i-1][j-1];
-  }
-  return theta_sum;
-}
-
-void revise_theta(int** theta, struct index* alpha, int o_h, 
-		  struct partial_alloc* feasible_guide,
-		  struct process_cee* working_cee,
-		  struct index_list* J_increments,
-		  struct index_list* P_increments, int* favorites) {
-  int g, h, i, j, l, done, current_o, current_i;
-
-  h = length_of_index_list(J_increments);
+int* initialize_theta_sums(int **theta, int nst, int nsc) {
+  int i, j;
   
-  int* P_schools = malloc((h+1) * sizeof(int));
-  int* J_students = malloc(h * sizeof(int));
-
-  P_schools[h] = o_h;
-  current_o = o_h;
-  for (g = h; g >= 1; g--) {
-    
-    done = 0;
-    l = 1;
-    while (!done) {
-      i = element_of_list_set(J_increments,g,l);      
-      if (index_has_element(&(alpha[i-1]),current_o) &&
-	  (feasible_guide->allocations[i-1][current_o-1] <
-	   working_cee->maximums[i-1][current_o-1] - 0.000001 ||
-	  theta[i-1][current_o-1] < 0)) {
-	done = 1;
-	current_i = i;
-	J_students[g-1] = i;
-      }
-      else {	
-	l++;
-      }
-    }
-      
-    done = 0;
-    l = 1;
-    while (!done) {
-      j = element_of_list_set(P_increments,g,l);
-      if (index_has_element(&(alpha[current_i-1]),j) &&
-	  (feasible_guide->allocations[current_i-1][j-1] > 0.000001 ||
-	   theta[current_i-1][j-1] > 1 ||
-	   (theta[current_i-1][j-1] > 0 && j != favorites[i-1]))) {
-	done = 1;
-	current_o = j;
-	P_schools[g-1] = j;
-      }
-      else {
-	l++;
-      }
+  int* new_theta_sums = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    new_theta_sums[j-1] = 0;
+    for (i = 1; i <= nst; i++) {
+      new_theta_sums[j-1] += theta[i-1][j-1];
     }
   }
 
-  for (g = 1; g <= h; g++) {
-    theta[J_students[g-1]-1][P_schools[g-1]-1]--;
-    theta[J_students[g-1]-1][P_schools[g]-1]++;
-  }
-
-  free(P_schools);
-  free(J_students);
+  return new_theta_sums;
 }
 
 void next_J_h(struct subset* next_J_subset, struct subset* J_subset, struct subset* P_subset,
@@ -217,9 +165,7 @@ void next_J_h(struct subset* next_J_subset, struct subset* J_subset, struct subs
       for (l = 1; l <= omega[k-1].no_elements; l++) {
 	i = omega[k-1].indices[l-1];
 	if (!J_subset->indicator[i-1] &&
-	    (feasible_guide->allocations[i-1][j-1] > 0.000001 || theta[i-1][j-1] > 0) && 
-	    (feasible_guide->allocations[i-1][j-1] > 0.000001 || j != favorites[i-1]
-	     || theta[i-1][j-1] > 1)) {
+	    student_qualified_for_school(i,j,feasible_guide,theta,favorites)) {
 	  add_element(next_J_subset,i);
 	  add_element(J_subset,i);
 	}
@@ -228,8 +174,9 @@ void next_J_h(struct subset* next_J_subset, struct subset* J_subset, struct subs
   }
 }
 
-void next_P_h(struct subset* next_P_subset, struct subset* J_subset, struct subset* P_subset,
-	      struct partial_alloc* feasible_guide, struct process_cee* working_cee,
+void next_P_h(struct subset* next_P_subset, struct subset* J_subset,
+	      struct subset* P_subset, struct partial_alloc* feasible_guide,
+	      struct process_cee* working_cee,
 	      struct index* alpha, int** theta) {
   int i, j, k;
   
@@ -240,8 +187,8 @@ void next_P_h(struct subset* next_P_subset, struct subset* J_subset, struct subs
       for (k = 1; k <= alpha[i-1].no_elements; k++) {
 	j = alpha[i-1].indices[k-1];
 	if (!P_subset->indicator[j-1] &&
-	    (feasible_guide->allocations[i-1][j-1] < working_cee->maximums[i-1][j-1] - 0.000001
-	     || theta[i-1][j-1] < 0)) {
+	    school_qualified_for_student(i, j, feasible_guide, theta,
+					 working_cee)) {
 	  add_element(next_P_subset,j);
 	  add_element(P_subset,j);
 	}
@@ -250,16 +197,19 @@ void next_P_h(struct subset* next_P_subset, struct subset* J_subset, struct subs
   }
 }
 
-void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset,
+void compute_increments_and_o_h(struct subset* J_subset,
+				struct subset* P_subset,
 				struct index_list* J_increments,
 				struct index_list* P_increments,
 				struct partial_alloc* feasible_guide,
 				struct process_cee* working_cee,
-				struct index* alpha, struct index* active_schools_index,
-				struct index* omega, int** theta, int* favorites,
+				struct index* alpha,
+				struct index* active_schools_index,
+				struct index* omega, int** theta, int* theta_sums,
+				int* favorites,
 				int* fully_allocated, int sch, int* o_h,
 				int* critical_pair_found, int* h_sum) {
-  int k, theta_sum, sch_no;
+  int k, sch_no; 
 
   int done = 0;
   
@@ -305,8 +255,7 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
 
 	for (k = 1; k <= next_P_index.no_elements; k++) {
 	  sch_no = next_P_index.indices[k-1];
-	  theta_sum = get_theta_sum(theta,nst,sch_no);
-	  if (!fully_allocated[sch_no-1] || theta_sum < 0) {	    
+	  if (!fully_allocated[sch_no-1] || theta_sums[sch_no-1] < 0) {	    
 	    done = 1;
 	    *o_h = sch_no;
 	  }
@@ -323,15 +272,74 @@ void compute_increments_and_o_h(struct subset* J_subset, struct subset* P_subset
   }
 }
 
-void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_subset,
-					 struct subset* J_subset, struct process_cee* working_cee,
+struct pivot* extract_pivot(int** theta, struct index* alpha, int o_h, 
+			   struct partial_alloc* feasible_guide,
+			   struct process_cee* working_cee,
+			   struct index_list* J_increments,
+			   struct index_list* P_increments, int* favorites) {
+  int g, h, i, j, l, done, current_o, current_i;
+
+  h = length_of_index_list(J_increments);
+
+  struct pivot* my_pivot = malloc(sizeof(struct pivot));
+  *my_pivot = initialized_pivot(h);
+
+  my_pivot->schools[h] = o_h;
+  
+  current_o = o_h;
+  for (g = h; g >= 1; g--) {
+    
+    done = 0;
+    l = 1;
+    while (!done) {
+      i = element_of_list_set(J_increments,g,l);      
+      if (index_has_element(&(alpha[i-1]),current_o) && 
+	  school_qualified_for_student(i, current_o, feasible_guide, theta,
+					 working_cee)) {
+	done = 1;
+	current_i = i;
+
+	my_pivot->students[g-1] = i;
+	
+      }
+      else {	
+	l++;
+      }
+    }
+      
+    done = 0;
+    l = 1;
+    while (!done) {
+      j = element_of_list_set(P_increments,g,l);
+      if (index_has_element(&(alpha[current_i-1]),j) &&
+	  student_qualified_for_school(i,j,feasible_guide,theta,favorites)) {
+	done = 1;
+	current_o = j;
+
+	my_pivot->schools[g-1] = j;
+	
+      }
+      else {
+	l++;
+      }
+    }
+  }
+
+  return my_pivot;
+}
+
+void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, int* theta_sums,
+					 struct subset* P_subset, struct subset* J_subset,
+					 struct process_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
 					 struct index* alpha, struct index* active_schools_index,
 					 struct index* omega, int* favorites,
-					 int* fully_allocated, int* critical_pair_found,
-					 int* pivots, int* h_sum) {
+					 int* fully_allocated, struct pivot_list* my_list,
+					 int* critical_pair_found,
+					 int* no_new_pivots, int* h_sum) {
 
-  (*pivots)++;
+  /*  (*no_pivots)++; */
+  (*no_new_pivots)++;
   
   int* o_h = malloc(sizeof(int));
   
@@ -344,12 +352,32 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
 
   compute_increments_and_o_h(J_subset, P_subset, J_increments, P_increments,
 			     feasible_guide, working_cee, alpha, active_schools_index,
-			     omega, theta, favorites,
+			     omega, theta, theta_sums, favorites,
 			     fully_allocated, sch, o_h, critical_pair_found, h_sum);
   
   if (!*critical_pair_found) {
-    revise_theta(theta, alpha, *o_h, feasible_guide, working_cee,
-		 J_increments, P_increments, favorites);
+    struct pivot* my_pivot = extract_pivot(theta, alpha, *o_h, 
+					   feasible_guide,
+					   working_cee,
+					   J_increments, P_increments,
+					   favorites);
+
+    /* - This check seemed to work perfectly.
+    if (!pivot_is_valid(my_pivot, theta, theta_sums, alpha, feasible_guide, working_cee,
+			favorites, fully_allocated)) {
+      printf("Something is wrong, it seems.\n");
+      exit(0);
+    }
+    */
+
+
+    
+			
+    execute_pivot(my_pivot,theta,theta_sums);
+    
+    add_pivot_to_list(my_list,my_pivot);
+
+    destroy_pivot_ptr(my_pivot);
 
     remove_all_elements(J_subset);
     remove_all_elements(P_subset); 
@@ -360,311 +388,108 @@ void mas_theta_or_find_crit_pair_for_sch(int sch, int** theta, struct subset* P_
   destroy_index_list(P_increments);
 }
   
-void massage_theta_or_find_critical_pair(int** theta, struct subset* P_subset,
+void massage_theta_or_find_critical_pair(int** theta, int* theta_sums, struct subset* P_subset,
 					 struct subset* J_subset, struct process_cee* working_cee,
 					 struct partial_alloc* feasible_guide,
 					 struct index* alpha, struct index* active_schools_index,
 					 struct index* omega,int* favorites,
-					 int* fully_allocated, int* critical_pair_found,
-					 int* pivots, int* h_sum) {
-  int j, k, theta_sum;
-
-  int nst = feasible_guide->no_students;
+					 int* fully_allocated,
+					 struct pivot_list* my_list,
+					 int* critical_pair_found,
+					 int* no_new_pivots, int* h_sum) {
+  int j, k; 
 
   k = 1;
   while (!*critical_pair_found && k <= active_schools_index->no_elements) {
     j = active_schools_index->indices[k-1];
     if (fully_allocated[j-1]) {
-      theta_sum = get_theta_sum(theta,nst,j);
-      while (!*critical_pair_found && theta_sum > 0) {
-	mas_theta_or_find_crit_pair_for_sch(j, theta, P_subset, J_subset, working_cee,
+      while (!*critical_pair_found && theta_sums[j-1] > 0) {
+	mas_theta_or_find_crit_pair_for_sch(j, theta, theta_sums, P_subset, J_subset, working_cee,
 					    feasible_guide, alpha, active_schools_index, omega,
-					    favorites, fully_allocated,
-					    critical_pair_found, pivots, h_sum);
-	theta_sum = get_theta_sum(theta,nst,j);
+					    favorites, fully_allocated, my_list,
+					    critical_pair_found, no_new_pivots, h_sum);
       }
     }
     k++;
   }
 }
-  
-int theta_is_valid(int** theta, struct process_cee* working_cee,
-		   struct partial_alloc* feasible_guide,
-		   struct index* alpha, int* favorites, int* fully_allocated) {
-  int i, j;
-
-  int nst = working_cee->no_students;
-  int nsc = working_cee->no_schools;
-
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      if (!index_has_element(&(alpha[i-1]),j) && theta[i-1][j-1] != 0) {
-	printf("Nonzero theta of i = %d for ineligible school j = %d.\n",i,j);
-	printf("The working_cee is \n");
-	print_process_cee(working_cee);
-	return 0;
-      }
-      if (feasible_guide->allocations[i-1][j-1] < 0.000001 && theta[i-1][j-1] < 0) {
-	printf("Negative theta of zero allocation.\n");
-	return 0;
-      }
-      if (feasible_guide->allocations[i-1][j-1] < 0.000001 && favorites[i-1] == j &&
-	  theta[i-1][j-1] < 1) {
-	printf("Nonpositive theta of zero allocation of favorite.\n");
-	return 0;
-      }
-      if (feasible_guide->allocations[i-1][j-1] > working_cee->maximums[i-1][j-1] -0.000001 && 
-	  theta[i-1][j-1] > 0) {
-	printf("Positive theta in spite of max allocation.\n");
-	return 0;
-      }
-    }
-  }
-
-  for (i = 1; i <= nst; i++) {
-    int sum = 0;
-    for (j = 1; j <= nsc; j++) {
-      sum += theta[i-1][j-1];
-    }
-    if (sum != 0) {
-      printf("The sum of theta for agent %d is not zero.\n",i);
-    }
-  }
-
-  for (j = 1; j <= nsc; j++) {
-    int total_theta = 0;
-    for (i = 1; i <= nst; i++) {
-      total_theta += theta[i-1][j-1];
-    }
-      
-    if (fully_allocated[j-1] && total_theta > 0) {
-      printf("Positive theta_sum for fully allocated school %d.\n", j);
-      return 0;
-    }
-  }
-
-  return 1;
-}
-
-double time_until_some_max_exhaustion(int* favorites, struct process_cee* working_cee) {
-  int i;
-  
-  int nst = working_cee->no_students;
-  
-  double mnm = working_cee->time_remaining;;
-  for (i = 1; i <= nst; i++) {
-    mnm = min(mnm,working_cee->maximums[i-1][favorites[i-1]-1]);
-  }
-
-  return mnm;
-}
-
-double time_until_some_school_exhaustion(int* favorites, struct process_cee* working_cee) {
-  int i, j;
-
-  double little_min, minimum;
-  
-  int nst = working_cee->no_students;
-  int nsc = working_cee->no_schools;
-
-  int* student_count = malloc(nsc * sizeof(int));
-  for (j = 1; j <= nsc; j++) {
-    student_count[j-1] = 0;
-  }
-
-  for (i = 1; i <= nst; i++) {
-    student_count[favorites[i-1]-1]++;
-  }
-  
-  minimum = working_cee->time_remaining;
-  for (j = 1; j <= nsc; j++) {
-    if (student_count[j-1] > 0) {
-      little_min = working_cee->quotas[j-1]/student_count[j-1];
-      minimum = min(minimum,little_min);
-    }
-  }
-
-  free(student_count);
-  
-  return minimum;
-}
-
-double time_until_feasible_guide_not_feasible(int** theta, struct index* alpha,
-					      struct process_cee* working_cee,
-					      struct partial_alloc* feasible_guide)  {
-  int i, j, k, slope;
-  
-  int nst = working_cee->no_students;
-  int nsc = working_cee->no_schools;
-
-  double individual_min, school_quota_min, temp_min, final_min;
-
-  individual_min = working_cee->time_remaining;
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      slope = theta[i-1][j-1];
-      if (slope < 0) {
-	temp_min = - feasible_guide->allocations[i-1][j-1]/slope;
-      }
-      if (slope > 0) {
-	temp_min = working_cee->maximums[i-1][j-1]/slope;
-      }
-      if (slope != 0) {
-	individual_min = min(individual_min, temp_min);
-      }
-    }
-  }
-
-  double* unalloc_quota = malloc(nsc * sizeof(double));
-  int* slopes = malloc(nsc * sizeof(int));
-  for (j = 1; j <= nsc; j++) {
-    unalloc_quota[j-1] = working_cee->quotas[j-1];
-    slopes[j-1] = 0;
-  }
-
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      unalloc_quota[j-1] -= feasible_guide->allocations[i-1][j-1];
-      slopes[j-1] += theta[i-1][j-1];
-    }
-  }
-
-  school_quota_min = working_cee->time_remaining;
-  for (j = 1; j <= nsc; j++) {
-    if (slopes[j-1] > 0) {
-      temp_min = unalloc_quota[j-1]/slopes[j-1];      
-      school_quota_min = min(school_quota_min, temp_min);
-    }
-  }
-
-  free(unalloc_quota);
-  free(slopes);
-  final_min = min(individual_min, school_quota_min);
-  
-  return final_min;
-}
-
-double time_until_feasible_guide_not_above_alloc(int** theta, struct index* alpha, int* favorites,
-						 struct process_cee* working_cee,
-						 struct partial_alloc* feasible_guide) {
-  int i, j, k, slope;
-  
-  int nst = working_cee->no_students;
-
-  double lower_bound_min,temp_min;
-
-  lower_bound_min = working_cee->time_remaining;;
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      slope = theta[i-1][j-1];
-      if (favorites[i-1] == j) {
-	slope--;
-      }
-      if (slope < 0) {
-	temp_min = - feasible_guide->allocations[i-1][j-1]/slope;
-	lower_bound_min = min(lower_bound_min, temp_min);
-      }
-    }
-  }
-
-  return lower_bound_min;
-}
-
-double time_until_trajectory_change(int** theta, struct index* alpha, int* favorites,
-				    struct process_cee* working_cee,
-				    struct partial_alloc* feasible_guide) {
-  double final_min, time_til_some_max_exhaustion, time_til_some_school_exhaustion,
-    time_til_feasible_guide_not_above, time_til_feasible_guide_not_feasible;
-  
-  final_min = working_cee->time_remaining;
-  
-  time_til_some_max_exhaustion = time_until_some_max_exhaustion(favorites, working_cee);
-  final_min = min(final_min,time_til_some_max_exhaustion);
-
-  time_til_some_school_exhaustion = time_until_some_school_exhaustion(favorites, working_cee);
-  final_min = min(final_min,time_til_some_school_exhaustion);
-
-  time_til_feasible_guide_not_above = time_until_feasible_guide_not_above_alloc(theta, alpha,
-										favorites,
-										working_cee,
-										feasible_guide);
-  final_min = min(final_min,time_til_feasible_guide_not_above);
-
-  time_til_feasible_guide_not_feasible = time_until_feasible_guide_not_feasible(theta, alpha,
-										working_cee,
-										feasible_guide);
-  final_min = min(final_min,time_til_feasible_guide_not_feasible);
-
-  return final_min;
-}
-
-void decrement_working_cee(struct process_cee* working_cee, int* favorites, double delta) {
-  int i;
-  
-  int nst = working_cee->no_students;
-
-  for (i = 1; i <= nst; i++ ) {
-    working_cee->maximums[i-1][favorites[i-1]-1] -= delta; 
-    working_cee->quotas[favorites[i-1]-1] -= delta;
-  }
-
-  working_cee->time_remaining -= delta;
-}
 
 void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
 						     struct process_scp* working_scp,
 						     struct partial_alloc* feasible_guide,
-						     struct partial_alloc* final_alloc, 
+						     struct partial_alloc* final_alloc,
+						     struct pivot_list* probe_list,
 						     struct subset* P_subset,
 						     struct subset* J_subset,
 						     int* critical_pair_found,
-						     int* segments, int* pivots, int* h_sum) {
+						     int* no_segments,
+						     int* no_new_pivots,
+						     int* no_old_pivots, int* h_sum) {
   int nst = (input->cee).no_students;
-  int nsc = (input->cee).no_schools;  
+  int nsc = (input->cee).no_schools;
+
+  /* For each student i, alpha[i-1] is the set of schools that are possible for i.
+     The active_schools are those that are possible for some student.  For each active
+     school j, omega[j-1] is the set of students who might attend j. */
 
   struct index* alpha = malloc(nst * sizeof(struct index));
   get_alpha(&(working_scp->cee), alpha);
   struct subset active_schools = union_of_indices(alpha, nsc, nst);
   struct index active_school_index = index_of_subset(&active_schools);  
-  destroy_subset(active_schools);
-  
+  destroy_subset(active_schools);  
   struct index* omega = reverse_of_correspondence_graph(alpha, &active_school_index, nst);
-  int* favorites = get_favorites(&(working_scp->cee), input->preferences);
+
+  /* fully_allocated[j-1] == 1 if j is fully allocated in feasible_guide, 0 otherwise. */
+  
   int* fully_allocated = compute_fully_allocated(&(working_scp->cee),feasible_guide);
+  int* favorites = get_favorites(&(working_scp->cee), input->preferences);
   int** theta = initialize_theta(feasible_guide, favorites);
+  int* theta_sums = initialize_theta_sums(theta,nst,nsc);
+
+  struct pivot_list list_of_pivots = void_pivot_list();
+
+  reuse_prior_pivots(probe_list, &list_of_pivots, theta, theta_sums, alpha, feasible_guide,
+		     &(working_scp->cee), favorites, fully_allocated, no_old_pivots, h_sum);
+
+  destroy_pivot_list(*probe_list);
+  *probe_list = void_pivot_list();
     
-  massage_theta_or_find_critical_pair(theta, P_subset, J_subset, &(working_scp->cee),
+  massage_theta_or_find_critical_pair(theta, theta_sums, P_subset, J_subset, &(working_scp->cee),
 				      feasible_guide, alpha, &active_school_index, omega,
-				      favorites, fully_allocated,
-				      critical_pair_found, pivots, h_sum);
+				      favorites, fully_allocated, &list_of_pivots,
+				      critical_pair_found, no_new_pivots, h_sum);
   
   destroy_alpha_or_omega(omega, active_school_index.no_elements); 
   destroy_index(active_school_index);  
   free(fully_allocated);  
   
   if (!*critical_pair_found) {
-
-    (*segments)++;
-  
-    double delta = time_until_trajectory_change(theta, alpha, favorites,&(working_scp->cee),
-						feasible_guide);
-    augment_partial_alloc(final_alloc, favorites, delta);
-    adjust_feasible_guide(feasible_guide, theta, alpha, favorites, delta);
-    decrement_working_cee(&(working_scp->cee), favorites, delta);
+    (*no_segments)++;
+    move_to_endpoint_of_segment(theta, alpha, favorites, working_scp, feasible_guide, final_alloc);
   }
 
+  concatenate_pivot_lists(probe_list, &list_of_pivots);
+
+  destroy_pivot_list(list_of_pivots);
+
   destroy_theta(theta, nst);
+  free(theta_sums);
   destroy_alpha_or_omega(alpha, nst);
   free(favorites);
 }
 
+/* GCPS_allocation_with_guide allocates each student's favorite school for as long as it
+is possible to find a path above the allocation in the set of feasible allocations.  
+This can end because time runs out, in which case the computation is complete, or it can end
+because the search for a direction in the set of feasible allocations reveals a critical
+pair, in which case we descend recursively to the computation of the two subproblems. */
+
 struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
 						struct partial_alloc* feasible_guide,
-						int* segments, int* splits,
-						int* pivots, int* h_sum) {
+						struct pivot_list* probe_list,
+						int* no_segments, int* no_splits,
+						int* no_new_pivots,
+						int* no_old_pivots,int* h_sum) {
 
   int nst = (input->cee).no_students;
   int nsc = (input->cee).no_schools;
@@ -676,21 +501,26 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   struct process_scp working_scp;
   copy_process_scp(input, &working_scp);
 
-  struct subset P_subset;
-  struct subset J_subset;
-  P_subset = nullset(nsc);
-  J_subset = nullset(nst);
+  struct subset P_subset = nullset(nsc);
+  struct subset J_subset = nullset(nst);
 
+  /*  struct pivot_list probe_list = void_pivot_list(); */
   
   int* critical_pair_found = malloc(sizeof(int));
   *critical_pair_found = 0;
   while (!*critical_pair_found) {
 
     compute_next_path_segment_or_find_critical_pair(input, &working_scp, feasible_guide,
-						    &final_alloc, &P_subset, &J_subset,
-						    critical_pair_found, segments, pivots, h_sum);
+						    &final_alloc, probe_list,
+						    &P_subset, &J_subset,
+						    critical_pair_found,
+						    no_segments, no_new_pivots,
+						    no_old_pivots, h_sum);
 
     if ((working_scp.cee).time_remaining < 0.000001) {  
+
+      destroy_pivot_list(*probe_list);
+    
       destroy_subset(P_subset);
       destroy_subset(J_subset);
       destroy_process_scp(working_scp);
@@ -698,23 +528,27 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
       return final_alloc;
     }
   }
+  
   free(critical_pair_found);
 
   if (J_subset.subset_size > 0 && J_subset.subset_size < J_subset.large_set_size &&
       P_subset.subset_size > 0 && P_subset.subset_size < P_subset.large_set_size) {    
-    (*splits)++;
+    (*no_splits)++;
   }
 
   struct index J_index, P_index;
 
   if (J_subset.subset_size > 0) {
+    
     struct process_scp left_scp = critical_sub_process_scp(&working_scp, &J_subset);
-
     struct partial_alloc left_feas_guide = left_feasible_guide(feasible_guide, &J_subset);
+    struct pivot_list left_list = left_reduced_pivot_list(probe_list,&J_subset,&P_subset);
     
     struct partial_alloc left_increment = GCPS_allocation_with_guide(&left_scp, &left_feas_guide,
-								     segments, splits,
-								     pivots, h_sum);
+								     &left_list,
+								     no_segments, no_splits,
+								     no_new_pivots,
+								     no_new_pivots, h_sum);
 
     destroy_process_scp(left_scp);
     destroy_partial_alloc(left_feas_guide);
@@ -732,16 +566,18 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   if (J_subset.subset_size < J_subset.large_set_size) {
 
     struct process_scp right_scp = crit_compl_sub_process_scp(&working_scp, &J_subset, &P_subset);
-
     struct partial_alloc right_feas_guide = right_feasible_guide(feasible_guide,
 								 &J_subset,&P_subset);
+    struct pivot_list right_list = right_reduced_pivot_list(probe_list,&J_subset,&P_subset);
 
-    struct partial_alloc right_increment = GCPS_allocation_with_guide(&right_scp,
-								      &right_feas_guide, segments,
-								      splits, pivots, h_sum);
+    struct partial_alloc right_increment = GCPS_allocation_with_guide(&right_scp,&right_feas_guide,
+								      &right_list,
+								      no_segments, no_splits,
+								      no_new_pivots,
+								      no_old_pivots, h_sum);
 
     destroy_process_scp(right_scp);
-    destroy_partial_alloc(right_feas_guide);
+    destroy_partial_alloc(right_feas_guide);  
     
     J_index = index_of_complement(&J_subset);    
     P_index = index_of_complement(&P_subset);
@@ -752,6 +588,8 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
     destroy_index(J_index);
     destroy_index(P_index);
   }
+
+  destroy_pivot_list(*probe_list);
   
   destroy_subset(P_subset);
   destroy_subset(J_subset);
@@ -760,16 +598,24 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   return final_alloc;
 }
 
+/* The next function uses push_relabel to compute a feasible allocation, then invokes
+GCPS_allocation_with_guide to compute the allocation.  The integer pointers -- no_segments, 
+no_splits, no_pivots, and h_sum -- are for recording the numbers of the indicated events. */
 
-struct partial_alloc GCPS_allocation(struct process_scp* input, int* segments, int* splits,
-				     int* pivots, int* h_sum) {
+struct partial_alloc GCPS_allocation(struct process_scp* input, int* no_segments,
+				     int* no_splits, int* no_new_pivots,
+				     int* no_old_pivots, int* h_sum) {
   
-  struct partial_alloc feasible_guide;
-  feasible_guide = zero_alloc_for_process_scp(&(input->cee));
+  struct partial_alloc feasible_guide = zero_alloc_for_process_scp(&(input->cee));
   push_relabel(&(input->cee), &feasible_guide);
 
-  struct partial_alloc final_alloc = GCPS_allocation_with_guide(input, &feasible_guide, segments,
-								splits, pivots, h_sum);
+  struct pivot_list probe_list = void_pivot_list();
+
+  struct partial_alloc final_alloc = GCPS_allocation_with_guide(input, &feasible_guide,
+								&probe_list,
+								no_segments, no_splits,
+								no_new_pivots,
+								no_old_pivots, h_sum);
 
   destroy_partial_alloc(feasible_guide);
 

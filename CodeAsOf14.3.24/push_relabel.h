@@ -5,7 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+
+
 #include "normal.h"
+#include "subset.h"
+#include "cee.h"
+#include "schchprob.h"
 #include "partalloc.h"
 
 int push_is_valid(int source, int target,

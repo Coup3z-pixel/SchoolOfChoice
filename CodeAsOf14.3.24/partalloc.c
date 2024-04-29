@@ -82,6 +82,35 @@ void destroy_partial_alloc(struct partial_alloc my_partial_alloc) {
   free(my_partial_alloc.allocations);
 }
 
+void augment_partial_alloc(struct partial_alloc* my_alloc, int* favorites, double delta) {
+  int i;
+
+  int nst = my_alloc->no_students;
+
+  for (i = 1; i <= nst; i++) {
+    my_alloc->allocations[i-1][favorites[i-1]-1] += delta;
+  }
+}
+
+void adjust_feasible_guide(struct partial_alloc* feasible_guide, int** theta, struct index* alpha,
+			   int* favorites,
+			   double delta) {
+  int i, j, k;
+
+  int nst = feasible_guide->no_students;
+
+  for (i = 1; i <= nst; i++) {
+    for (k = 1; k <= alpha[i-1].no_elements; k++) {
+      j = alpha[i-1].indices[k-1];
+      feasible_guide->allocations[i-1][j-1] += theta[i-1][j-1] * delta;
+    }
+  }
+  
+  for (i = 1; i <= nst; i++) {
+    feasible_guide->allocations[i-1][favorites[i-1]-1] -= delta;
+  }
+}
+
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
 			     struct index* stu_index,struct index* sch_index) {
   int i,j;

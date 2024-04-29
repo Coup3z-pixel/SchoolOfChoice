@@ -188,23 +188,6 @@ void complement(struct subset* given_subset, struct subset* comp) {
   }
 }
 
-int* subset_element_numbers(struct subset* my_subset) {
-  int i;
-  int* numbers = malloc(my_subset->large_set_size * sizeof(int));
-  int counter = 0;
-  for (i = 1; i <= my_subset->large_set_size; i++) {
-    if (my_subset->indicator[i-1]) {
-      counter++;
-      numbers[i-1] = counter;
-    }
-    else {
-      numbers[i-1] = 0;
-    }
-  }
-
-  return numbers;
-}
-
 struct index index_of_subset(struct subset* my_subset) {
   int i, k;
   struct index my_index;
@@ -521,5 +504,7 @@ struct subset union_of_indices(struct index* my_list, int large_set_size, int li
 
   return my_union;  
 }
+
+
 
 

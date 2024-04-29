@@ -1350,10 +1350,10 @@ is $$GCPS(E,\succ) = p(1).$$
 At each moment the trajectory of $p$ increases, at unit speed, each
 student's assignment of her favorite school, among those that are
 still available to her, while leaving other allocations fixed.  This
-direction is adjusted when an student $i$'s assignment of an school
-$j$ reaches $g_{ij}$, and when $p$ arrives at one of the facets of
-$R$.  Suppose that $t^*$ is the first time such that $p(t^*)$ is in a
-facet of $R$, so that there is a minimal critical pair $(J,P)$ for the
+direction is adjusted when an student $i$'s assignment of a school $j$
+reaches $g_{ij}$, and when $p$ arrives at one of the facets of $R$.
+Suppose that $t^*$ is the first time such that $p(t^*)$ is in a facet
+of $R$, so that there is a minimal critical pair $(J,P)$ for the
 residual CEE, which we denote by $E - p(t^*)$. The GCPS allocation has
 a recursive definition: for $t \in [t^*,1]$, $p(t)$ is, by definition,
 the sum of $p(t^*)$ and the results of applying the allocation
@@ -1375,21 +1375,25 @@ that we have already computed $p(t_k)$ and $\barp(t_k)$.  For each
 student $i$ we compute the set $\alpha_i(t_k)$ of schools that are still
 possible for $i$, and we determine her $\succ_i$-favorite element
 $e_i^k$.  Let $\theta^k \in \In^{I \times O}$ be the matrix such that
-$\theta^k_{ij} = 1$ if $o = e_i^k$, and otherwise $\theta^k_{ij} = 0$.
+$\theta^k_{ij} = 1$ if $j = e_i^k$, and otherwise $\theta^k_{ij} = 0$.
 
-There are now two possibilities.  The first is that there is some $t'
-> t_k$ such that $p(t_k) + \theta^k(t - t_k) \in R$ for all $t \in
-[t_k,t']$.  In this case we will find a $\theta \in \In^{I \times O}$
-such that for some $t' > t_k$ and all $t \in [t_k,t']$, $\barp(t_k) +
-\theta(t - t_k) \in Q$ and $$p(t_k) + \theta^k(t - t_k) \le \barp(t_k)
-+ \theta(t - t_k). \eqno{(*)}$$ Now $t_{k+1}$ is the first time after
-$t_k$ such that one of the following holds: a) $p_{ie_i^k}(t_{k+1}) =
-g_{ie_i^k}$ for some $i$; b) $\barp(t_k) + \theta(t - t_k) \notin Q$
-for $t > t_{k+1}$; c) ($*$) does not hold for $t > t_{k+1}$.  For $t
-\in [t_k,t_{k+1}]$ we have determined that $p(t) = p(t_k) + \theta^k(t
-- t_k)$, and we set $\barp(t) = \barp(t_k) + \theta(t - t_k)$.  Having
-determined $p(t_{k+1})$ and $\barp(t_{k+1})$, we can repeat the
-process.
+There are now two possibilities.  The first is that for some $t' >
+t_k$, $p(t_k) + \theta^k(t - t_k) \in R$ for all $t \in [t_k,t']$.  In
+this case we will find a $\theta \in \In^{I \times O}$ such that for
+some $t' > t_k$, $$\barp(t_k) + \theta(t -
+t_k) \in Q \quad \text{and} \quad p(t_k) + \theta^k(t - t_k) \le \barp(t_k) + \theta(t
+- t_k). \eqno{(*)}$$  and all $t \in [t_k,t']$.  Now $t_{k+1}$ is the first time after $t_k$ such
+that one or more of the following holds:
+\begin{enumerate}
+  \item[a)] $p_{ie_i^k}(t_{k+1}) = g_{ie_i^k}$ for some $i$;
+  \item[b)] $\barp(t_k) + \theta(t - t_k) \notin Q$ for $t > t_{k+1}$;
+  \item[c)] for $t > t_{k+1}$ it is not the case that $p(t_k) +
+    \theta^k(t - t_k) \le \barp(t_k) + \theta(t - t_k)$.
+\end{enumerate}
+For $t \in [t_k,t_{k+1}]$ we have determined that $p(t) = p(t_k) +
+\theta^k(t - t_k)$, and we set $\barp(t) = \barp(t_k) + \theta(t -
+t_k)$.  Having determined $p(t_{k+1})$ and $\barp(t_{k+1})$, we can
+repeat the process.
 
 The second possibility is that it is not possible to continue $p$, as
 described above, without leaving $R$, because there is a critical pair
@@ -1399,15 +1403,13 @@ allocations of derived subeconomies.
 
 We now describe an algorithm that determines which of these
 possibilities holds, In the first case it finds a satisfactory
-$\theta$, and in the second case it finds a suitable $(J,P)$.
-
+$\theta$, and in the second case it finds a critical pair $(J,P)$.
 Suppose that there is a $\theta \in \In^{I \times O}$ such that for
-there exists a $t' > t_k$ such that for all $t \in [t_k,t']$, ($*$)
-holds and $\barp(t_k) + \theta(t - t_k) \in Q$.  Together these
-conditions imply that $p(t_k) + \theta^k(t - t_k) \in R$, so the first
-possibility above holds, and we can use $\theta$ to define the
-continuation of $\barp$.  The algorithm may be thought of as a search
-for such a $\theta$.
+some $t' > t_k$, ($*$) holds for all $t \in [t_k,t']$.  The two
+conditions in ($*$) together imply that $p(t_k) + \theta^k(t - t_k)
+\in R$ for all $t \in [t_k,t']$, so the first possibility above holds,
+and we can use $\theta$ to define the continuation of $\barp$.  The
+algorithm may be thought of as a search for such a $\theta$.
 
 For a given $\theta$, a $t' > 0$ as above exists if and only if
 $\theta$ satisfies the following conditions:
@@ -1415,7 +1417,9 @@ $\theta$ satisfies the following conditions:
   \item[(a)] For each $i$ and $j$:
     \begin{enumerate}
       \item[(i)] If $o \notin \alpha_i$, then $\theta_{ij} = 0$.
-      \item[(ii)] If $\barp_{ij}(t_k) = p_{ij}(t_k)$, then $\theta_{ij} \ge 0$, and if, in addition, $o = e^k_i$, then $\theta_{ij} \ge 1$.
+      \item[(ii)] If $\barp_{ij}(t_k) = p_{ij}(t_k)$, then
+        $\theta_{ij} \ge 0$, and if, in addition, $o = e^k_i$, then
+        $\theta_{ij} \ge 1$.
       \item[(iii)] If $\barp_{ij}(t_k) = g_{ij}$, then $\theta_{ij} \le 0$.
     \end{enumerate}
   \item[(b)] For each $i$, $\sum_j \theta_{ij} = 0$.
@@ -1432,66 +1436,76 @@ e^k_i$ such that $\barp_{ij_i}(t_k) > p_{ij_i}(t_k)$, and we set
 $\theta_{ij} = 0$ for all other $j$.  Evidently $\theta$ satisfies (a)
 and (b).
 
-Let $$\tP = \{\, o : \text{$\sum_i \barp_{ij}(t_k) = q_{o}$ and
+Let $$\tP = \{\, j : \text{$\sum_i \barp_{ij}(t_k) = q_j$ and
   $\sum_i \theta_{ij} > 0$} \,\}.$$ If $\sum_{j \in \tP} \sum_i
 \theta_{ij} \le 0$, then (c) holds.  Suppose that this is not the
 case.  We now describe a construction that may or may not be possible.
 When it is possible, it passes from $\theta$ to a $\theta' \in \In^{I
-  \times O}$ satisfying (a) and (b) such that if $\tP' = \{\, o :
-\text{$\sum_i \barp_{ij}(t_k) = q_{j_h}$ and $\sum_i \theta'_{ij} >
+  \times O}$ satisfying (a) and (b) such that if $\tP' = \{\, j :
+\text{$\sum_i \barp_{ij}(t_k) = q_j$ and $\sum_i \theta'_{ij} >
   0$} \,\}$, then $$\sum_{j \in \tP'} \sum_i \theta'_{ij} = \sum_{j
-  \in \tP} \sum_i \theta_{ij} - 1.$$ Repeating this construction will
+  \in \tP} \sum_i \theta_{ij} - 1. \eqno{(**)}$$ Repeating this construction will
 eventually produce an element of $\In^{I \times O}$ satisfying
 (a)--(c) unless, at some point, the construction becomes impossible.
 
-Choose $j_0 \in \tP$, and let $P_0 = \{j_0\}$.  We define sets
-$J_1,P_1, J_2, P_2, \ldots$ inductively.  If $P_{h-1}$ is given, let
-$J_h = \bigcup_{j \in P_{h-1}} J_h(j)$ where
-$$J_h(j) = \{\, i : \text{$j \in \alpha_i$ and if $\barp_{ij}(t_k) =
-  p_{ij}(t_k)$, then $\theta_{ij} > 0$ and $\theta_{ij} > 1$ if $o =
-  e^\succ_i$} \,\}.$$ If $J_h$ is given, let $P_h = \bigcup_{i \in
-  J_h} P_h(i)$ where
-$$P_h(i) = \{\, j \in \alpha_i : \text{$\theta_{ij} < 0$ if
-  $\barp_{ij}(t_k) = g_{ij}$} \,\}.$$
-
-Suppose that for some $h$ there is an $j_h \in P_h \setminus P_{h-1}$
-such that either $\sum_i \barp_{ij_h} < q_{j_h}$ or $\sum_i
-\theta_{ij_h} < 0$. We can find a $i_h \in J_h$ such that $j_h \in
-J_h(i_h)$, then find an $j_{h-1} \in P_{h-1}$ such that $i_h \in
-J_h(j_{h-1})$, and so forth. Define $\theta'$ by
+Choose $j_0 \in \tP$.  We wish to find an integer $h \ge 1$, distinct
+$i_1, \ldots, i_h$, and $j_1, \ldots, j_h$ such that $j_0,j_1, \ldots,
+j_h$ are distinct, such that if we define $\theta'$ by
 setting $$\theta'_{i_gj_{g-1}} = \theta_{i_gj_{g-1}} - 1 \quad
 \text{and} \quad \theta'_{i_gj_g} = \theta_{i_gj_g} + 1$$ for $g = 1,
-\ldots, h$ and $\theta'_{ij} = \theta_{ij}$ for all other $(i,j)$.
+\ldots, h$ and $\theta'_{ij} = \theta_{ij}$ for all other $(i,j)$,
+then $\theta'$ satisfies (a), (b), and ($**$).  Evidently $\theta'$
+satisfies (i) if $j_{g-1}, j_g \in \alpha_{i_g}$ for all $g = 1,
+\ldots, h$, it satisfies (ii) if, for each $g = 1, \ldots, h$, if
+$\barp_{i_gj_{g-1}}(t_k) = p_{i_gj_{g-1}}(t_k)$, then
+$\theta_{i_gj_{g-1}} > 0$ and $\theta_{i_gj_{g-1}} > 1$ if $j_{g-1} =
+e^\succ_{i_g}$, and it satisfies (iii) if, for each $g = 1, \ldots,
+h$, either $g_{i_gj_g} < \barp_{i_gj_g}(t_k)$ or $\theta_{i_gj_g} <
+0$. Clearly $\theta'$ satisfies (b) if $\theta$ satisfies (b).  We
+have $\sum_i \theta'_{ij_0} = \sum_i \theta_{ij_0} - 1$, $\sum_i
+\theta'_{ij_g} = \sum_i \theta_{ij_g}$ for $g = 1, \ldots, h-1$, and
+$\sum_i \theta'_{ij_h} = \sum_i \theta_{ij_h} + 1$, so $\theta'$
+satisfies ($**$) if $\sum_i \barp_{ij_h}(t_k) < q_{j_h}$ or $\sum_i
+\theta_{ij_h} < 0$.
 
-It is easy to see that $\theta'$ satisfies (a), because $\theta'_{ij}$
-differs from $\theta_{ij}$ only when the difference is permitted,
-according to (i)--(iii).  For each $i$, $\sum_j \theta'_{ij} = \sum_j
-\theta_{ij}$, either by construction if $i = i_g$ for some $g$, or
-because $\theta'_{ij} = \theta_{ij}$ for all $j$.  Since $\theta$
-satisfies (b), $\theta'$ also satisfies (b).
+We now describe the search for $j_0,j_1, \ldots, j_h$ and $i_1,
+\ldots, i_h$. For $i \in I$ let
+$$P(i) = \{\, j \in \alpha_i : \text{$\theta_{ij} < 0$
+  if $\barp_{ij}(t_k) = g_{ij}$} \,\}.$$
+For $j \in O$ let
+$$J(j) = \{\, i : \text{$j \in \alpha_i$ and if
+  $\barp_{ij}(t_k) = p_{ij}(t_k)$, then $\theta_{ij} > 0$ and
+  $\theta_{ij} > 1$ if $j = e^\succ_i$} \,\}.$$ We define sets $P_0,
+J_1, P_1, J_2, \ldots$ inductively, beginning with $P_0 = \{j_0\}$.
+If $P_{g-1}$ has already been computed, we set $J_g = \bigcup_{j \in
+  P_{g-1}} J(j)$. If $J_g$ has already been computed,
+we set $P_g = \bigcup_{i \in J_g} P(i)$.  We continue
+this construction until we arrive at an $h$ such that either $P_h =
+P_{h-1}$ or there is a $j_h \in P_h$ such that $\sum_i
+\barp_{ij_h}(t_k) < q_{j_h}$ or $\sum_i \theta_{ij_h} < 0$.
 
-For $o \notin \{j_0, \ldots, j_h\}$ we have $\theta'_{ij} =
-\theta_{ij}$ for all $i$ and thus $\sum_i \theta'_{ij} = \sum_i
-\theta_{ij}$.  For each $g = 1, \ldots, h-1$ we have $\sum_i
-\theta'_{ij_g} = \sum_i \theta_{ij_g}$ by construction.  Clearly $\sum_i
-\theta'_{ij_0} = \sum_i \theta_{ij_0} - 1$ and $\sum_i \theta'_{ij_h}
-= \sum_i \theta_{ij_h} + 1$.  Since either $\sum_i \barp_{ij_h} <
-q_{j_h}$ or $\sum_i \theta'_{ij_h} \le 0$, $\theta'$ has all desired
-properties.
+If there is such a $j_h$, we can find an $i_h \in J_h$ such that $j_h
+\in P(i_h)$, then find an $j_{h-1} \in P_{h-1}$ such
+that $i_h \in J(j_{h-1})$, then find an $i_{h-1} \in
+J_{h-1}$ such that $j_{h-1} \in P(i_{h-1})$, and so
+forth.  Continuing in this fashion produces $j_0,j_1, \ldots, j_h$ and
+$i_1, \ldots, i_h$ as above.  Note that $j_h$ cannot be an element of
+$P_{h-1}$ because the process would have terminated sooner.  Similarly
+$i_h$ is not an element of $J_{h-1}$, $j_{h-1} \notin P_{h-1}$, and so
+forth.  Therefore $j_0,j_1, \ldots, j_h$ are distinct and $i_1,
+\ldots, i_h$ are distinct.
 
-It is impossible to construct $\theta'$ in this manner if there is no
-$h$ and $j_h \in P_h \setminus P_{h-1}$ such that $\sum_i \barp_{ij_h}
-< q_{j_h}$ or $\sum_i \theta_{ij_h} < 0$.  Supposing that this is the
-case, let $J = \bigcup_h J_h$ and $P = \bigcup_h P_h$.  We have
-$\sum_i \barp_{ij}(t_k) = q_j$ for all $j \in P$.  If $j \in P$ and $i
-\notin J$, then $\barp_{ij}(t_k) = p_{ij}(t_k)$.  If $i \in J$ and $o
-\notin P$, then $\barp_{ij}(t_k) = g_{ij}$ if $j \in \alpha_i
-\setminus P$, and $\barp_{ij}(t_k) = g_{ij} = 0$ if $o \notin
-\alpha_i$. Thus $\barp(t_k) - p(t_k)$ is a feasible allocation for $E
-- p(t_k)$ that gives all of the resources in $P$ to students in $J$,
-and it gives $g_{ij} - p_{ij}(t_k)$ to $i \in J$ whenever $j \in O
-\setminus P$. Clearly any feasible allocation also has these
-properties, so $(J,P)$ is a critical pair for $E - p(t_k)$.
+Now suppose that the construction terminates with $P_h = P_{h-1}$.
+Let $J = \bigcup_h J_h$ and $P = \bigcup_h P_h$.  We have $\sum_i
+\barp_{ij}(t_k) = q_j$ for all $j \in P$.  If $j \in P$ and $i \notin
+J$, then $i \notin J(j)$, so $\barp_{ij}(t_k) = p_{ij}(t_k)$.  If $i
+\in J$ and $j \notin P$, then $j \notin P(i)$, so $\barp_{ij}(t_k) =
+g_{ij}$ if $j \in \alpha_i \setminus P$, and $\barp_{ij}(t_k) = g_{ij}
+= 0$ if $j \notin \alpha_i$. Thus $\barp(t_k) - p(t_k)$ is a feasible
+allocation for $E - p(t_k)$ that gives all of the resources in $P$ to
+students in $J$, and it gives $g_{ij} - p_{ij}(t_k)$ to $i \in J$
+whenever $j \in O \setminus P$. Clearly any feasible allocation also
+has these properties, so $(J,P)$ is a critical pair for $E - p(t_k)$.
 
 Summarizing, the algorithm repeatedly extends $p$ and $\barp$ to
 intervals such as $[t_k,t_{k+1}]$ until $p(t_k)$ satisfies the GMC
