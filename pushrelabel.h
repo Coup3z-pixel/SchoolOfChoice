@@ -1,5 +1,5 @@
-#ifndef PUSH_RELABEL_H
-#define PUSH_RELABEL_H
+#ifndef PUSHRELABEL_H
+#define PUSHRELABEL_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,9 @@ struct labelling {
   int sink;
 };
 
-int push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc);
+void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc);
+
+int satisfies_the_GMC(struct process_scp* input);
 
 int* initialize_labels(int nst, int nsc);
 
@@ -38,4 +40,4 @@ void relabel(int node, double** capacities, double** preflows, int* labels, int 
 void destroy_pointers(int* labels, double** capacities, double** preflows, double* excess,
 		      int nst, int nsc);
 
-#endif /* PUSH_RELABEL_H */
+#endif /* PUSHRELABEL_H */

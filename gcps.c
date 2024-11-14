@@ -18,6 +18,11 @@ int main(int argc, char const *argv[])
   }
   
   struct process_scp input_process_scp = process_scp_from_input(&input_scp);
+
+  if (!satisfies_the_GMC(&input_process_scp)) {
+    printf("The input_scp does not satisfy the GMC.\n");
+    exit(0);
+  }
   
   struct partial_alloc gcps_alloc = simple_GCPS_alloc(&input_process_scp);
 

@@ -1,16 +1,10 @@
 #include "pushrelabel.h"
  
-int push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc) {
-  int satisfies_gmc, done, found_active, found_target;
+void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc) {
+  int i, j, nst, nsc, done, found_active, found_target, pivot_node, target_node;
   
-  int i, j;
-
-  int pivot_node, target_node;
-  
-  int nst = input->no_students;
-  int nsc = input->no_schools;
-
-  double flow_value;
+  nst = input->no_students;
+  nsc = input->no_schools;
 
   /* The nodes are represented by the integers 0,...,nst+nsc+1, where 0 is the
      source, 1,...nst are the students, nst+1,...,nst+nsc are the schools, and
@@ -88,20 +82,34 @@ int push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc
     }
   }
   
-  flow_value = 0.0;
+  destroy_pointers(labels, capacities, preflows, excess, nst, nsc); 
+}
+
+int satisfies_the_GMC(struct process_scp* input) {
+  int i, j, nst, nsc;
+  double total_flow;
+  
+  nst = input->no_students;
+  nsc = input->no_schools;
+  
+  struct partial_alloc max_flow_alloc = zero_alloc_for_process_scp(input);
+  push_relabel(input, &max_flow_alloc);
+
+  total_flow = 0.0;
   for (i = 1; i <= nst; i++) {
-    flow_value+=preflows[0][i];
+    for (j = 1; j <= nsc; j++) {
+      total_flow += max_flow_alloc.allocations[i-1][j-1];
+    }
   }
-  if (flow_value < nst * input->time_remaining - 0.000001) {
-    satisfies_gmc = 0;
+
+  destroy_partial_alloc(max_flow_alloc);
+
+  if (total_flow < nst * input->time_remaining - 0.000001) {
+    return 0;
   }
   else {
-    satisfies_gmc = 1;
+    return 1;
   }
-  
-  destroy_pointers(labels, capacities, preflows, excess, nst, nsc); 
-
-  return satisfies_gmc;
 }
 
 

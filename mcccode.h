@@ -1,5 +1,5 @@
-#ifndef MARKET_h
-#define MARKET_h
+#ifndef MCCCODE_h
+#define MCCCODE_h
 
 #include "normal.h"
 #include "schchprob.h"
@@ -17,4 +17,4 @@ double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands)
 
 struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs);
 
-#endif /* MARKET_h */
+#endif /* MCCCODE_h */

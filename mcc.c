@@ -2,6 +2,7 @@
 
 #include "parser.h"
 #include "schchprob.h"
+#include "pushrelabel.h"
 #include "mcccode.h"
 
 int main(int argc, char *argv[]) {
@@ -20,6 +21,11 @@ int main(int argc, char *argv[]) {
   }
 
   struct process_scp pr_scp = process_scp_from_input(&input_scp);
+
+  if (!satisfies_the_GMC(&pr_scp)) {
+    printf("The input_scp does not satisfy the GMC.\n");
+    exit(0);
+  }
 
   int* coarse = malloc(pr_scp.no_schools * sizeof(int));
   

@@ -27,11 +27,11 @@ gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pi
 lpgcps: lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o
 	$(CC) -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o $(LDFLAGS)
 
-mcc: mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o
-	$(CC) -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o  $(LDFLAGS)
+mcc: mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
+	$(CC) -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o  $(LDFLAGS)
 
-emcc: emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o
-	$(CC) -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o  $(LDFLAGS)
+emcc: emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
+	$(CC) -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o $(LDFLAGS)
