@@ -1,0 +1,2421 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\makeatletter
+\usepackage{graphicx,epsf}
+\usepackage{times,float}
+\usepackage{enumerate}
+\usepackage[round,comma]{natbib}
+\usepackage[colorlinks=true,citecolor=blue]{hyperref}
+\usepackage{bm}
+\usepackage{multirow}
+%\usepackage{blkarray}
+\usepackage{rotating}
+
+\setlength{\textwidth}{6.4in} \setlength{\textheight}{8.5in}
+\setlength{\topmargin}{-.2in} \setlength{\oddsidemargin}{.1in}
+\renewcommand{\baselinestretch}{1.3}
+
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem*{thm*}{Theorem}
+\newtheorem{prop}{Proposition}
+\newtheorem{cor}{Corollary}
+\newtheorem{lem}{Lemma}
+\newtheorem*{lem*}{Lemma}
+\newtheorem{claim}{Claim}
+\newtheorem{rem}{Remark}
+\newtheorem{ex}{Example}
+\newtheorem{fact}{Fact}
+\newtheorem*{fact*}{Fact}
+\newtheorem{remark}{Remark}
+
+
+\newcommand{\rR}{\mathrel{R}}
+\newcommand{\rP}{\mathrel{P}}
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\norev}{\medskip \centerline{\textbf{No Revisions Below}} \medskip}
+\renewcommand{\Re}{\mathbb{R}}
+\newcommand{\In}{\mathbb{Z}}
+
+\newcommand{\bare}{\overline{e}}
+\newcommand{\bark}{{\overline k}}
+\newcommand{\barl}{\overline{l}}
+\newcommand{\barp}{\overline{p}}
+\newcommand{\bart}{{\overline t}}
+
+\newcommand{\bartheta}{{\overline \theta}}
+
+\newcommand{\ba}{\mathbf{a}}
+\newcommand{\bb}{\mathbf{b}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bq}{\mathbf{q}}
+
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bN}{\mathbf{N}}
+
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cX}{\mathcal{X}}
+
+\newcommand{\dr}{{\dot r}}
+\newcommand{\dq}{{\dot q}}
+\newcommand{\dg}{{\dot g}}
+\newcommand{\ddp}{{\dot p}}
+
+\newcommand{\hA}{{\hat A}}
+\newcommand{\hO}{{\hat O}}
+
+\newcommand{\halpha}{{\hat \alpha}}
+
+\newcommand{\ta}{{\tilde a}}
+\newcommand{\te}{{\tilde e}}
+\newcommand{\tn}{{\tilde n}}
+
+\newcommand{\tB}{{\tilde B}}
+\newcommand{\tP}{{\tilde P}}
+
+\newcommand{\varep}{\varepsilon}
+
+\newcommand{\bone}{\mathbf{1}}
+
+\begin{document}
+
+\title{GCPS MCC Schools: A User's Guide}
+
+\author{Andrew McLennan\footnote{School of Economics, University of
+    Queensland, {\tt a.mclennan@economics.uq.edu.au}}}
+
+\date{\today}
+
+\maketitle
+
+\begin{abstract}
+This document provides a brief introduction to the software package GCPS MCC Schools.
+\end{abstract}
+
+% \pagebreak
+
+\section{Introduction}
+
+From time immemorial until about 25 or 30 years ago, each school had a
+district, and each student was required to attend the school whose
+district contained her residence, unless she enrolled in a private
+school.  This has various problems, e.g., de facto school segregation
+echoing residential segregation, but the main issue for us is that it
+forbids students from trading their assignments in ways that are
+mutually beneficial.
+
+School choice schemes allow students to attend public schools that
+they express a preference for.  In the schemes discussed here, each
+student submits a rank ordered list of schools that she would like to
+attend.  Each school has an eligibility rule (it may be a single sex
+school, and a selective school may have a minimum test score or GPA)
+and in addition it may have a ranking of eligible students called a
+\emph{priority} that might, for example, give preference for minority
+status or students who live nearby.  A \emph{school choice mechanism}
+is an algorithm that takes the preferences and the priorities as
+inputs and outputs an assignment of each student to one of the schools
+she ranked that is \emph{feasible}, in the sense that the number of
+students assigned to each school is not greater than the school's
+capacity.
+
+The academic paper ``Efficient Computationally Tractable School Choice
+Mechanisms'' (joint with Shino Takayama and Yuki Tamura) describes two
+new school choice mechanisms, the \emph{generalized constrained
+probabilistic serial} (GCPS) \emph{mechanism} and the \emph{market
+clearing cutoffs} (MCC) \emph{mechanism}, in formal mathematical
+detail.  \emph{GCPS MCC Schools} is a software package that implements
+the algorithms that define these mechanisms, and related algorithms
+that are required to apply these algorithms, and that allows the
+algorithms to be tested.
+
+The primary purpose of this document is provide a guide to users of
+\emph{GCPS MCC Schools}.  In the remainder of this section we first
+describes a bit more about the history of school choice, the mechanism
+that is currently most popular, and the problems with this mechanism
+that our mechanisms solve.  We then describe our mechanisms
+informally, but in some detail.  The next section explains how to use
+the software, with step-by-step instructions.  The final section
+describes the code for programmers who would like to have a general
+overview of its structure, and who might be interested in modifying or
+extending it.
+
+\subsection{The GCPS Mechanism}
+
+The \emph{probabilistic serial} (PS) \emph{mechanism}, due to
+\cite{bm01}, is a mechanism for probabilistic allocation of objects.
+In the simplest instance there is a set $I$ containing $n$ agents and
+a set $O$ containing $n$ objects, each agent must receive exactly one
+of the objects, each object can be assigned to only one agent, and
+each agent has a strict preference ordering of the objects.  The goal
+is to come up with a probability distribution over possible
+assignments that respects the agents' preferences and is fair.
+
+A common method of dealing with such problems is \emph{random
+priority}.  An ordering of the agents is chosen randomly, with each of
+the $n!$ orderings having probability $1/n!$.  The first agent claims
+her favorite object, the second agent claims her favorite of those
+that remain after the first agent's choice, and so forth.
+
+Bogolmonaia and Moulin describe the PS mechanism in terms of
+``simultaneous eating.'' Each object is thought of as a cake of unit
+size.  At time zero each agent starts eating (that is, accumulating
+probability) from the cake corresponding to her favorite object, at
+unit speed.  Whenever a cake is exhausted, the agents who were eating
+that cake switch to their favorite cakes from among those that have
+not yet been exhausted.  At time one all cakes have been exactly
+allocated, and each agent has a probability distribution over the
+objects. A matrix of assignment probabilities with these properties is
+said to be \emph{bistochastic}. As we will describe in detail later,
+for any bistochastic matrix of assignment probabilities it is possible
+to compute a probability distribution over deterministic assignments
+that realizes all of the assignment probabilities.
+
+The main advantage of the PS mechanism, in comparison with random
+priority, is that it is more efficient.  For a given agent, one
+probability distribution over $|O|$ \emph{stochastically dominates} a
+second distribution if, for each object $o$, the probability of
+receiving an object that is better than $o$ under the first
+distribution is at least as large as the probability under the second
+distribution.  The domination is \emph{strict} if the two
+distributions are different. When one distribution stochastically
+dominates a second distribution, we can think of the difference as a
+matter of moving a certain amount of probability to better objects, so
+it is an improvement no matter how much or how little one cares about
+the differences between particular objects.
+
+We say that a bistochastic matrix of assignment probabilities is
+\emph{$sd$-efficient} if there does not exist a second such matrix
+that gives each agent a distribution over $O$ that stochastically
+dominates the distribution given by the first matrix, with strict
+domination for some agents.  It turns out that random priority can
+produce a matrix of assignment probabilities that is not
+$sd$-efficient, but the matrix of assignment probabilities produced by
+the PS mechanism is always $sd$-efficient.
+
+The PS mechanism was generalized by \cite{bckm13aer} to the
+\emph{generalized probabilistic serial} mechanism, and further
+generalized to the \emph{generalized constrained probabilistic serial}
+(GCPS) mechanism by \cite{balbuzanov22jet}.  In the context of school
+choice, the elements of $I$ are \emph{students} and the elements of
+$O$ are \emph{schools}.  In school choice the schools have
+\emph{priorities}, which are preferences over the students.  The GCPS
+mechanism is appropriate when the schools' priorities are
+\emph{dichotomous}: for each school and student, the student is either
+eligible to attend the school or she is not, and each school gives
+equal consideration to all of its eligible students.
+
+Eligibility may be affected by gender, residential location, or test
+scores in the case of selective schools.  We also assume that each
+student has a \emph{safe school} which will certainly admit her if she
+is not admitted to a school she prefers, so she is not eligible to be
+assigned to any school that is worse for her than her safe school.
+Thus the given data of the GCPS mechanism consists of the capacities
+of the various schools and, for each student, the set of schools she
+is eligible for, ranked from best to worst.
+
+A \emph{feasible allocation} is an assignment, to each student-school
+pair, of a probability that the student receives a seat in the school,
+such that:
+\begin{enumerate}
+  \item[(a)] the probability is zero if the student is not eligible to
+    attend the school;
+  \item[(b)] for each student, the sum of her probabilities is one;
+  \item[(c)] for each school the sum of its probabilities is not
+    greater than its capacity.
+\end{enumerate}
+(Later we will see that for any feasible assignment there is a
+probability distribution over deterministic feasible assignments that
+realizes the assignment probabilities.)  The GCPS mechanism is also a
+matter of simultaneous eating: at each time between zero and one, each
+student consumes probability of the best school that is available to
+her at that time, at unit speed.
+
+A school may become unavailable if its capacity is exhausted, but it
+can also happen that at a certain time, a set of schools has only
+enough capacity to meet the needs of the students who are not eligible
+to attend schools that are outside the set and are still available.
+Formally, a pair $(J,P)$ of subsets $J \subset I$ and $P \subset O$ is
+\emph{critical} at time $t$ if, for every $i \in J$, the only schools
+that are still available to $i$ are contained in $P$, and the
+remaining capacity of the schools in $P$ is just enough to meet the
+remaining demand of the students in $J$.  When this happens, students
+outside of $J$ become ineligible to consume additional probability of
+schools in $P$.  Since the GCPS mechanism detects each critical pair
+and revises the students' sets of available schools in response, if
+there is a feasible allocation, the allocation it computes at time one
+is feasible.  (This is a consequence of a significant theorem, so it
+should not be obvious at this point.)  Since the number of subsets of
+$|O|$ is $2^{|O|}$, one might expect that the complexity of the
+computation is exponential, but it turns out that there is a bit of
+algorithmic magic that gets around this problem.
+
+The \emph{generalized constrained probabilistic serial} (GCPS)
+mechanism is implemented in the command \texttt{gcps}, which takes the
+schools' capacities and the students' eligibilities and declared
+preferences as inputs, and which outputs a feasible allocation if one
+exists.  In order for \texttt{gcps} to produce a feasible allocation,
+a feasible allocation must exist, of course, and insuring that this is
+the case is a responsibility of the user.  One way to do this is to
+choose an assignment of safe schools that is feasible, in the sense
+that no school is assigned more students than its capacity.  Let $Q$
+be the polytope\footnote{A \emph{polytope} is a bounded set defined by
+some system of finitely many weak linear inequalities.} of feasible
+allocations.
+
+There is a lot more to say about the GCPS mechanism, but for the time
+being we only make a couple comments.  First, the feasible allocations
+produced by the GCPS mechanism are $sd$-efficient, although this is
+not obvious at this point.  As we will describe in detail later, the
+allocations produced by the mechanism that is currently most commonly
+used for school choice are not $sd$-efficient.
+
+A mechanism is \emph{strategy-proof} if reporting a preference that is
+different from your true preference is never beneficial.  It is easy
+to see that random priority is strategy-proof: when your time to
+choose comes, there is nothing better than to choose your favorite
+from the objects that remain.
+
+A simple example shows that the PS mechanism is not strategy proof.
+Suppose that there is one other person for whom your favorite object
+is their favorite object, and there are two other people for whom your
+second favorite object is their favorite.  Suppose also that no one
+else has any interest in either of these objects, and the two people
+who have the same second favorite object as you have no interest in
+your favorite object.  If you report your true preference you will
+divide your favorite object with the other person who likes it until
+time $\tfrac12$, at which point your second favorite object will also
+have been fully allocated.  If you say that your second favorite
+object is actually your favorite, you will share it with the two
+others until time $\tfrac13$, after which two thirds of your favorite
+object will remain, and you will get half of it.  In short, if you
+tell the truth your total probability of your two favorite objects
+will be $\tfrac12$, and if you misreport your total probability of
+your two favorite objects will be $\tfrac23$.  If your main concern is
+to maximize the probability of receiving one of your two favorite
+objects, this can be beneficial.
+
+Although the GCPS mechanism is not strategy-proof, it does satisfy a
+weaker condition that is good enough for practical purposes.  This
+concept considers applying a mechanism to a sequence of problems with
+an increasing number of agents.  We assume that each agent's beliefs
+about the types of the other agents are that they are independent
+draws from a distribution over a finite set of types that assigns
+positive probability to the agent's own type.  The mechanism is
+\emph{strategy-proof in the large} \citep{ab19res} if the maximum
+expected benefits of manipulation decrease asymptotically to zero as
+the population size goes to infinity.  Among other things,
+strategy-proofness in the large assures us that we have not failed to
+notice a ``one weird trick'' manipulation that provides significant
+gains even when the population is large.  Azevedo and Budish give
+several examples of mechanisms that are not strategy-proof, but are
+strategy-proof in the large, and which work well in practice.
+
+In the GCPS mechanism, if the times at which certain schools become
+unavailable to certain agents are fixed, you do best by simply
+consuming your favorite available school at each moment.  Therefore any
+benefit from manipulation is the result of changing the times at which
+certain schools become unavailable to certain agents.  These times are
+determined by the distribution over types in the population, and when
+the population is large, the agent's beliefs about the probability
+distribution over such distributions is only slightly affected by the
+agent's own preference declaration.
+
+\subsection{The MCC Mechanism}
+
+The MCC and EMCC mechanisms are appropriate when the schools'
+priorities are not dichotomous.  We assume that for each school and
+each student who is eligible to attend that school, the student's
+priority at the school is a nonnegative integer.  We may imagine that
+the school ``prefers'' to admit students with higher priority.  The
+pathways by which this results in a better utilization of society's
+educational resources are often not obvious and straightforward, but
+we will simply take this as a given.
+
+The inputs for the MCC and EMCC mechanisms are \emph{school choice
+problems}.  A school choice problem has given sets of students and
+schools.  For each student there is a strict preference ordering of
+some of the schools, with her safe school at the bottom of the list.
+Her \emph{eligible schools} are those she ranks.  For each student and
+each of her eligible schools, the student's \emph{priority} at the
+school is a nonnegative integer.
+
+A \emph{coarse cutoff} for a school is a nonnegative integer, and a
+\emph{coarse cutoff profile} is a specification of a coarse cutoff for
+each school.  A feasible allocation \emph{fulfills} a coarse cutoff profile if:
+\begin{enumerate}
+  \item[(a)] when a student's priority at a school is less than the
+    school's coarse cutoff, the probability that the student is
+    assigned a seat in the school is zero;
+  \item[(b)] when a student's priority at a school is greater than the
+    school's coarse cutoff, the student's consumption of the school is
+    not rationed, in the sense that the probability that the student
+    is assigned a seat in a school she likes less is zero;
+  \item[(c)] when a school's capacity is not fully utilized (the sum
+    of its assignment probabilities is less than its capacity) the
+    school's coarse cutoff is zero.
+\end{enumerate}
+ 
+A \emph{fine cutoff} for a school is a nonnegative real number, and a
+\emph{fine cutoff profile} is a specification of a fine cutoff for
+each school.  For a school $o$, a fine cutoff $c_o$ \emph{refines} a
+coarse cutoff $C_o$ if $C_o \le c_o < C_o + 1$.  Evidently a fine
+priority refines a unique coarse priority, and for a fine cutoff
+profile, the coarse cutoff profile refined by it is the coarse cutoff
+profile whose component, for each school, is the coarse cutoff refined
+by the school's fine cutoff.  A feasible allocation \emph{fulfills} a
+fine cutoff profile if:
+\begin{enumerate}
+  \item[(a)] it fulfills the coarse cutoff profile that the fine
+    cutoff profile refines;
+  \item[(b)] for each student $i$ and school $o$, if $i$'s priority at
+    the school is equal to the school's coarse priority $C_o$, then
+    the probability that $i$ is assigned to $o$ is not greater than
+    $C_o + 1 - c_o$, where $c_o$ is $o$'s fine cutoff;
+  \item[(c)] when a school's capacity is not fully utilized the
+    school's fine cutoff is zero.
+\end{enumerate}
+
+For a given profile of fine cutoffs $c$ we compute a student's
+\emph{demand} by having her consume as much of her favorite school as
+she is allowed to, then as much of her second favorite school as
+allowed, and so on until she has one unit of probability.  If $C$ is
+the profile of coarse priorities that $c$ refines, then the student's
+consumption of her favorite school $o_1$ is $0$ if her coarse priority
+at $o_1$ is less than $C_{o_1}$, $C_{o_1} + 1 - c_{o_1}$ if her coarse
+priority at $o_1$ is $C_{o_1}$, and $1$ if her coarse priority at
+$o_1$ is greater than $C_{o_1}$.  Her consumption of her second
+favorite school $o_2$, here third favorite school $o_3$, and so forth,
+are defined similarly, except that she stops consuming when her total
+consumption reaches one unit of probability.  Thus she is consuming
+the allowed amount of each school except for the last one, where her
+consumption is the amount needed to complete a probability
+distribution.
+
+The \emph{market clearing cutoffs} (MCC) mechanism is implemented in
+the command \texttt{mcc}, which takes the students' preferences and
+the schools' priorities as inputs and outputs a feasible allocation.
+To begin with we compute the students' demands for the profile of fine
+cutoffs in which each school's fine cutoff is $0$.  If no school has
+excess demand then we are done, but otherwise we iterate as follows.
+For each school with demand greater than its capacity we compute the
+fine cutoff for that school that would reduce the demand, as
+previously computed, enough to equate supply and demand for seats in
+that school.  This gives a second profile of fine cutoffs, for which
+we compute the students' demands.  For each school $o$, the increase
+in the other schools' cutoffs increases demand for $o$, so again there
+may be schools with excess demand, and again we compute the fine
+cutoff for each school that would equate supply and demand for seats
+in that school if all other schools' fine cutoffs stayed the same,
+which gives a third profile of fine cutoffs.  Iterating in this way
+need not converge in finitely many steps, but it does converge
+geometrically (i.e., with exponential decay of excess demands) and
+\texttt{mcc} outputs the allocation of demands when the total excess
+demand is zero to within some tolerable bound.
+
+The MCC mechanism is strategy proof in the large.  If the fine cutoffs
+of the schools are given, utility is maximized by the demand of the
+true preferences.  Therefore any benefit of manipulation is the result
+of its effect on the fine cutoffs.  The fine cutoffs are determined by
+the distribution of types in the population, and when the population
+is large, and the agent's beliefs about the distribution of types are
+as described earlier, the agent's beliefs about the probability
+distribution of the distribution of types is insensitive to the
+agent's own declaration.  
+
+\subsection{Enhanced MCC Mechanisms}
+
+Suppose that $C$ is the profile of coarse cutoffs that the MCC
+allocation fulfills.  It is possible that the MCC allocation is
+strictly $sd$-dominated by another feasible allocation that fulfills
+$C$.  For example, suppose the priorities of Anne and Bob at school
+$A$ are both the coarse cutoff priority $C_A$, and their priorities at
+school $B$ are both the coarse cutoff priority $C_B$.  If $c$ is the
+profile of fine cutoffs whose demands give the MCC allocation, then in
+the MCC allocation it can happen that Anne and Bob both receive $C_A +
+1 - c_A$ units of school $A$ and $C_B + 1 - c_B$ units of school $B$.
+If Anne prefers $A$ to $B$ while Bob prefers $B$ to $A$, then they can
+achieve $sd$-dominating probability distributions by having Anne give
+Bob some of her probability of $B$ in exchange for an equal amount of
+Bob's probability of $A$.  In conjunction with the probability
+distributions for the other students given by the MCC allocation, this
+gives an allocation that strictly $sd$-dominates the MCC allocation
+and that also fulfills $C$.
+
+Longer cycles of exchange are also possible.  In fact a feasible
+allocation that fulfills $C$ is not strictly $sd$-dominated by another
+feasible allocation that fulfills $C$ if and only if no such trading
+cycle is possible.  There are many algorithms that pass from a
+feasible allocation that fulfills $C$ to such an allocation that is
+not strictly $sd$-dominated by another feasible allocation that
+fulfills $C$; the idea is to repeatedly identify and execute such
+cyclic trades until no further possibilities remain.  An
+\emph{enhanced MCC mechanism} is a mechanism that first computes the
+MCC allocation, and the profile of coarse cutoffs $C$ that it
+fulfills, and then uses such an algorithm to compute a feasible
+allocation that fulfills $C$ and is not strictly $sd$-dominated by any
+other feasible allocation that fulfills $C$.  The command
+\texttt{emcc} implements one such mechanism.
+
+An enhanced MCC mechanism may fail to be strategy proof in the large.
+A student may benefit, even when the population is large, in elevating
+a popular school in her reported preference, if she is confident that
+she will be able to trade probability of that school for probability
+of a school she really wants.
+
+\subsection{The Main Competitor: Deferred Acceptance}
+
+One of the first school choice mechanisms to be used in practice,
+called the \emph{Boston mechanism} or \emph{immediate acceptance},
+requires each student to submit a ranking of the schools.  The
+mechanism first assigns as many students as possible to their top
+ranked schools, then assigns as many of the remaining students to the
+schools they ranked second, and so forth.
+
+A school choice mechanism is \emph{strategy-proof} for the students if
+a student can never improve her outcome by reporting a false
+preference.  strategy-proof mechanisms are seemingly straightforward,
+and don't punish lack of strategic sophistication.  A mechanism that
+is not strategy-proof is not what it seems to be on its surface, at
+best simply because it allows some students to get away with things,
+and at worst because it creates a tricky game in which each student
+has to anticipate how others will try to manipulate it.
+
+A big problem with the Boston mechanism is that it is not strategy
+proof for the students.  For example, suppose there are three high
+schools, called Harvard High, Yale High, and Cornell High.  Harvard
+High and Yale High each have 200 seats in their entering class, and
+Cornell High has 600 seats.  Almost everyone prefers Harvard High to
+Yale High, and almost everyone strongly prefers Yale High to Cornell
+High.  If all students state their preferences truthfully, then each
+has a 20\% chance of going to Harvard High, a 20\% chance of going to
+Yale High, and a 60\% chance of going to Cornell High.  If everyone
+else is truthful, and you list Yale High as your top choice, then you
+go there for sure.  But everyone can see this, and many people will
+not be truthful, so before you can figure out what to do, you have to
+try to guess what others are doing.
+
+The \emph{student proposes deferred acceptance} (DA) mechanism was
+first proposed in the academic literature by \cite{GaSh62}, but
+later people realized that it had already been used, very
+successfully, for several years to match medical school graduates with
+residencies.  In a seminal article \cite{as03aer} recommend applying it
+to school choice, and it is now the dominant mechanism for school
+choice, and is used around the world.  DA requires that each school
+has a \emph{priority} that strictly ranks all students.  We will say more
+later about where these priorities might come from, but for the time
+being we simply assume they are given.
+
+In the first round of deferred acceptance each student applies to her
+favorite school.  Each school with more applicants than seats
+tentatively accepts its favorite applicants, up to its capacity, and
+rejects all the others.  In the second round each student who was
+rejected in the first round applies to her second favorite school, and
+each school tentatively retains its favorite applicants from those who
+applied in both rounds, up to its capacity, and rejects the others.
+In each subsequent round each student who was rejected in the
+preceeding round applies to her favorite school among those that have
+not yet rejected her, and each school hangs on to its favorite
+applicants, from all rounds, up to its capacity, and rejects all
+others.  This continues until there is a round with no rejections, at
+which point the existing tentative acceptances become the final assignment.
+
+An assignment of each student to some school is \emph{feasible} if the
+number of students assigned to each school is not greater than the
+school's capacity.  A \emph{blocking pair} for a feasible assignment
+is a student-school pair $(i,o)$ such that the $i$ prefers $o$ to the
+school she has been assigned to and $o$ either has an empty seat or
+has a higher priority for $i$ than some other student that has been
+assigned to $o$.  A feasible assignment is \emph{stable} if there are
+no blocking pairs.  The assignment produced by DA is stable: if $i$ prefers
+$o$ to the school she has been assigned to, $o$ must have rejected $i$
+at some stage, and $o$'s pool of applicants only expanded after that,
+so $o$ never came to regret this rejection.
+
+In fact DA produces an assignment that is at least as good, for each
+student $i$, as any other stable assignment.  If $i$ is rejected by
+her favorite school in the first round of DA, then $i$ is not matched
+with that school in any stable assignment, because there are enough
+students with higher priority at that school who would certainly block
+such an assignment if they were not already matched to that school.
+Now suppose that $i$ is rejected in the second round, either by her
+favorite school or by her second favorite school.  For all the
+students that the school retains after the second round, the school is
+either their favorite, or it is their second favorite and they are not
+matched to their favorite in any stable assignment, so each of them
+would block an assignment of $i$ to that school if they were not
+already matched to that school.  In general, whenever $i$ is rejected
+by a school, each student the school retains has higher priority than
+$i$ and is not matched to a school she prefers in any stable
+assignment.
+
+It turns out that DA is strategy-proof for the students.  The proof of
+this is rather hard.  For the curious, we will go through it anyway,
+but nothing later on depends on you understanding it, and you should
+feel free to skip it if you don't like this sort of stuff.
+
+It will be somewhat easier to work with Gale and Shapley's original,
+more romantic, setting of one-to-one matching of boys and girls, with
+the boys proposing.  (You can think of each student as a boy and each
+seat in each school as a girl.)  Let $B$ and $G$ be the sets of boys
+and girls.  A \emph{matching} is a function $\mu \colon B \cup G \to B
+\cup G$ such that $\mu(b) \in G \cup \{b\}$ for each boy $b$, $\mu(g)
+\in B \cup \{g\}$ for each girl $g$, and $\mu \circ \mu$ is the
+identity function.  (You have exactly one partner, and your partner's
+partner is yourself.)  For the sake of simplicity we assume that there
+are at least as many girls as boys, and that everyone prefers any
+partner of the opposite sex to being alone, so every boy is matched
+with a girl in any stable matching.
+
+Let $\mu$ denote the DA matching when everyone reports their true
+preference.  The proof is by contradiction, so we suppose that there
+is a boy Albert who, when he reports some false preference, induces a
+DA matching $\mu'$ that is better for him.  Let $R$ be the set of boys
+who prefer their partner in $\mu'$ to their partner in $\mu$.  Since
+Albert is an element of $R$, $R$ is nonempty.  Let $S = \mu'(R)$.  Of
+course $\mu'(S) = R$.
+
+We claim that each girl in $S$ prefers her partner in $\mu$ to her
+partner in $\mu'$.  Suppose that Abe is in $R$, $\mathrm{Beth} =
+\mu'(\mathrm{Abe})$, and $\textrm{Carl} = \mu(\textrm{Beth})$. Since
+Abe has different partners in $\mu$ and $\mu'$, Beth has different
+partners in $\mu$ and $\mu'$, which means that Abe and Carl are
+different.  Since Abe prefers Beth to his partner in $\mu$ and $\mu$
+is stable, Beth must prefer Carl to Abe.  Among other things, this
+implies that Carl is a boy and not Beth herself.
+
+We can say a bit more: since Beth has different partners in $\mu$ and
+$\mu'$, Carl has different partners in $\mu$ and $\mu'$, and since
+Beth prefers Carl to Abe, if Carl and Albert are different, then the
+stability of $\mu'$ (with respect to the preferences modified by
+Albert's manipulation) implies that Carl prefers his partner in $\mu'$
+to Beth, so Carl is an element of $R$.  Of course if Carl is Albert,
+then Carl is an element of $R$, so we have shown that $\mu(S) = R$.
+
+Under DA for the true preferences, leading to $\mu$, there is a last
+round in which an element of $R$ makes a proposal.  Now let Don be one
+of the elements of $R$ who proposes in this round, and let
+$\textrm{Ella} = \mu(\textrm{Don})$ be the girl he proposes to.  Since
+every boy in $R$ prefers his partner in $\mu'$, every girl in $S$ has
+already rejected her partner in $\mu'$, so when Don proposes to Ella,
+she is holding a proposal from a boy Fred who she rejects in favor of
+Don.  Since Fred has more proposing to do, Fred is not an element of
+$R$ and thus Fred is not Ella's partner in $\mu'$.  Since Ella
+rejected her partner in $\mu'$ on her way to holding a proposal from
+Fred, she prefers Fred to her partner in $\mu'$.  Since Fred was
+rejected by Ella, Fred prefers Ella to his partner in $\mu$, and since
+Fred is not in $R$, Fred weakly prefers his partner in $\mu$ to his
+partner in $\mu'$, so Fred prefers Ella to his partner in $\mu'$.
+Thus Ella and Fred are a blocking pair for $\mu'$.  This contradiction
+of the stability of $\mu'$ completes the proof.
+
+It turns out that DA is not strategy-proof for the girls.  It can
+happen that when Alice is holding a proposal from Harry and receives a
+proposal from Bob, who she prefers to Harry, she might nevertheless do
+better by rejecting Bob if the result is that Bob proposes to Carol,
+who then dumps David, after which David proposes to Alice, which is
+what Alice really wanted all along.
+
+If you understood all of these arguments, congratulations!  The main
+reason for presenting all this theory, about a mechanism that isn't
+even one of the ones the software implements, is to explain why
+students, parents, and school administrators find DA extremely
+confusing.  The strategy-proofness of DA for students was discovered
+two decades after Gale and Shapley's paper, so it should come as no
+surprise that students and parents do not understand it.  Experimental
+studies find that misreporting of preferences is quite common.
+Largely for these reasons, the Boston mechanism continued to be used
+around the world for many years, in spite of its clear cut theoretical
+inferiority.  An important practical advantage of our mechanisms is
+that they are at least somewhat easier to explain than DA.
+
+Where do the schools' priorities come from?  We will distinguish
+between a school's \emph{given priority}, which is a weak ordering of
+the students that embodies social values, and the school's \emph{final
+priority}, which is the strict ordering that is an input to the DA
+algorithm.
+
+At one extreme the given priorities may be \emph{dichotomous}: a
+student is either eligible or ineligible to attend a school, and each
+school gives equal consideration to all of its eligible students.  In
+this case each school's final priority is a random strict ordering of
+its eligible students.  (In order to be fair, the possible orderings
+should each have equal probability.)  When DA is applied to such
+priorities, inefficiencies can result.  For example, if Bob likes
+Carol School and Ted likes Alice School, the mechanism may still match
+Bob with Alice School and Ted with Carol School if Carol School
+``prefers'' Ted and Alice School ``prefers'' Bob.  Longer cycles of
+potentially improving trades are also possible.  Such inefficiencies
+have been found to be quantitatively important in practice.  In a
+study of New York City data \citep{apr09aer} it was found that if all
+schools used the same ordering of students, out of roughly 90,000
+students, 1500 students' placements in the DA assignment could be
+improved without harming anyone, and if different schools used
+different orderings, 4500 placements could be improved.  Our GCPS
+mechanism avoids such inefficiencies.
+
+A common example of given priorities that express actual social values
+is that, among eligible students, those with a sibling at the school
+who live in the school's walk zone have highest priority, those with a
+sibling at the school who live outside the walk zone have second
+priority, those without a sibling at the school who live in the walk
+zone have third priority, and other eligible students have lowest
+priority.  It is common for given priorities to value a residential
+location near the school, a high test score or grade point average, or
+minority status.  In order to apply DA there must be (usually randomly
+generated) strict priorities that refine the given priorities, and
+again the DA allocation may be inefficient, insofar as there are
+mutually beneficial trades.  Applying our enhanced MCC mechanism
+avoids such inefficiencies while honoring the given priorities to the
+extent possible.
+
+Almost all school choice mechanisms limit the number of schools that a
+student is allowed to rank.  With this limitation DA is no longer
+strategy-proof, and can be quite tricky.  In the 2006 New York City
+High School Match students were allowed to rank 12 schools.  Of the
+roughly 100,000 participants, over 8000 were unmatched after the first
+round, having not received an offer from any school they ranked.
+These students participated in a supplementary round, in which they
+submitted ranked lists of schools that had remaining capacity after
+the first round.  Students who did not receive an offer in the
+supplementary round were assigned administratively.  The overall
+mechanism is clearly not strategy proof because it may be best in the
+first round to rank schools that are ``realistic'' rather than most
+preferred, in order to avoid the supplementary round.
+
+A way around these difficulties is to arrange for each student $i$ to
+have a \emph{safe school} which is guaranteed to not have more
+students ranked above $i$ than the school's capacity, so that $i$ will
+not be rejected by the school if she applies to it.  Some school
+systems have \emph{neighborhood schools}, which is a guarantee that
+each student has the right to attend the school whose district
+contains her residence.  Assigning safe schools that the students can
+be expected to like is consistent with the main goal of school choice,
+which is to place students in schools they are happy to attend.
+
+We suppose that each student knows which school is her safe school, so
+she only needs to submit a ranked list of the schools she prefers to
+it. If the number of such schools is not greater than the number she
+is allowed to rank, strategy-proofness for her is restored, because it
+is as if she submits a ranking of all schools.  We expect safe schools
+to be popular with students and parents because they simplify the
+application process, and because the lower bound on the outcome that
+they provide is intuitively appealing.
+
+Safe schools also make sense for the GCPS, MCC, and enhanced MCC
+mechanisms, and in fact the structure of the GCPS mechanism solves an
+algorithmic problem created by safe schools.  In abstract theory these
+mechanisms can be applied in multiround systems by having the safe
+school in the first round be participation in the second round, having
+the safe school in the second round be participation in the third
+round, and so forth. However, our software presumes that there are
+safe schools, and applying it more generally will probably require
+at least some modifications by the user.
+
+\subsection{Generating a Random Deterministic Assignment}
+
+Having computed a feasible assignment, which is a matrix of
+assignment probabilities, the next problem is to generate a
+random assignment of students to schools that realizes these
+probabilities.  Doing this is called \emph{implementation} by
+\cite{bckm13aer}.  The command \texttt{purify} implements the special
+case, for our context, of the algorithm they propose for this.  We now
+briefly explain the key idea.
+
+We begin with a feasible assignment $m$ with entries $m_{io}$.  The
+algorithm works by transitioning from $m$ to a feasible assignment
+$m^\alpha$ with probability $\tfrac{\beta}{\alpha + \beta}$ and
+transitioning from $m$ to a feasible assignment $m^{-\beta}$ with
+probability $\tfrac{\alpha}{\alpha + \beta}$, where
+$\tfrac{\beta}{\alpha + \beta}m^\alpha + \tfrac{\alpha}{\alpha +
+  \beta}m^{-\beta} = m$.  All the entries that are integral in $m$ are
+integral in $m^\alpha$ and $m^{-\beta}$, and all the schools $o$ that
+have integral total demand $\sum_i m_{io}$ in $m$ also have integral
+total demand in $m^\alpha$ and $m^{-\beta}$.  In addition, either
+$m^\alpha$ has an integral entry that is not integral in $m$, or there
+is a school that has integral total demand in $m^\alpha$ but not in
+$m$, and similarly for $m^{-\beta}$.  Evidently repeatedly
+transitioning in this way leads eventually to a random deterministic
+assignment with a distribution that averages to $m$.
+
+We now need to explain the construction of $m^\alpha$ and
+$m^{-\beta}$.  We form an undirected graph $G = (V,E)$ whose set of
+\emph{vertices} $V$ consists of the students, the schools, and an
+artificial node called the \emph{sink}. The set of \emph{edges} $E$
+contains an edge between a student $i$ and a school $o$ if $m_{io}$ is
+not an integer, so neither $0$ nor $1$, and $E$ contains an edge
+between a school and the sink if the total probability $\sum_i m_{io}$
+of assignment to that school is not an integer.  If $E = \emptyset$,
+then every probability in the assignment is either $0$ or $1$, so it
+is a deterministic assignment, and we are done.
+
+Suppose that $v_1$ and $v_2$ are elements of $V$ such that there is an
+edge between $v_1$ and $v_2$.  We will show, by enumeration of cases,
+that there is a vertex $v_3$ that is not $v_1$ such that $E$ contains
+an edge between $v_2$ and $v_3$. If $v_2$ is a student, then $v_1$ is
+a school such that $m_{v_2v_1}$ is not an integer, and since the
+total $\sum_o m_{v_2o}$ of $v_2$'s assignment probabilities is $1$,
+there must be another school $v_3$ such that $m_{v_2v_3}$ is not an
+integer.  If $v_2$ is a school and $v_1$ is a student, then either
+there is another student $v_3$ such that $m_{v_3v_2}$ is not an
+integer or the sum $\sum_i m_{iv_2}$ of assignment probabilities for
+$v_2$ is not an integer, in which case there is an edge between $v_2$
+and the sink.  If $v_2$ is a school and $v_1$ is the sink, then the
+sum of the assignment probabilities to $v_2$ is not an integer, so
+there is a student $v_3$ such that $m_{v_3v_2}$ is not an integer.
+Finally, if $v_2$ is the sink and $v_1$ is a school such that the sum
+of the assignment probabilities to $v_1$ is not an integer, then,
+since the sum of all assignment probabilities is the number of
+students, there is another school $v_3$ such that the sum of
+assignment probabilities to $v_3$ is not an integer.
+
+Having found a $v_3 \ne v_1$ such that there is an edge between $v_2$
+and $v_3$, we can repeat this step to find a $v_4 \ne v_2$ such that
+there is an edge between $v_3$ and $v_4$.  We can continue in this
+manner, and since $V$ is finite, we will eventually revisit an element
+of $V$ we have already seen, so we have shown how to construct a path
+$v_1, \ldots, v_l$ such that $v_l = v_h$ for some $h < l - 2$.  Let
+$k = l - h + 1$, and for $i = 1, \ldots, k$ let $w_i = v_{i + h - 1}$.
+We have constructed $w_1, \ldots, w_k$ such that:
+\begin{enumerate}
+  \item[(a)] for each $i = 1, \ldots, k-1$, $E$ contains an edge
+    between $w_i$ and $w_{i+1}$, and $E$ contains an edge between
+    $w_k$ and $w_1$.
+  \item[(b)] $w_k \ne w_2$, $w_{i-1} \ne w_{i+1}$ for all $i = 2,
+    \ldots, k-1$, and $w_{k-1} \ne w_1$.
+\end{enumerate}
+
+For each $i = 1, \ldots, k$, if $w_i$ is a student and $w_{i+1}$ is a
+school, then the edge between $w_i$ and $w_{i+1}$ is a \emph{forward
+edge}, and if $w_i$ is a school and $w_{i+1}$ is a student, then the
+edge between $w_i$ and $w_{i+1}$ is a \emph{backward edge}.  (If $w_i$
+or $w_{i+1}$ is the sink, then the edge between $w_i$ and $w_{i+1}$ is
+neither forward nor backward.)  If $w_k$ is a student and $w_1$ is a
+school, then the edge between $w_k$ and $w_1$ is a forward edge, and
+if $w_k$ is a school and $w_1$ is a student, then the edge between
+$w_k$ and $w_1$ is a backward edge.
+
+For $\alpha > 0$ consider the matrix $m^\alpha$ of numbers obtained by
+increasing $m_{w_iw_{i+1}}$ by $\alpha$ when the edge between $w_i$
+and $w_{i+1}$ is a forward edge and decreasing $m_{w_{i+1}w_i}$ by
+$\alpha$ when the edge between $w_i$ and $w_{i+1}$ is a backward edge.
+For each student, the edges involving a student can be grouped in
+pairs, with each pair having one forward edge and one backward edge,
+so the total assignment probability for the student in $m^\alpha$
+continues to be one.  If the total probability assigned to some school
+is an integer, then the edges involving it can also be group in such
+pairs, so its total assignment probability in $m^\alpha$ is the same
+as in $m$.  Therefore $m^\alpha$ is a feasible assignment if $\alpha$
+is sufficiently small.  
+
+Similarly, for $\beta > 0$ consider the matrix $m^{-\beta}$ of numbers
+obtained by decreasing $m_{w_iw_{i+1}}$ by $\beta$ when the edge
+between $w_i$ and $w_{i+1}$ is a forward edge and increasing
+$m_{w_{i+1}w_i}$ by $\beta$ when the edge between $w_i$ and $w_{i+1}$
+is a backward edge.  As above, $m^{-\beta}$ is a feasible assignment
+if $\beta$ is sufficiently small.  Clearly $\tfrac{\beta}{\alpha +
+  \beta}m^\alpha + \tfrac{\alpha}{\alpha + \beta}m^{-\beta} = m$.  If
+we choose $\alpha$ to be the smallest positive number such that
+$m^\alpha$ has an integral assignment probability that is not integral
+in $m$ or there is a school whose total assignment probability in $m$
+is not integral and is integral in $m^\alpha$, and we choose $\beta$
+similarly, then all the conditions described above are satisfied.
+
+
+\section{For the User}
+
+In the remainder of the main body of this document we look at the
+software from the point of view of school administrator (or perhaps an
+administrator's tech support person) who wants to know how to use the
+software to come up with an assignment of students to schools.  We'll
+talk only about what you need to do, not how it works or why it works.
+There will be much more information about those aspects in the
+Appendices, where we describe the code.
+
+\subsection{Downloading and Setting Up} \label{subsec:DownloadInstall}
+
+Here we give step-by-step instructions for downloading the code and
+compiling the executables.  We will assume a Unix command line
+environment, which could be a terminal in Linux, the terminal
+application in MacOS, or some third flavor of Unix.  (There are
+probably easy enough ways to do these things in Windows, but a Windows
+user can also just get Cygwin.)
+
+First, in a web browser, open the url
+\begin{obeylines}
+  \texttt{
+    https://github.com/Coup3z-pixel/SchoolOfChoice/
+    }
+\end{obeylines}
+
+\bigskip \noindent You will see a list of directories and files.
+Clicking on the filename \texttt{gcps\_mcc.tar} will take you to a
+page for that file.  On the line beginning with \texttt{Code} you will
+see a button marked \texttt{Raw}.  Clicking on that button will
+download the file to your browser.  Move it to a suitable directory.
+
+We use the \texttt{tar} command to
+extract its contents, then go into the directory \texttt{GCPS} that this action creates:
+\begin{obeylines}
+  \texttt{
+    \$ tar xvf gcps\_mcc.tar
+    \$ cd gcps\_mcc
+    }
+\end{obeylines}
+\bigskip
+
+To compile the executables we need the tools \texttt{make} and
+\texttt{gcc}, and we can check for their presence using
+the command \texttt{which}:
+\begin{obeylines}
+  \texttt{
+    \$ which make
+    /usr/bin/make
+    \$ which gcc
+    /usr/bin/gcc
+    }
+\end{obeylines}
+\bigskip \noindent If you don't have them, you will need to get them.
+Assuming all is well, we issue the command \texttt{make} and see the
+text that the command directs to the screen:
+\begin{obeylines}
+  \texttt{
+    \$ make
+gcc -I. -Wall -Wextra -fsanitize=address -g -c normal.c 
+gcc -I. -Wall -Wextra -fsanitize=address -g -c parser.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c subset.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c cee.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c schchprob.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c partalloc.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c pushrelabel.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c pivot.c 
+gcc -I. -Wall -Wextra -fsanitize=address -g -c endpoint.c
+gcc -I. -Wall -Wextra -fsanitize=address -g -c gcpscode.c
+gcc -o gcps gcps.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o gcpscode.o -fsanitize=address -static-libasan -lm
+gcc -I. -Wall -Wextra -fsanitize=address -g -c mcccode.c
+gcc -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o cee.o schchprob.o  -fsanitize=address -static-libasan -lm
+gcc -I. -Wall -Wextra -fsanitize=address -g -c emcccode.c
+gcc -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o cee.o schchprob.o  -fsanitize=address -static-libasan -lm
+gcc -I. -Wall -Wextra -fsanitize=address -g -c purifycode.c
+gcc -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o -fsanitize=address -static-libasan -lm
+gcc -I. -Wall -Wextra -fsanitize=address -g -c makexcode.c
+gcc -o makex makex.c normal.o makexcode.o -fsanitize=address -static-libasan -lm
+    } 
+\end{obeylines}
+\bigskip
+
+We have now constructed the executable files \texttt{gcps},
+\texttt{mcc}, \texttt{emcc}, \texttt{purify}, and \texttt{makex}.
+(The compilation process also constructed various ``object'' files
+with file names ending with \texttt{.o}, that are intermediated steps
+in the compilation process.)  On many Unix's
+these can invoked simply by typing the executable name on the command
+line, but it may be the case that, for security reasons, the current
+directory is not in the \texttt{path} (the list of directories that
+the command line looks in when a command is invoked) in which case you
+will need to type \texttt{./gcps}, \texttt{./mcc}, etc.
+
+\subsection{Input Files}
+
+The executables \texttt{gcps}, \texttt{mcc}, and \texttt{emcc} act on
+\emph{school choice problem} input files.  The executable
+\texttt{purify} acts on \emph{partial allocation} input files.  We now
+describe the formats of these files. We will study an example of a
+school choice input file, but the rules specified below apply to both
+types of files.
+
+Among the files you downloaded, there is a sample school choice
+problem file \texttt{my.scp}:
+
+\begin{obeylines}\texttt{
+    \$ cat my.scp
+/* This file was generated by makex with 2 schools,
+3 students per school, capacity 4 for all schools,
+school valence std dev 1.00, idiosyncratic std dev 1.00,
+student test std dev 1.00, and 1 priority grades. */
+There are 6 students and 2 schools
+The vector of quotas is (4,4)
+The priority matrix is
+    0    0
+    0    0
+    0    0
+    0    0
+    0    0
+    0    0
+The students numbers of ranked schools are
+(1,2,1,1,1,2)
+The preferences of the students are
+1:    2
+2:    1   2
+3:    1
+4:    1
+5:    1
+6:    1   2
+  }
+\end{obeylines}
+
+\medskip
+
+\emph{GCPS MCC Schools} input files begin with a comment between
+\texttt{/*} and \texttt{*/}.  This is purely for your convenience.
+The comment can be of any length, and provide whatever information is
+useful to you, but it is mandatory insofar as the computer will insist
+that the first two characters of the file are \texttt{/*}, and it will
+only start extracting information after it sees the \texttt{*/}.  As
+you can see, when \texttt{makex} makes an input file, it uses the
+comment to provide some information concerning how the file was made;
+removing or replacing this won't change how the file is processed by
+\texttt{gcps}, \texttt{mcc}, and \texttt{emcc}.
+
+The computer divides the remainder of the file into ``generalized
+white space'' and ``tokens.''  Generalized white space includes the
+usual white space characters (spaces, tabs, and new lines), and in
+addition `\texttt{(}', `\texttt{)}', and `\texttt{,}' are treated as
+white space.  Tokens are contiguous sequences of characters without
+any of the generalized white space characters.  Tokens are either
+prescribed words, nonnegative integers, positive integers, or student
+or school tags (a student or school number followed by `\texttt{:}').
+Everything must be more or less exactly as shown above, modulo white
+space, so, for example, the first line must not be \texttt{There are 3
+  students and 1 school}, but it could be \texttt{There are 3 students
+  and \ \ 1 schools}.  If one of the GCPS executables tries to read a
+file and finds a violation of the format requirements, it will print a
+short statement describing the problem and quit.
+
+The second line after the comment gives the quotas (i.e., the
+capacities) of the schools, so both schools have four seats.
+Here we see the convenience of making `\texttt{(}', `\texttt{)}', and
+`\texttt{,}' white space characters: otherwise we would have to write
+\texttt{The vector of quotas is 4 4}.
+
+In general the lowest priority level is 0, which means that the
+student may receive some probability of a seat at the school if she is
+eligible and not crowded out by students with higher priorities.  The
+schools' priorities play no role in \texttt{gcps}, which is to say
+that in \texttt{gcps} the priorities are \emph{dichotomous}: for each
+school and student, either the student is eligible to attend the
+school (and her preferences rank that school) or she is not, and the
+school gives equal consideration to all eligible students.  A student
+may be ineligible to attend a school if she is not qualified (it is a
+single sex school for boys, or her test scores are too low) or she may
+be ineligible because she weakly prefers a seat at her safe school.
+
+The next line provides information (for each student, the number of
+schools she ranks) that the computer could figure out for itself, but
+we prefer to confirm that whatever person or software prepared the
+input knew what they were doing.  After that come the students'
+preferences: for each student, that student's tag followed by the
+schools she might attend, listed from best to worst.  The collection
+of information provided by such an input file is a \emph{school choice
+problem}.  We recommend file names for input files for \texttt{gcps}
+that end with \texttt{.scp}, but the software does not enforce this.
+
+\subsection{\texttt{gcps}, \texttt{mcc}, and \texttt{emcc}}
+
+We now imagine that you've done the hard work of figuring out what
+each school's capacity is, which schools each student is eligible to
+attend, assigning a safe school to each student, and getting each
+student to provide the rank ordered list of schools she is eligible
+for and likes at least as much as her safe school.  All this
+information has been encoded in an input file \texttt{my.scp} that is
+in the current directory.  We assume that the executable \texttt{gcps}
+is also in this directory.  The next step could be to issue the
+command:
+\begin{obeylines}
+  \texttt{
+    \$ ./gcps my.scp 
+    }
+\end{obeylines}
+\bigskip
+
+In the Unix OS the user has a \texttt{PATH}, which is a list of
+directories.  When you issue a command from the command line, the
+first item on the command line is the name of the command, and the
+computer goes through the directories in the \texttt{PATH} looking for
+an executable with that name.  For security reasons some flavors of
+Unix do not put the current directory (denoted by \texttt{\ .\ }) in
+the \texttt{PATH}, so you need to tell the computer that that is where
+you want it to look.  Thus \texttt{./gcps my.scp} is telling the
+computer to apply the version of \texttt{gcps} in the current
+directory to the file \texttt{my.scp}.  (It is also possible to run
+\texttt{gcps} without specifying an input file, in which case it will
+look for a file \texttt{schools.scp} in the current directory.)
+
+If \texttt{my.scp} is the input file above, \texttt{./gcps my.scp}
+gives the output shown below.
+\medskip
+\begin{obeylines}\texttt{
+/* This is a sample introductory comment. */
+There are 6 students and 2 schools
+          1:          2:
+1:   0.00000000  1.00000000
+2:   0.50000000  0.50000000
+3:   1.00000000  0.00000000
+4:   1.00000000  0.00000000
+5:   1.00000000  0.00000000
+6:   0.50000000  0.50000000
+}
+\end{obeylines} \noindent
+
+\smallskip \noindent Note that the sum of the entries in each row is 1
+and the sum of the entries in each school's column is not greater than
+that school's quota.  An assignment of probabilities with these
+properties --- each student has positive probability only in schools
+they are eligible for, each student's total assignment is 1, and no
+school is overassigned --- is a \emph{feasible allocation}.
+
+It is aesthetically unfortunate that the results are printed with
+eight significant digits, but this is necessary because the output of
+\texttt{gcps}, \texttt{mcc}, and \texttt{emcc} are inputs to
+\texttt{purify}, as we will explain below.  The software regards two
+numbers as ``the same'' if they differ by less than 0.000001, so
+0.3333 and 0.33333333 are different numbers.
+
+Mechanisms like GCPS are usually described in terms of simultaneous
+eating: each school is thought of as a cake whose size is its
+capacity, and at each moment during the unit interval of time each
+student ``eats'' probability of the favorite cake that is still
+available to her.  In our example each student consumes probability of
+a seat in her favorite school until time 0.5.  At that time the
+remaining 1.5 unallocated seats in school 1 are just sufficient to
+meet the needs of students 3, 4, and 5, who cannot consume any other
+school, so students 2 and 6 are required to switch to consumption of
+their second favorite schools.
+
+For the discussion of \texttt{mcc} and \texttt{emcc} we consider a
+slightly different input file.
+\begin{obeylines}\texttt{
+    \$ cat your.scp
+/* This file was generated by makex with 2 schools,
+3 students per school, capacity 4 for all schools,
+school valence std dev 1.00, idiosyncratic std dev 1.00,
+student test std dev 1.00, and 3 priority grades. */
+There are 6 students and 2 schools
+The vector of quotas is (4,4)
+The priority matrix is
+    0    0
+    0    1
+    1    0
+    1    0
+    2    0
+    0    2
+The students numbers of ranked schools are
+(1,2,1,1,1,2)
+The preferences of the students are
+1:    2
+2:    1   2
+3:    1
+4:    1
+5:    1
+6:    1   2
+  }
+\end{obeylines}
+The only difference in the parameters used to prepare
+\texttt{your.scp} is that now each school has three priority classes.
+Note that the students who rank only school 1 (students 3, 4, and 5)
+all have priorities among the top three for that school.  This
+guarantees that they will be admitted to school 1, which is their safe
+school.
+
+We apply \texttt{mcc} to this input file:
+\medskip
+\begin{obeylines}\texttt{
+    \$ ./mcc your.scp 
+/* This is a sample introductory comment. */
+There are 6 students and 2 schools
+ \ \ \ \ \ \ \ \          1: \ \ \ \ \ \ \          2:
+1:   0.00000000  1.00000000
+2:   0.50000000  0.50000000
+3:   1.00000000  0.00000000
+4:   1.00000000  0.00000000
+5:   1.00000000  0.00000000
+6:   0.50000000  0.50000000
+}
+\end{obeylines} \noindent
+We get the same output the came from \texttt{./gcps my.scp}, but the
+way this happens is different.  The mechanism recognizes that without
+any restrictions, the total demand for school 1 would be 5, which
+exceeds school 1's capacity. Therefore it raises the fine cutoff of
+school 1 to 0.5.  This displaces some demand from school 1 to school
+2, but not so much that further increases in fine cutoffs are
+necessary.
+
+If we ran the command \texttt{./emcc your.scp}, the software would
+compute the outcome coming from \texttt{./mcc your.scp} and then look
+around for mutually beneficial trading cycles.  Since there aren't any
+such cycles, \texttt{./emcc your.scp} would also give the output shown
+above.
+
+\subsection{\texttt{purify}} \label{subsec:Implementation} 
+
+By default the output of the \texttt{gcps} goes to the screen, which
+is not very useful, so 
+\begin{obeylines}
+  \texttt{
+    \$ ./gcps my.scp > my.mat
+    }
+\end{obeylines}
+\bigskip \noindent is probably a preferable command because it
+\emph{redirects} the output to a file \texttt{my.mat}, which is
+created (or overwritten if it already exists) in the current directory
+by this command.  We recommend that files produced by \texttt{gcps},
+\texttt{mcc}, and \texttt{emcc} have filenames ending in \texttt{.mat}
+(for \emph{matrix}), but the software does not enforce this.
+
+Having generated the file \texttt{my.mat}, which is a matrix of
+assignment probabilities, the next problem is to generate a random
+assignment of students to schools that realizes these probabilities.
+That is, we want to generate a random deterministic feasible
+assignment of students to schools such that for each student
+\texttt{i} and school \texttt{j}, the probability that \texttt{i}
+receives a seat in \texttt{j} is the corresponding entry in
+\texttt{my.mat}.  Doing this is called \emph{implementation} by
+\cite{bckm13aer}, and the algorithm for accomplishing this was
+described earlier.
+
+Implementation can be accomplished by issuing the command:
+\begin{obeylines}
+  \texttt{
+    \$ ./purify my.mat 
+    }
+\end{obeylines}
+\bigskip \noindent When we run the command above we get:
+\begin{obeylines}\texttt{
+/* This is a sample introductory comment. */
+    \ \ \      1: \!\!\!\!\!2:
+   1:    0    1
+   2:    0    1
+   3:    1    0
+   4:    1    0
+   5:    1    0
+   6:    1    0
+}
+\end{obeylines} \noindent
+In effect, the computer flips a coin to decide which of students 2 and
+6 will be allowed to attend school 1, while the other is required to
+attend school 2.  As with \texttt{gcps}, \texttt{purify} directs its
+output to the screen.  Thus
+\begin{obeylines}
+  \texttt{
+    \$ ./purify my.mat > my.pur
+    }
+\end{obeylines}
+\bigskip \noindent
+is probably a more useful command.
+
+\subsection{\texttt{makex}} \label{subsec:Makex}
+
+Development of this sort of software requires testing on a wide range
+of inputs, under at least somewhat realistic conditions.  The utility
+\texttt{makex} produces examples of input files for \texttt{gcps},
+\texttt{mcc}, and \texttt{emcc} that reflect the geographical
+dispersion of schools within school districts with many schools, and
+the idiosyncratic nature of school quality and student preferences.
+
+We have already seen that \texttt{makex} has four integer parameters:
+the number of schools, the number of students per school, the common
+quota (capacity) of all schools, and the number of priority classes at
+each school.  There are also three types of random variables that are
+independent and normally distributed, with mean zero.  The default
+values of their standard deviations are all 1.0, but these can be
+reset.
+
+Each school has a normally distributed \emph{valence}.  For each
+student-school pair there is a normally distributed
+\emph{idiosyncratic match quality}.  The student's utility for a
+school is the sum of the school's valence and the idiosyncratic match
+quality minus the distance from the student's house to the school.
+These numbers determine the sudent's ordinal preferences over the
+schools, and in particular they determine the ordinal ranking of the
+schools that are weakly preferred to the safe school.
+
+Each student has a normally distributed \emph{test score}.  A
+student's \emph{raw priority} at a school is her test score minus the
+distance from her house to the school.  Students for whom the school
+is the safe school are reassigned numerical priorities that are high
+enough to insure that they will in the top group of students that is
+certain to be admitted if they apply.  After this, the adjusted
+numerical priorities give an ordinal ranking of the students who have
+ranked the school, and these students are divided, as equally as
+possible, into the specified number of priority classes.  To the
+extent that equal division is not possible, a lower priority class
+will have one more student than a higher priority class.  For example,
+if there are five students and three priority classes, the bottom two
+priority classes will each have two students and the top priority
+class will have one student.
+
+It is possible to run \texttt{makex} in several ways.  If it is
+invoked without any other arguments on the command line (which
+corresponds to \texttt{argc} = 1) it is run with the default
+parameters in the code, specified by the following lines in
+\texttt{makex.c}.
+\begin{obeylines}\texttt{
+  nsc = 2;
+  no\_students\_per\_school = 3;
+  school\_capacity = 4;
+  school\_valence\_std\_dev = 1.0;
+  idiosyncratic\_std\_dev = 1.0;
+  test\_std\_dev = 1.0;
+  no\_priority\_grades = 3;
+}
+\end{obeylines} \noindent
+One can change the values of these parameters by editing the code.
+For example, to diminish the relative importance of travel costs one
+can increase \texttt{school\_valence\_std\_dev} and
+\texttt{idiosyncratic\_std\_dev}.  As the code is currently
+configured, it is possible to invoke \texttt{makex} with seven other
+arguments on the command line, resetting all of these parameters, and
+it also possible to invoke it with four other arguments, resetting the
+integer parameters without changing the standard deviations.  Without
+really knowing anything about the C programming language, it should be
+apparent how to create other customized versions of \texttt{makex} by
+editing the source code.
+
+This illustrates an important point concerning the relationship
+between this software and its users.  Most softwares you are familiar
+with have interfaces with the user that neither require nor allow the
+user to edit the source code, but to create such an interface here
+would be counterproductive. It would add complexity to the source code
+that had nothing to do with the underlying algorithms.  More
+importantly, one of the main purposes of this software is to provide a
+starting point for the user's own programming effort in adapting it to
+the particular requirements and idiosyncratic features of the user's
+school choice setting.  Our algorithms are not very complicated, and
+someone familiar with C should hopefully not have a great deal of
+difficulty figuring out what is going on and then bending it to her
+purposes.  Starting to look at and edit the source code as soon as
+possible is a first step down that road.
+
+%%%------------------------------------------------------------------------------------
+%%%------------------------------------------------------------------------------------
+
+\begin{appendix}
+
+\section{About the Code} \label{app:Code}
+
+As we have mentioned earlier, we hope that our code provides a useful
+starting point for others, either contributing to the repository at
+Github, or for people specializing it for applications to districts
+with idiosyncratic features.  We don't expect anyone to try to
+understand every detail, but we have tried to write and organize
+things in a way that makes it possible for someone else to figure out
+the things they need to understand in order to do whatever they want
+to do.
+
+Before diving into details, here are some general remarks.  The code
+is written in C, which some regard as an archaic language, but it is
+still often taught as a first language, and it is a prerequisite to
+C++, which is still in widespread use, so it is about as close to a
+lingua franca as currently exists in the world of programming.  C is
+also still at the front of the industry pack for execution speed,
+which is a critical consideration for application of \texttt{gcps} to
+very large school districts.  Even though we are not using C++, the
+code is largely object oriented in spirit, being organized as an
+interaction of objects that are given by \texttt{struct}'s.
+
+Practically speaking, we will assume that the reader knows at least
+the basics of C, but those languages that give the computer
+step-by-step instructions are all pretty similar, so even without
+knowing much, it should mostly be possible to have a good sense of
+what is going on, and a monkey-see-monkey-do approach to writing your
+own modifications can go quite far.  Much of the time objects are
+``passed by reference'' to functions, which means that instead of
+passing the object itself, what is passed is a pointer to the object.
+Understanding the pointer concept of C is certainly a prerequisite to
+any detailed understanding of the code.
+
+In comparison with languages such as \texttt{Python}, C certainly has
+some disadvantages.  Organizing the hierarchical structure of the code
+using curly brackets rather than indentation makes the code bulky, but
+this is primarily an aesthetic concern.  More serious is the fact that
+in C the programmer is responsible for explicitly allocating and
+deallocating memory.  Historically this gave rise to major headaches,
+because it was easy to accidently write to or access a part of memory
+that had not actually been allocated, or to accidently overwrite some
+previously allocated memory, without the computer complaining at all.
+Such bugs were notoriously hard to track down.  If you look in the
+\texttt{makefile} you will see that for Linux there are the additional
+\texttt{CFLAGS} \texttt{-fsanitize=address} and \texttt{-g} and the
+additional \texttt{LDFLAGS} \texttt{-fsanitize=address} and
+\texttt{-static-libasan}, while for Mac OS the last flag becomes
+\texttt{-static-libsan}.  These flags invoke
+\texttt{addresssanitizer}, which results in compilation of executables
+that check for memory errors such as those described above.  On Linux,
+but not on Mac OS, the executables also check for memory leaks, which
+are allocated memory that is not deallocated at the end of run time.
+Of course this checking is a burden that slows execution and eats up
+additional memory, so you may want to use \texttt{addresssanitizer}
+only while debugging.
+
+Many objects have a destroyer, which frees the memory that stores the
+object's data, and for many objects there is a way of printing the
+object.  These printing functions provide the format of the output of
+\texttt{makex}, \texttt{gcps}, \texttt{mcc}, \texttt{emcc}, and
+\texttt{purify}, and for other objects the printing functions can be
+useful for debugging.  In all cases the code for these functions is
+simple, straightforward, and located at the end of the source code
+files, and printing and destroyer functions will not be mentioned
+below.  The many calls to destroyers, and to \texttt{free}, add
+unfortunate bulk to the code, but when studying the code, the reader
+can safely ignore these calls, trusting that they are conceptually
+insignificant, and that the allocation and freeing of memory is being
+handled correctly.
+
+In the C programming language, an $n$ element array is indexed by the
+integers $0, \ldots, n-1$.  We always think of it as indexed by the
+integers $1, \ldots, n$, so the $j^{\text{th}}$ component of
+\texttt{vec} is \texttt{vec[j-1]}.  Similarly, the $(i,j)$ component
+of a matrix \texttt{mat} is \texttt{mat[i-1][j-1]}.  While this is
+perhaps not one of the most appealing features of C, and it certainly
+adds some bulk to the code, once you get used to it, in a curious way
+it seems to enhance the readability of the code.
+
+\subsection{Overview of the Code}
+
+Compiling (by typing \texttt{make} on the command line) produces the
+executables \texttt{makex}, \texttt{gcps}, \texttt{mcc},
+\texttt{emcc}, and \texttt{purify}, which can be invoked from the
+command line, or by using shell scripts or scripting languages such as
+\texttt{perl}.  For \texttt{makex} there are associated files
+\texttt{makex.c}, \texttt{makexcode.h}, and \texttt{makexcode.c}.  For
+each of the other executables there are similarly titled associated
+files, and for each executable the division of labor between them is
+similar.  In all cases the relationship between the header
+\texttt{file.h} and the source \texttt{file.c} is as usual:
+\texttt{file.h} includes other resources, defines \texttt{struct}'s,
+and states the signatures of the functions defined in
+\texttt{file.c}. We will not mention the header files in our
+subsequent discussion.  The code in \texttt{makex.c} only manages the
+interaction with the command line, and, once it is has sorted out the
+relevant parameters, it invokes the function \texttt{make\_example}
+defined in \texttt{makexcode.c}.
+
+The code in the \texttt{code.c} files is organized, roughly, in a top
+down manner, with the ``big picture'' functions at the beginning, and
+functions providing greater detail organized in a roughly hierarchical
+manner lower down.  (This is vivid in the code for
+\texttt{make\_example}, but true to some greater or lesser extent for
+all the executables.
+
+The code in \texttt{normal.c} provides simple numerical functions, and
+the code in \texttt{subset.c} gives operations on subsets of the set
+of integers from 1 to some finite upper bound.  The code in
+\texttt{cee.c} defines and provides support for collective endowment
+economies, the code in \texttt{schchprob.c} defines and provides
+support for school choice problems, and the code in
+\texttt{partalloc.c} defines and provides support for partial
+allocations.  The functions defined in \texttt{parser.c} read input
+files, which are either school choice problems or partial allocations.
+
+Perhaps the most important thing to understand is that the code for
+\texttt{gcps} is \emph{much} more complex than the code for the other
+executables.  In addition to \texttt{gcps.c} and \texttt{gcpscode.c},
+\texttt{gcps} uses the code in \texttt{endpoint.c}, \texttt{pivot.c},
+and \texttt{pushrelabel.c}.  We will have much more to say about it
+below.
+
+\subsection{\texttt{normal.c}}
+
+The functions \texttt{min} and \texttt{max} compute the minimum and
+maximum of two doubles.  The function \texttt{is\_integer} returns 1
+(true) if the given double is within one one millionth of an integer
+and 0 (false) otherwise.  In general, throughout the code, two
+floating point numbers are regarded as equal if they differ by less
+that one millionth.  This prevents rounding error from creating a
+spurious impression that two numbers differ.  Incidently, the reason
+that the numbers in the output of \texttt{gcps}, \texttt{mcc}, and
+\texttt{emcc} have many digits is that outputs of these executables
+must be accurate inputs for \texttt{purify}, so \texttt{gcps}
+shouldn't (for example) print 0.99 instead of 0.99999999. The
+functions \texttt{uniform} and \texttt{normal} provided uniformly
+distributed (in $[0,1]$) and normally distributed (for mean 0 and
+standard deviation 1) pseudorandom numbers.
+
+\subsection{\texttt{subset.c}}
+
+One may represent a subset of $\{1, \ldots,
+\mathtt{large\_set\_size}\}$ as an $n$-tuple of 0's and 1's, or as a
+list of its elements.  The first representation is given by
+\texttt{subset}, which, in addition to the $n$-tuple
+\texttt{indicator} of elements of $\{0,1\}$, keeps track of the number
+\texttt{subset\_size} of elements of the subset.  The second
+representation is given by \texttt{index}, in which
+\texttt{no\_elements} is the number of elements of the subset (not the
+containing set) and \texttt{indices} is a strictly increasing
+\texttt{no\_elements}-tuple of positive integers.  The \texttt{index}
+representation can be much more efficient when we are dealing with
+little subsets of big sets.
+
+The function \texttt{index\_of\_subset} passes from the first
+representation to the second, and \texttt{subset\_of\_index} goes in
+the other direction.  (Since an \texttt{index} does not know the size
+of the set it is a subset of, that piece of data is a required
+argument.) There is no index representation of the empty set, and if
+\texttt{subset\_of\_index} receives the empty set as an argument, it
+will complain and halt the program.
+
+An \texttt{index\_list} is a linked list of subsets in \texttt{index}
+form.  
+
+Mostly the functions in \texttt{subset.c} have self explanatory
+titles, with code that is not hard to understand.  There may now be
+some functions that are not used elsewhere, as we have not made an
+effort to eliminate such functions when they may prove useful later,
+and are illustrative of what is possible.
+
+\subsection{\texttt{schchprob.c}}
+
+A \emph{school choice problem} consists of a set of students and a set
+of schools.  For each school \texttt{j}, \texttt{quotas[j-1]} is the
+school's capacity.  Each student \texttt{i} has
+\texttt{no\_eligible\_schools[i-1]} they can be assigned to, and
+\texttt{preferences[i-1]} is the list of such schools, ordered from
+most preferred to least preferred.  For student \texttt{i} and school
+\texttt{j}, \texttt{priorities[i-1][j-1]} (a nonnegative integer) is
+student \texttt{i}'s \emph{priority} at school \texttt{j}. Even if
+\texttt{priorities[i-1][j-1]} is zero, student \texttt{i} can be
+assigned to school \texttt{j} if it is one of the schools she ranked.
+
+When the school choice problem is given as an input, in the struct
+\texttt{input\_sch\_ch\_prob}, the schools' quotas are integers.  In
+the computation of the \text{gcps} there are situations in which the
+schools have been partially allocated and the remaining amounts to be
+allocated are no longer integers. The computations of \texttt{gcps}
+use the struct \texttt{process\_scp} which has floating point quotas
+and the member \texttt{time\_remaining} that keeps track of how much
+longer the allocation process will continue.  It also has a member
+\texttt{eligible} which is a matrix whose entry
+\texttt{eligible[i-1][j-1]} is 1 if \texttt{j} is one of the schools
+ranked by \texttt{i} and 0 otherwise.  This entry does not provide
+independent information, and is computed from the \texttt{preferences}
+by the function \texttt{compute\_eligibility\_matrix}.
+
+A pair $(J,P)$ consisting of a set of students $J$ and a set of
+schools $P$ is \emph{critical} if the only way to meet the requirement
+of the agents in $J$ is to give each student in $J$ her maximum of
+each of the schools outside $P$, and to give all of the seats in
+schools in $P$ only to students in $J$.  During the \texttt{gcps}
+computation, when the pair $(J,P)$ becomes critical for the as yet
+unallocated resources, the computation recursively descends to two
+subprocesses, one for the agents in $J$ and all the resources that
+they might possibly consume (which is the minimum needed to meet their
+requirements) and the other for students in the complement of $J$ and
+schools in the complement of $P$.  The functions
+\texttt{critical\_sub\_process\_scp} and
+\texttt{crit\_compl\_sub\_process\_scp} compute the
+\texttt{process\_scp}'s of these subprocesses.
+
+\subsection{\texttt{makex.c} and \texttt{makexcode.c}}
+
+The file \texttt{makex.c} contains the \texttt{main} function of
+\texttt{makex}, which sets the parameters of \texttt{makex} and then
+calls the function \texttt{make\_example}.  This function, which is
+defined in \texttt{makexcode.c}, implements the description of
+\texttt{makex} given in Subsection \ref{subsec:Makex} in a
+straightforward manner that is easy to understand.
+
+\subsection{\texttt{partalloc.h} and \texttt{partalloc.c}}
+
+In a \texttt{partial\_alloc} for \texttt{no\_students} students and
+\texttt{no\_schools} schools, there is a matrix \texttt{allocations}
+that specifies an amount \texttt{allocations[i-1][j-1]} of school
+\texttt{j} to student \texttt{i}, i.e., a probability that $i$
+receives a set in $j$, for each \texttt{i} and \texttt{j}.  A
+\texttt{pure\_alloc} has the same structure, but now
+\texttt{allocations[i-1][j-1]} is an integer that should be zero or
+one, and for each student \texttt{i} there should be exactly one
+school \texttt{j} such that \texttt{allocations[i-1][j-1]} is one.
+
+A \texttt{partial\_alloc} is \emph{feasible} if the total amount
+assigned to each student is $1$ and the total assigned amount of each
+school is not more than the school's quota.  In the \texttt{gcps}
+computation, in addition to computing the path of the allocation
+itself, the process computes a path in the set of feasible allocations
+that is above the path of the allocation.  When the process encounters
+a critical pair (as described earlier and in more detail later) the
+process descends recursively to two subprocesses.  The function
+\texttt{reduced\_feasible\_guide} computes the initial point of the
+path of feasible allocations for such a subprocess, and the functions
+\texttt{left\_feasible\_guide} and \texttt{right\_feasible\_guide}
+call this function to compute the two specific initial points.
+
+\subsection{\texttt{parser.c}}
+
+Two parsing functions \texttt{sch\_ch\_prob\_from\_file} and
+\texttt{allocation\_from\_file} are defined in \texttt{parser.c}.  As
+their names suggest, these functions read data from files,
+constructing, respectively, a school choice problem
+(\texttt{sch\_ch\_prob}) and an allocation (\texttt{partial\_alloc}).
+A valid input file has an opening comment, which begins with
+\texttt{/*} and ends with \texttt{*/}, and a body.  In the body, in
+addition to the usual white space characters (space, tab, and newline)
+the characters `\texttt{(}', `\texttt{)}', and `\texttt{,}' are
+treated as white space.  The body is divided into whitespace and
+tokens, which are sequences of adjacent characters without any white
+space that are preceeded and followed by white space.
+
+Everything in \texttt{parser.c} is easy to understand.  The bulk of
+the actual code is devoted to functions checking that the verbal
+tokens are the ones that are expected, and quitting with an error
+message if one of them isn't.
+
+\subsection{\texttt{purify.c} and \texttt{purifycode.c}}
+
+The code of the algorithm going from a fractional allocation to a
+random pure allocation whose distribution has the given allocation as
+its average follows the description in Section
+\ref{subsec:Implementation}.  The \texttt{nonintegral\_graph} derived
+from the given allocation is an undirected graph with an edge between
+a student and a school if the student's allocation of the school is
+strictly between zero and one, and an edge between a school and the
+sink if the total allocation of the school is not an integer.  The
+function \texttt{graph\_from\_alloc} has the given allocation as its
+input, and its output is the derived \texttt{nonintegral\_graph}.
+
+Especially for large school choice problems, we expect the
+\texttt{nonintegral\_graph} to be quite sparse, so it can be
+represented more compactly, and be easier to work with, if we encode
+it by listing the neighbors of each node.  The \texttt{stu\_sch\_nbrs}
+member of \texttt{neighbor\_lists} is a list of \texttt{no\_students}
+lists, where the \texttt{stu\_sch\_nbrs[i-1]} are arrays of varying
+dimension. We set \texttt{stu\_sch\_nbrs[i-1][0] = 0} in order to have
+a place holder that allows us to not have an array with no entries
+when \texttt{i} has no neighbors.  The actual neighbors of \texttt{i}
+are
+$$\text{\texttt{stu\_sch\_nbrs[i-1][1],...,stu\_sch\_nbrs[i-1][stu\_no\_nbrs[i-1]]}}.$$
+The members \texttt{sch\_no\_nbrs} and \texttt{sink\_sch\_nbrs} follow
+this pattern, except that in the latter case there is just a single
+list.  The member \texttt{sch\_sink\_nbrs} is a
+\texttt{no\_schools}-dimensional array of integers with
+\texttt{sch\_sink\_nbrs[j-1] = 1} if there is an edge connecting
+\texttt{j} and the \texttt{sink} and \texttt{sch\_sink\_nbrs[j-1] = 0}
+otherwise.  To pass from a \texttt{nonintegral\_graph} to its
+representation as a \texttt{neighbor\_lists} we apply
+\texttt{neighbor\_lists\_from\_graph}.
+
+A cycle in the \texttt{nonintegral\_graph} is a linked list of
+\texttt{path\_node}'s.  The function \texttt{find\_cyclic\_path}
+implements the algorithm for finding a cycle that we described in
+Section \ref{subsec:Implementation}.  Given a cycle,
+\texttt{bound\_of\_cycle} computes the smallest ``alternating
+perturbation,'' in one direction or the other, of the entries of (the
+pointee of) \texttt{my\_alloc} that turns some component of the
+allocation, or some total allocation of a school, into an integer.
+For such an \texttt{adjustment} the function
+\texttt{cyclic\_adjustment} updates the allocation, and it calls the
+functions \texttt{student\_edge\_removal} and
+\texttt{sink\_edge\_removal} to update \texttt{neighbor\_lists}.
+When \texttt{graph\_is\_nonempty(my\_lists) = 0} (false) the entries
+of \texttt{my\_alloc} are doubles that are all very close to integers,
+and the function \texttt{pure\_allocation\_from\_partial} passes to
+the associated \texttt{pure\_alloc}.  The function
+\texttt{random\_pure\_allocation} is the master function that
+supervises the whole process.
+
+\section{Market Clearing Cutoffs, Enhanced}
+
+We now describe the computation of the market clearing cutoffs and
+enhanced market clearing cutoffs allocations.
+
+\subsection{\texttt{mcc.c} and \texttt{mcccode.c}}
+
+The function \texttt{MCC\_alloc\_plus\_coarse\_cutoffs} computes the
+MCC allocation.  (It also sets the coarse cutoffs, which are an input
+to the EMCC computation.)  It first sets all of the
+\texttt{fine\_cutoffs} to zero.  It then repeatedly goes through the
+cycle of computing the demands of the students given the
+\texttt{fine\_cutoffs}, the differences \texttt{excesses[j-1]} between
+total demand for school \texttt{j} and school \texttt{j}'s quota, and
+setting each \texttt{fine\_cutoffs[j-1]} to the number that would
+reduce the computed demand for school \texttt{j} to its quota.  This
+continues until the sum \texttt{excess\_sum} of demands beyond quotas
+is close enough to zero.
+
+The function \texttt{naive\_eq\_cutoff} computes the
+\texttt{fine\_cutoff[j-1]} that would reduce the total demand for
+school \texttt{j} to school \texttt{j}'s quota.  For a candidate fine
+cutoff \texttt{cand} the demand of student \texttt{i} for school
+\texttt{j} is the minimum of the amount given by \texttt{i}'s
+component of \texttt{demands} and the maximum demand allowed by
+\texttt{cand} given \texttt{i}'s priority at \texttt{j}.  The total of
+the students' demands is a nonincreasing piecewise linear function of
+\texttt{cand}.  Repeated subdivision is used to compute the point in
+its domain where the value of this function is school \texttt{j}'s
+quota.  We begin with two points \texttt{(lower\_cand, lower\_dmd)}
+and \texttt{(upper\_cand,upper\_dmd)} in the graph of this function
+with \texttt{lower\_cand} less than \texttt{upper\_cand}, and
+\texttt{lower\_dmd} greater than school \texttt{j}'s quota, which is
+in turn greater than \texttt{upper\_dmd}.  The number
+\texttt{new\_cand} is the horizontal coordinate of the point on the
+line segment between these points whose vertical coordinate is
+\texttt{j}'s quota.  If the demand \texttt{new\_dmd} at
+\texttt{new\_cand} is less than school \texttt{j}'s quota, then we
+replace \texttt{(upper\_cand,upper\_dmd)} with
+\texttt{(new\_cand,new\_dmd)}, and if \texttt{new\_dmd} is greater
+that school \texttt{j}'s quota, then we replace
+\texttt{(lower\_cand,lower\_dmd)} with \texttt{(new\_cand,new\_dmd)}.
+This subdivision process is repeated until \texttt{new\_dmd} is
+approximately equal to school \texttt{j}'s quota, at which point the
+function returns \texttt{new\_cand}.
+
+A point of interest is that in this context the acceptable error of
+approximation is one billionth rather than one millionth.  This is in
+order to avoid \texttt{MCC\_alloc\_plus\_coarse\_cutoffs} getting into
+an infinite loop in which it repeatedly computes the same
+\texttt{fine\_cutoffs} such that for each \texttt{j} the excess is
+less than a millionth, but the sum of the excesses is greater than a
+millionth.
+
+The remaining functions in \texttt{mcccode.c}
+(\texttt{demand\_at\_new\_cutoff}, \texttt{excess\_demands}, and
+\texttt{compute\_demands}) are defined by straightforward code that
+computes what the function names lead us to expect.
+
+\subsection{\texttt{emcc.c} and \texttt{emcccode.c}}
+
+The \texttt{main} function in \texttt{emcc.c} reads an
+\texttt{inpu\_sch\_ch\_prob} from a file, passes from this to a
+\texttt{process\_scp}, and applies \texttt{EMCC\_allocation} to this
+to get an allocation, which it returns.
+
+The function \texttt{EMCC\_allocation} first applies
+\texttt{MCC\_alloc\_plus\_coarse\_cutoffs} to get an allocation
+\texttt{alloc\_to\_adjust} and a profile \texttt{coarse} of coarse
+cutoffs.  It then repeatedly finds cycles $(i_1,j_1), \ldots,
+(i_k,j_k)$ such that for each $h = 1, \ldots, k-1$, $i_h$ is consuming
+a positive quantity of $j_h$ in \texttt{alloc\_to\_adjust}, $i_h$
+prefers $j_{h+1}$ to $j_h$, and $i_h$'s priority at $j_{h+1}$ is at
+least as large as \texttt{coarse[$\texttt{j}_{h+1}$]}.  (Also $i_k$ is
+consuming a positive quantity of $j_k$ in \texttt{alloc\_to\_adjust},
+$i_k$ prefers $j_1$ to $j_k$, and $i_k$'s priority at $j_1$ is at
+least as large as \texttt{coarse[$\texttt{j}_1$]}.)  Each time it
+finds such a cycle it adjusts \texttt{alloc\_to\_adjust} by increasing
+each allocation of $j_{h+1}$ to $i_h$ (and of $j_1$ to $i_k$) by
+\texttt{Delta} while decreasing each allocation of $j_h$ to $i_h$ by
+\texttt{Delta}, where \texttt{Delta} is the largest amount allowed by
+the various constraints.  When there are no more cycles it returns
+\texttt{alloc\_to\_adust}.
+
+The struct \texttt{stu\_sch\_node} has three members: a student
+number, a school number, and a pointer to a \texttt{stu\_sch\_node}.
+A cycle, such as was described above, is a linked list of such
+nodes. The \texttt{cmatrix} in \texttt{EMCC\_allocation} is a matrix
+such that for each student \texttt{i} and school \texttt{j},
+\texttt{cmatrix[i-1][j-1]} is a pointer to a \texttt{stu\_sch\_node}
+that either points to the first node of a cycle containing
+\texttt{(i,j)} or is \texttt{NULL} if no such cycle exists.  In order
+to contribute as little as possible to the many advantages enjoyed by
+people with names like Aaron Aardvark, \texttt{EMCC\_allocation}
+chooses a \texttt{random\_cycle} from \texttt{cmatrix}.
+
+The function \texttt{get\_cycle\_matrix} first uses
+\texttt{get\_envy\_graph} to get \texttt{egraph}, which is also a
+matrix of pointers to \texttt{stu\_sch\_node}'s, but in this case
+\texttt{egraph[i-1][j-1]} is simply a list of pairs \texttt{(k,l)}
+such that \texttt{i} would like to get some \texttt{l} from \texttt{k}
+in exchange for some \texttt{j}.  For each \texttt{i} and \texttt{j},
+the function \texttt{get\_cycle} is applied in order to construct a
+cycle containing \texttt{(i,j)} or show that no such cycle exists.
+
+The function \texttt{get\_envy\_graph} first creates a matrix
+\texttt{active} where \texttt{active[i-1][j-1]} is 1 if
+\texttt{alloc\_to\_adjust} assigns a positive amount of \texttt{j} to
+\texttt{i} and \texttt{j} is not \texttt{i}'s favorite school, and 0
+otherwise.  For each \texttt{i} and \texttt{j} such that
+\texttt{active[i-1][j-1]} is 1, the function looks at all the schools
+\texttt{l} that \texttt{i} prefers to \texttt{j} at which \texttt{i} has 
+high enough priority, and for each such \texttt{l} and each student
+\texttt{h} such that \texttt{active[h-1][l-1]} is 1 it appends
+\texttt{(h,l)} to \texttt{egraph[i-1][j-1]}.
+
+The main operation in \texttt{get\_cycle} is the construction of
+\texttt{previously\_found}, which is a list of lists of pairs.  The
+first list \texttt{previously\_found[0]} is a copy of
+\texttt{egraph[i-1][j-1]}.  Having constructed the lists for levels 1
+up to \texttt{level-2}, \texttt{previously\_found[level-1]} is
+constructed by looking at each of the pairs \texttt{(m,n)} in
+\texttt{egraph[k-1][l-1]} for each pair \texttt{(k,l)} in
+\texttt{previously\_found[level-2]}.  If \texttt{(m,n) = (i,j)}, then
+we have shown that a cycle exists.  If \texttt{(m,n)} has not already
+been seen, then it is added to \texttt{previously\_found[level]}.
+This process continues until a cycle has been shown to exist or no
+pairs are added to \texttt{previously\_found[level-1]}, which shows
+that there is no cycle that includes \texttt{(i,j)}.  If a cycle has
+been shown to exist it is obtained from \texttt{extract\_cycle}.
+
+Other functions in \texttt{emcccode.c} do what their names suggest, in
+ways that are not too difficult to figure out.
+
+\section{Computing the GCPS Allocation}
+
+\subsection{Theoretical Background}
+
+It is now time to develop a more detailed theoretical understanding of
+the GCPS mechanism, as applied to school choice.  We consider a fixed
+school choice problem with set of students $I$ and set of schools $O$.
+For each $i \in I$ let $\alpha_i \subset O$ be the set of schools that
+$i$ ranks. For each $o \in O$ let $\omega_o = \{\, i : o \in \alpha_i
+\,\}$ be the set of students who might attend $o$. For each $o \in O$
+let $q_o > 0$ be the \emph{quota} of school $o$.  Usually the given
+$q_o$ will be an integer, but this is not necessary.
+
+A \emph{feasible allocation} is a point $m \in \Re^{I \times O}_+$
+such that $m_{io} = 0$ for all $i$ and $o$ such that $o \notin
+\alpha_i$, $\sum_o m_{io} = 1$ for all $i$, and $\sum_i m_{io} \le
+q_o$ for all $O$.  Let $Q$ be the set of feasible allocations.  As a
+bounded set of points satisfying a finite system of weak linear
+inequalities, $Q$ is a polytope.
+
+A \emph{possible allocation} is a point $p \in \Re^{I \times O}_+$
+such that $p \le m$ for some $m \in Q$.  Let $R$ be the set of
+possible allocations.  It is visually obvious that $R$ is also a
+polytope, and this is not particularly difficult to prove.  A much
+more subtle result is that $R$ is the set of points $p \in \Re^{I
+  \times O}_+$ satisfying the inequality
+$$\sum_{i \in J_P^c}\sum_{o \in P} p_{io} \le \sum_{o \in P} q_o -
+|J_P|$$ for each $P \subset O$.  Here $J_P = \{\, i : \alpha_i \subset
+P \,\}$ is the set of students who have not ranked any school outside
+of $P$, and must receive a seat in a school in $P$, and $J_P^c$ is the
+complement of this set.  The inequality says that the total allocation
+of seats in schools in $P$ to students outside of $J_P$ cannot exceed
+the number of seats that remain after every student in $J_P$ has been
+assigned to a seat in a school in $P$.  Clearly every point in $R$
+satisfies each such inequality.  Much more subtle, and difficult to
+prove, is the fact that these inequalities completely characterize
+$R$, in the sense that a $p \in \Re^{I \times O}_+$ that satisfies all
+of them is, in fact, an element of $R$.
+
+Recall that the GCPS allocation is $p(1)$ where $p \colon [0,1] \to R$
+is the function such that $p(0)$ is the origin and at each time, each
+student is increasing, at unit speed, her consumption of her favorite
+school among those that are still available to her, with her other
+allocations fixed.  It may happen that this process simply assigns
+each student to her favorite school, but the more important
+possibility is that at some time before $1$, say $t^*$, there is a $P
+\subset O$ such that the inequality above holds with equality at $t^*$
+and does not hold at time $t > t^*$.  We say that $P$ becomes
+\emph{critical} at $t^*$.
+
+At this point the process splits into two parts:
+\begin{enumerate}
+  \item[(a)] assignment of the remaining probability of receiving a
+    school in $P$ to the students in $J_P$;
+  \item[(b)] assignment of additional probability of seats in schools
+    in $P^c$ to the students in $J_P^c$.
+\end{enumerate}
+These problems are independent of each other, in the sense that each
+is determined by data that does not affect the other, and each has the
+form of the original problem, except that now the time remaining $1 -
+t^*$ may be less that $1$.  Thus our algorithm is recursive, applying
+itself to the subproblems that arise in this way.  Implementing this
+recursion requires a fair amount of code, but it is conceptually
+straightforward.
+
+The remaining algorithmic problem is the computation of $t^*$ and a
+set $P$ that becomes critical at that time.  One possibility is to
+simply compute the time at which the inequality above holds with
+equality for every $P$.  This has been implemented, and works
+reasonably well if the number of schools is not too large, say 25 or
+less.  But for the largest school choice problems (e.g., NYC with over
+500 schools) this approach is completely infeasible.
+
+It turns out that the computation can be sped up by also computing a
+piecewise linear path $\barp \colon [0,t^*] \to Q$ such that $p(t) \le
+\barp(t)$ for all $t$.  For each $i$ let $e_i$ be $i$'s favorite
+element of $\alpha_i$.  Let $\theta \in \In^{I \times O}$ be the
+matrix such that $\theta_{ie_i} = 1$ and $\theta_{io} = 0$ if $o \ne
+e_i$.  For $t \le t^*$ we have $p(t) = \theta t$.
+
+Suppose that for some time $t_0$ we have computed a $\barp(t_0) \in Q$
+such that $p(t_0) \le \barp(t_0)$.  We attempt to find a $\bartheta
+\in \In^{I \times O}$ such that for sufficiently small $\varep > 0$,
+$\barp(t_0) + \bartheta \varep \in Q$ and $p(t_0) + \theta \varep \le
+\barp(t_0) + \bartheta \varep$.  If we can find such a $\bartheta$, we
+let $t_1$ be the largest $t$ such that $\barp(t_0) + \bartheta (t_1 -
+t_0) \in Q$ and $p(t_0) + \theta \varep \le \barp(t_0) + \bartheta
+(t_1 - t_0)$, we replace $t_0$ with $t_1$ and $\barp(t_0)$ with
+$\barp(t_0) + \bartheta (t_1 - t_0)$, and we repeat the calculation.
+If our attempt to find a suitable $\bartheta$ fails, then $t_0 = t^*$,
+and it will turn oot that the failure of the attempt will produce a $P$
+that is critical at $t^*$.
+
+For $\bartheta \in \In^{I \times O}$ it is the case that $p(t_0) +
+\theta \varep \le \barp(t_0) + \bartheta \varep$ for sufficiently
+small $\varep > 0$ if and only if:
+\begin{enumerate} 
+  \item[(a)] For each $i$ and $o$, if $\barp_{io}(t_k) = p_{io}(t_k)$, then
+        $\bartheta_{io} \ge 1$ if $o = e_i$, and otherwise
+        $\bartheta_{io} \ge 0$.
+\end{enumerate}
+For a $\bartheta$ satisfying this condition, if $\barp_{io}(t_0 = 0$,
+then $\theta_{io} \ge 0$, so $\barp(t_0) + \bartheta \varep \in Q$ for
+sufficiently small $\varep > 0$ if and only if, in addition:
+\begin{enumerate} 
+  \item[(b)] For each $i$ and $o$, if $o \notin \alpha_i$, then $\bartheta_{io} = 0$.
+  \item[(c)] For each $i$, $\sum_o \bartheta_{io} = 0$.
+  \item[(d)] For each $o$, if $\sum_i \barp_{io}(t_0) = q_o$, then $\sum_i \bartheta_{io} \le 0$.
+\end{enumerate}
+
+Our search for a suitable $\bartheta$ begins by defining an initial
+$\bartheta^0 \in \In^{I \times O}$ as follows.  For each $i$, if
+$\barp_{ie_i}(t_0) > p_{ie_i}(t_0)$, then we set $\bartheta^0_{io} =
+0$ for all $o$.  If $\barp_{ie_i} = p_{ie_i}(t_0)$, then we set
+$\bartheta^0_{ie_i} = 1$, we set $\bartheta^0_{io_i} = -1$ for some
+$o_i \in \alpha_i \setminus \{e_i\}$ such that $\barp_{io_i}(t_0) >
+p_{io_i}(t_0)$, and we set $\bartheta^0_{io} = 0$ for all other $o$.
+Evidently $\bartheta^0$ satisfies (a), (b), and (c).
+
+Now suppose that $\bartheta$ satisfies (a), (b), and (c), but not (d),
+and $o_0$ is an element of $O$ such that $\sum_i \barp_{io}(t_0) =
+q_o$ and $\sum_i \bartheta_{io} > 0$.  For $o \in O$ let
+$$J(o) = \{\, i \in \omega_o : \text{if $\barp_{io}(t_0) =
+  p_{io}(t_0)$, then $\bartheta_{io} > 1$ if $o = e_i$, and otherwise
+  $\bartheta_{io} > 0$} \,\}$$ be the set of $i$ such that decreasing
+$\bartheta_{io}$ by one does not result in a violation of (a) or (b).
+For $i \in I$ let $P(i) = \alpha_i$.  We define sets $P_0, J_1, P_1,
+J_2, \ldots$ inductively, beginning with $P_0 = \{o_0\}$ and
+continuing inductively with $$J_g = \bigcup_{o \in P_{g-1}} J(o)
+\setminus \bigcup_{f < g} J_f \quad \text{and} \quad P_g = \bigcup_{i
+  \in J_g} P(i) \setminus \bigcup_{f < g} P_f.$$ We continue this
+construction until we arrive at an $h$ such that either $P_h =
+\emptyset$ or there is a $o_h \in P_h$ such that $\sum_i
+\barp_{io_h}(t_0) < q_{o_h}$ or $\sum_i \theta_{io_h} < 0$.
+
+If there is such an $o_h$ we construct $i_1, \ldots, i_h$ and $o_1,
+\ldots, o_h$ by choosing $i_h \in J_h$ such that $o_h \in P(i_h)$,
+choosing $o_{h-1} \in P_{h-1}$ such that $i_h \in J(o_{h-1})$,
+choosing $i_{h-1} \in J_{h-1}$ such that $o_{h-1} \in P(i_{h-1})$, and
+so forth.  Clearly $o_0,o_1, \ldots, o_h$ and $i_1, \ldots, i_h$ are
+distinct.  We define $\bartheta'$ by setting $$\bartheta'_{i_go_{g-1}}
+= \bartheta_{i_go_{g-1}} - 1 \quad \text{and} \quad
+\bartheta'_{i_go_g} = \bartheta_{i_go_g} + 1$$ for $g = 1, \ldots, h$
+and $\bartheta'_{io} = \bartheta_{io}$ for all other $(i,o)$.  Since
+$\bartheta$ satisfies (a) and $i_g \in J(o_{g-1})$ for all $g$,
+$\bartheta'$ satisfies (a).  Since $\bartheta$ satisfies (b) and $i_g
+\in J(o_{g-1})$ and $o_g \in P(i_g)$ for all $g$, $\bartheta'$
+satisfies (b).  Since $\bartheta$ satisfies (c), $\bartheta'$
+satisfies (c).  We have $\sum_i \bartheta'_{io_0} = \sum_i
+\bartheta_{io_0} - 1$ and $\max \{0,\sum_i \bartheta'_{io}\} = \max
+\{0,\sum_i \bartheta_{io}\}$ for all $o \ne o_0$, so repeating this
+maneuver will eventually produce a $\bartheta$ satisfying (a)--(d)
+unless at some point it becomes impossible to find a satisfactory $h$
+and $i_1, \ldots, i_h$ and $o_1, \ldots, o_h$.
+
+Now suppose that the construction terminates with $P_h = \emptyset$.
+Let $J = \bigcup_h J_h$ and $P = \bigcup_h P_h$.  We have $\sum_i
+\barp_{io}(t_0) = q_o$ for all $o \in P$.  If $o \in P$ and $i \notin
+J$, then $i \notin J(o)$, so $\barp_{io}(t_0) = p_{io}(t_0)$.  If $i
+\in J$ and $o \notin P$, then $o \notin P(i) = \alpha_i$.  
+Thus $\barp(t_0) - p(t_0)$ is a feasible
+allocation for $E - p(t_0)$ that gives all of the resources in $P$ to
+students in $J$, and it gives $1 - p_{io}(t_0)$ to $i \in J$ whenever
+$o \in O \setminus P$. Clearly any feasible allocation also has these
+properties, so $(J,P)$ is a critical pair for $E - p(t_0)$.
+
+\subsection{Linear Programming}
+
+A different approach to computing the GCPS allocation is to solve the
+linear program
+$$\max t \quad \text{subject to} \quad \text{$(t,m) \in [0,1] \times
+  Q$ and $\theta t \le m$}.$$ I suspect that this is not very
+efficient, and probably infeasible for large school choice problems,
+because the matrices in the canonical formulation of linear
+programming for this problem have very large numbers of entries for
+large school choice problems.  Nevertheless the proof of the pudding
+is in the eating, and others may wish to experiment, so a linear
+programming based algorithm has been included in the code.
+
+We should emphasize that the software is not designed to handle more
+general problems than the ones that arise is the school choice
+application.  For many more general applications, simple modifications
+should suffice, but that is up to the user.  We should also emphasize
+that we have not applied any sophisticated optimization techniques.
+
+The most general form of a linear programming problem is $\max \bc x +
+c_0$ subject to $\bA_= x = \bb_=$, $\bA_\le x \le \bb_\le$, and $x \ge
+0$, where $\bA_=$ and $\bA_\le$ are $m_= \times n$ and $m_\le \times
+n$ matrices, $\bb_= \in \Re^{m_=}$, and $b_\le \in \Re^{m_\le}$.  A
+linear programming problem in \emph{standard form} is a problem of the
+form $\max \bc x + c_0$ subject to $\bA x = \bb$ and $x \ge 0$ where
+$\bA$ is an $m \times n$ matrix and $\bb \in \Re^m$.  The general
+problem is equivalent to the problem $\max \bc x + c_0$ subject to
+$\bA_= x = \bb_=$, $\bA_\le x + s_\le = \bb_\le$, $x \ge 0$, and
+$s_\le \ge 0$, where $s_\le$ is a vector of slack variables, so any
+problem can be reexpressed in standard form.  (This is trivial, but of
+course we will need routines that do the conversion, and that convert
+a solution of the converted problem to a solution of the original
+problem.)
+
+For the problem $\max \bc x + c_0$ subject to $\bA x = \bb$ and $x \ge
+0$ in standard form, we can attain the additional condition $\bb \ge
+0$ by replacing each constraint $\sum_j \ba_{ij} x_j = \bb_i$ such
+that $\bb_i < 0$ with the equivalent condition $-\sum_j \ba_{ij} x_j =
+-\bb_i$.  A key point of the simplex algorithm is that the condition
+$\bb \ge 0$ is preserved at each step.
+
+Suppose that we can find a collection of $m$ variables such that
+(after rearranging the columns of $A$ to put these variables at the
+beginning) $\bA = [\bB \; \bN]$, $\bB$ is invertible, and $\bb' =
+\bB^{-1} \bb \ge 0$.  We say that the collection of $m$ variables is a
+\emph{feasible basis}.  Let $\bA' = \bB^{-1}\bA = [\bI_m \; \bN']$ where
+$\bN' = \bB^{-1}\bN$.  If $x' = [x_\bB' \; x_\bN']$, then the
+condition $\bA x' = \bb$ becomes $\bb' = \bA' x' = x_\bB' + \bN'
+x_\bN'$, so $x_\bB' = \bb' - \bN' x_\bN'$ and thus the basis variables
+$x_\bB'$ can be expressed as a function of $x_\bN'$.  If $\bc =
+[\bc_\bB \; \bc_\bN]$, then $$\bc x' = \bc_\bB x_\bB' + \bc_\bN x_\bN'
+= \bc_\bB (\bb' - \bN' x_\bN') + \bc_\bN x_\bN' = \bc_\bB \bb' +
+(\bc_\bN - \bc_\bB \bN')x_\bN'.$$
+
+Consider a nonbasis variable, say $x_i$, such that the $i$-component
+of $\bc_\bN - \bc_\bB \bN'$ is positive.  Beginning at $[\bb \; 0]$,
+if we increase $x_i'$ while the other nonbasis variables are fixed at
+$0$, the objective function increases.  We can do this until further
+increase would cause some component of $x_\bB' = \bb' - \bN' x_\bN'$
+to become negative.  (This may happen even when $x_i' = 0$.)  The
+component that would become negative can become a nonbasis variable
+while $x_i$ becomes a basis variable.  The matrix $\bA''$, the value
+$\bb''$ of the new basis variables, and the coefficient vector and
+constant term of the transformed objective function $\bc'' = \bc_\bN''
+x_\bN'' + c_0''$, can be obtained from $\bA'$, $\bb'$, $\bc_\bN'$, and
+$c_0'$ by conceptually simple (but tedious to write out) algebraic
+manipulations.  This process is called \emph{pivotting}.
+
+The remaining problem is to find an initial feasible basis.  For this
+purpose we consider the artificial problem $\max - \sum_i w_i$ subject
+to $w + \bA x = \bb$, $w \ge 0$, and $ \ge 0$.  The artificial
+variables $w$ with value $\bb$ may be taken as the initial feasible
+basis for this problem.  In the case expressing the artificial
+objective function in terms of the nonbasis variables is somewhat
+simpler: $w' = \bb - \bA x'$, so $$\sum_i w_i' = \sum_i (\bb_i -
+\sum_j \ba_{ij} x_j') = \sum_i \bb_i - \sum_j (\sum_i \ba_{ij})x_j'.$$
+Since we only consider feasible given problems, repeated pivotting
+leads eventually to the objective function being zero, i.e., $y = 0$.
+When this happens, the value of $x$ is a basic feasible solution for
+the given problem.  It may happen that some of the components of $w$
+are in the basis at this point, but all of the components of $x$ that
+are not in the basis vanish.  To obtain a tableau that is a suitable
+starting point of the simplex algorithm it is desirable, for any
+component of $w$ that is in the basis, to pivot to put it outside the
+basis.
+
+\subsection{\texttt{gcps.c}} \label{sec:GcpsTop}
+
+As with the other executables, the \text{main} function in
+\texttt{gcps.c} reads an \texttt{input\_sch\_ch\_prob} from a file.
+It derives a \texttt{process\_scp} from it, uses the function
+\texttt{simple\_GCPS\_alloc} to obtain a \texttt{partial\_alloc},
+prints this, and then cleans up memory.  An important point is that
+although the the input to \texttt{simple\_GCPS\_alloc} is a
+\texttt{process\_scp}, as is the case for the \texttt{mcc} and
+\texttt{emcc} mechanisms, the priorities play no role in the
+computation.  Insofar as this information is copied at various times
+during the computation, this entails a certain amount of inefficiency,
+but probably not enough to make a significant difference to running
+times.  The additional infrastructure of a different input type
+(reading from a file, printing, copying, and otherwise managing) would
+be a burden, and does not seem worthwhile at this point.
+
+\subsection{Computing the GCPS Allocation}
+
+\subsection{\texttt{gcps.c}}
+
+The first function defined in \texttt{gcpscode.c} is
+\texttt{simple\_GCPS\_alloc}.  This function obtains a
+\texttt{partial\_alloc} from \texttt{GCPS\_allocation}, which is a
+function that, in addition to the the \texttt{input} argument, has
+integer pointers \texttt{no\_segments}, \texttt{no\_splits},
+\texttt{no\_new\_pivots}, \texttt{no\_old\_pivots}, and
+\texttt{h\_sum}.  These pointers count the number of times certain
+events (described below) occur during the computation, and thus
+provide interesting information concerning the performance of the
+algorithm.  There is commented out code for printing these numbers.
+There is also commented out code for comparing the results of the
+computation with the contents of the file \texttt{allocate.mat}.  By
+running this code frequently during (for example) a large scale
+reorganization of the code, one can quickly determine if a bug was
+introduced by some step in the process.
+
+\norev
+
+We now describe how the GCPS allocation is computed.  We work with
+a fixed school choice CEE $E = (I,O,q,g)$ and a profile $\succ \; =
+(\succ_i)_{i \in I}$ of strict preferences over $O$. Let
+$Q$ be the set of feasible allocations, and let $R$ be the set of
+possible allocations. The allocation procedure is a piecewise linear function $p
+\colon [0,1] \to R$ with $p(0) = 0$, $p(t) \in R \setminus Q$ for all
+$t < 1$, and $p(1) \in Q$.  The \emph{GCPS allocation}
+is $$GCPS(E,\succ) = p(1).$$
+
+At each moment the trajectory of $p$ increases, at unit speed, each
+student's assignment of her favorite school, among those that are
+still available to her, while leaving other allocations fixed.  This
+direction is adjusted when an student $i$'s assignment of a school $j$
+reaches $g_{ij}$, and when $p$ arrives at one of the facets of $R$.
+Suppose that $t^*$ is the first time such that $p(t^*)$ is in a facet
+of $R$, so that there is a minimal critical pair $(J,P)$ for the
+residual CEE, which we denote by $E - p(t^*)$. The GCPS allocation has
+a recursive definition: for $t \in [t^*,1]$, $p(t)$ is, by definition,
+the sum of $p(t^*)$ and the results of applying the allocation
+procedure to the derived CEE's obtained by restricting $E - p(t^*)$ to
+$J$ and $P$ and to the complements of $J$ and $P$, as described
+earlier.
+
+The main computational challenge is to detect when $p$ arrives at one
+of the facets of $R$.  During the computation our algorithm computes
+an auxilary piecewise linear function $\barp \colon [0,1] \to Q$ such
+that $p(t) \le \barp(t)$ for all $t$.  We use the push-relabel
+algorithm to compute $\barp(0)$.
+
+The combined function $(p,\barp)$ is piecewise linear, and $[0,1]$ is
+a finite union of intervals $[t_0,t_1], [t_1, t_2], \ldots, [t_{K-1},
+  t_K]$, where $t_0 = 0$ and $t_K = 1$, such that on each interval
+$[t_k,t_{k+1}]$ the derivative of $(p,\barp)$ is constant.  Suppose
+that we have already computed $p(t_k)$ and $\barp(t_k)$.  For each
+student $i$ we compute the set $\alpha_i(t_k)$ of schools that are still
+possible for $i$, and we determine her $\succ_i$-favorite element
+$e_i^k$.  Let $\theta^k \in \In^{I \times O}$ be the matrix such that
+$\theta^k_{ij} = 1$ if $j = e_i^k$, and otherwise $\theta^k_{ij} = 0$.
+
+There are now two possibilities.  The first is that for some $t' >
+t_k$, $p(t_k) + \theta^k(t - t_k) \in R$ for all $t \in [t_k,t']$.  In
+this case we will find a $\theta \in \In^{I \times O}$ such that for
+some $t' > t_k$, $$\barp(t_k) + \theta(t -
+t_k) \in Q \quad \text{and} \quad p(t_k) + \theta^k(t - t_k) \le \barp(t_k) + \theta(t
+- t_k). \eqno{(*)}$$  and all $t \in [t_k,t']$.  Now $t_{k+1}$ is the first time after $t_k$ such
+that one or more of the following holds:
+\begin{enumerate}
+  \item[a)] $p_{ie_i^k}(t_{k+1}) = g_{ie_i^k}$ for some $i$;
+  \item[b)] $\barp(t_k) + \theta(t - t_k) \notin Q$ for $t > t_{k+1}$;
+  \item[c)] for $t > t_{k+1}$ it is not the case that $p(t_k) +
+    \theta^k(t - t_k) \le \barp(t_k) + \theta(t - t_k)$.
+\end{enumerate}
+For $t \in [t_k,t_{k+1}]$ we have determined that $p(t) = p(t_k) +
+\theta^k(t - t_k)$, and we set $\barp(t) = \barp(t_k) + \theta(t -
+t_k)$.  Having determined $p(t_{k+1})$ and $\barp(t_{k+1})$, we can
+repeat the process.
+
+The second possibility is that it is not possible to continue $p$, as
+described above, without leaving $R$, because there is a critical pair
+$(J,P)$ for the residual economy at time $t_k$.  In this case we find
+such a pair, then descend recursively to the computation of the GCPS
+allocations of derived subeconomies.
+
+We now describe an algorithm that determines which of these
+possibilities holds, In the first case it finds a satisfactory
+$\theta$, and in the second case it finds a critical pair $(J,P)$.
+Suppose that there is a $\theta \in \In^{I \times O}$ such that for
+some $t' > t_k$, ($*$) holds for all $t \in [t_k,t']$.  The two
+conditions in ($*$) together imply that $p(t_k) + \theta^k(t - t_k)
+\in R$ for all $t \in [t_k,t']$, so the first possibility above holds,
+and we can use $\theta$ to define the continuation of $\barp$.  The
+algorithm may be thought of as a search for such a $\theta$.
+
+For a given $\theta$, a $t' > 0$ as above exists if and only if
+$\theta$ satisfies the following conditions:
+\begin{enumerate} 
+  \item[(a)] For each $i$ and $j$:
+    \begin{enumerate}
+      \item[(i)] If $o \notin \alpha_i$, then $\theta_{ij} = 0$.
+      \item[(ii)] If $\barp_{ij}(t_k) = p_{ij}(t_k)$, then
+        $\theta_{ij} \ge 0$, and if, in addition, $o = e^k_i$, then
+        $\theta_{ij} \ge 1$.
+      \item[(iii)] If $\barp_{ij}(t_k) = g_{ij}$, then $\theta_{ij} \le 0$.
+    \end{enumerate}
+  \item[(b)] For each $i$, $\sum_j \theta_{ij} = 0$.
+  \item[(c)] For each $j$, if $\sum_i \barp_{ij}(t_k) = q_j$, then $\sum_i \theta_{ij} \le 0$.
+\end{enumerate}
+
+
+Our search for a suitable $\theta$ begins by defining an initial
+$\theta \in \In^{I \times O}$ as follows.  For each $i$, if
+$\barp_{ie^k_i}(t_k) > p_{ie^k_i}(t_k)$, then we set $\theta_{ij} = 0$
+for all $j$.  If $\barp_{ie^k_i} = p_{ie^k_i}(t_k)$, then we set
+$\theta_{ie^k_i} = 1$, we set $\theta_{ij_i} = -1$ for some $j_i \ne
+e^k_i$ such that $\barp_{ij_i}(t_k) > p_{ij_i}(t_k)$, and we set
+$\theta_{ij} = 0$ for all other $j$.  Evidently $\theta$ satisfies (a)
+and (b).
+
+Let $$\tP = \{\, j : \text{$\sum_i \barp_{ij}(t_k) = q_j$ and
+  $\sum_i \theta_{ij} > 0$} \,\}.$$ If $\sum_{j \in \tP} \sum_i
+\theta_{ij} \le 0$, then (c) holds.  Suppose that this is not the
+case.  We now describe a construction that may or may not be possible.
+When it is possible, it passes from $\theta$ to a $\theta' \in \In^{I
+  \times O}$ satisfying (a) and (b) such that if $\tP' = \{\, j :
+\text{$\sum_i \barp_{ij}(t_k) = q_j$ and $\sum_i \theta'_{ij} >
+  0$} \,\}$, then $$\sum_{j \in \tP'} \sum_i \theta'_{ij} = \sum_{j
+  \in \tP} \sum_i \theta_{ij} - 1. \eqno{(**)}$$ Repeating this construction will
+eventually produce an element of $\In^{I \times O}$ satisfying
+(a)--(c) unless, at some point, the construction becomes impossible.
+
+Choose $j_0 \in \tP$.  We wish to find an integer $h \ge 1$, distinct
+$i_1, \ldots, i_h$, and $j_1, \ldots, j_h$ such that $j_0,j_1, \ldots,
+j_h$ are distinct, such that if we define $\theta'$ by
+setting $$\theta'_{i_gj_{g-1}} = \theta_{i_gj_{g-1}} - 1 \quad
+\text{and} \quad \theta'_{i_gj_g} = \theta_{i_gj_g} + 1$$ for $g = 1,
+\ldots, h$ and $\theta'_{ij} = \theta_{ij}$ for all other $(i,j)$,
+then $\theta'$ satisfies (a), (b), and ($**$).  Evidently $\theta'$
+satisfies (i) if $j_{g-1}, j_g \in \alpha_{i_g}$ for all $g = 1,
+\ldots, h$, it satisfies (ii) if, for each $g = 1, \ldots, h$, if
+$\barp_{i_gj_{g-1}}(t_k) = p_{i_gj_{g-1}}(t_k)$, then
+$\theta_{i_gj_{g-1}} > 0$ and $\theta_{i_gj_{g-1}} > 1$ if $j_{g-1} =
+e^\succ_{i_g}$, and it satisfies (iii) if, for each $g = 1, \ldots,
+h$, either $g_{i_gj_g} < \barp_{i_gj_g}(t_k)$ or $\theta_{i_gj_g} <
+0$. Clearly $\theta'$ satisfies (b) if $\theta$ satisfies (b).  We
+have $\sum_i \theta'_{ij_0} = \sum_i \theta_{ij_0} - 1$, $\sum_i
+\theta'_{ij_g} = \sum_i \theta_{ij_g}$ for $g = 1, \ldots, h-1$, and
+$\sum_i \theta'_{ij_h} = \sum_i \theta_{ij_h} + 1$, so $\theta'$
+satisfies ($**$) if $\sum_i \barp_{ij_h}(t_k) < q_{j_h}$ or $\sum_i
+\theta_{ij_h} < 0$.
+
+We now describe the search for $j_0,j_1, \ldots, j_h$ and $i_1,
+\ldots, i_h$. For $i \in I$ let
+$$P(i) = \{\, j \in \alpha_i : \text{$\theta_{ij} < 0$
+  if $\barp_{ij}(t_k) = g_{ij}$} \,\}.$$
+For $j \in O$ let
+$$J(j) = \{\, i : \text{$j \in \alpha_i$ and if
+  $\barp_{ij}(t_k) = p_{ij}(t_k)$, then $\theta_{ij} > 0$ and
+  $\theta_{ij} > 1$ if $j = e_i$} \,\}.$$ We define sets $P_0,
+J_1, P_1, J_2, \ldots$ inductively, beginning with $P_0 = \{j_0\}$.
+If $P_{g-1}$ has already been computed, we set $J_g = \bigcup_{j \in
+  P_{g-1}} J(j)$. If $J_g$ has already been computed,
+we set $P_g = \bigcup_{i \in J_g} P(i)$.  We continue
+this construction until we arrive at an $h$ such that either $P_h =
+P_{h-1}$ or there is a $j_h \in P_h$ such that $\sum_i
+\barp_{ij_h}(t_k) < q_{j_h}$ or $\sum_i \theta_{ij_h} < 0$.
+
+If there is such a $j_h$, we can find an $i_h \in J_h$ such that $j_h
+\in P(i_h)$, then find an $j_{h-1} \in P_{h-1}$ such
+that $i_h \in J(j_{h-1})$, then find an $i_{h-1} \in
+J_{h-1}$ such that $j_{h-1} \in P(i_{h-1})$, and so
+forth.  Continuing in this fashion produces $j_0,j_1, \ldots, j_h$ and
+$i_1, \ldots, i_h$ as above.  Note that $j_h$ cannot be an element of
+$P_{h-1}$ because the process would have terminated sooner.  Similarly
+$i_h$ is not an element of $J_{h-1}$, $j_{h-1} \notin P_{h-1}$, and so
+forth.  Therefore $j_0,j_1, \ldots, j_h$ are distinct and $i_1,
+\ldots, i_h$ are distinct.
+
+Now suppose that the construction terminates with $P_h = P_{h-1}$.
+Let $J = \bigcup_h J_h$ and $P = \bigcup_h P_h$.  We have $\sum_i
+\barp_{ij}(t_k) = q_j$ for all $j \in P$.  If $j \in P$ and $i \notin
+J$, then $i \notin J(j)$, so $\barp_{ij}(t_k) = p_{ij}(t_k)$.  If $i
+\in J$ and $j \notin P$, then $j \notin P(i)$, so $\barp_{ij}(t_k) =
+g_{ij}$ if $j \in \alpha_i \setminus P$, and $\barp_{ij}(t_k) = g_{ij}
+= 0$ if $j \notin \alpha_i$. Thus $\barp(t_k) - p(t_k)$ is a feasible
+allocation for $E - p(t_k)$ that gives all of the resources in $P$ to
+students in $J$, and it gives $g_{ij} - p_{ij}(t_k)$ to $i \in J$
+whenever $j \in O \setminus P$. Clearly any feasible allocation also
+has these properties, so $(J,P)$ is a critical pair for $E - p(t_k)$.
+
+Summarizing, the algorithm repeatedly extends $p$ and $\barp$ to
+intervals such as $[t_k,t_{k+1}]$ until $p(t_k)$ satisfies the GMC
+equality for a pair $(J,P)$, at which point it descends
+recursively. If $p(t_k)$ does not satisfy such a GMC inequality, it
+finds a $\theta$ satisfying (a)--(c) by beginning with a $\theta$ that
+satisfies (a) and (b) and repeatedly adjusting it until it also
+satisfies (c).
+
+\subsection{\texttt{push\_relabel.h} and \texttt{push\_relabel.c}}
+\label{subsec:PushRelabel}
+
+The push-relabel algorithm of \cite{GoTa88} is implemented in
+\texttt{push\_relabel.h} and \texttt{push\_relabel.c}.  The code
+straightforwardly follows the description of the algorithm in Appendix
+\ref{subsec:Algorithms}, and the best way to approach it is to read that
+description, then examine the code.
+
+\subsection{Push-Relabel}
+
+This subsection describes the push-relabel algorithm of \cite{GoTa88}.
+We first describe the general setting of networks and flows, then we
+describe the algorithm, and in the next subsection we describe the
+specialized setting in which it is applied in our software.
+
+Let $(N,A)$ be a directed graph ($N$ is a finite set of \emph{nodes}
+and $A \subset N \times N$ is a set of \emph{arcs}) with distinct
+distinguished nodes $s$ and $t$, called the \emph{source} and
+\emph{sink} respectively.  We assume that $(n,s), (t, n) \notin A$ for
+all $n \in N$.
+
+A \emph{preflow} is a function $f \colon N \times N \to \Re$ such that:
+\begin{enumerate}
+  \item[(a)] for all $n$ and $n'$,  if $(n,n') \notin A$, then $f(n,n') \le 0$.
+  \item[(b)] for all $n$ and $n'$,  $f(n,n') = - f(n',n)$ (antisymmetry); 
+  \item[(c)] $\sum_{n' \in N} f(n',n) \ge 0$ for all $n \in N \setminus \{s,t\}$. 
+\end{enumerate}
+If neither $(n,n')$ nor $(n',n)$ is in $A$, then (a) and (b) imply
+that $f(n,n') = 0$.  Note that $f(s,n), f(n,t) \ge 0$ for all $n \in
+N$.  In conjunction with the other requirements, (c) can be understood
+as saying that for each $n$ other than $s$ and $t$, the total flow
+into $n$ is greater than or equal to the total flow out.
+
+A preflow $f$ is a \emph{flow} if $\sum_{n' \in N} f(n,n') = 0$ for
+all $n \in N \setminus \{s,t\}$.  In this case antisymmetry and this
+condition imply that
+$$0 = \sum_{n' \in N}\sum_{n \in N} f(n,n') = \sum_{n \in N} f(n,s) + \sum_{n' \in N} f(n,t),$$
+so we may define \emph{value} of $f$ to be
+$$|f| = \sum_{n \in N} f(s,n) = \sum_{n \in N} f(n,t).$$
+
+A \emph{capacity} is a function $c \colon N \times N \to [0,\infty]$
+such that $c(n,n') = 0$ whenever $(n,n') \notin A$.  A \emph{cut} is a
+set $S \subset N$ such that $s \in S$ and $t \in S^c$ where $S^c = N
+\setminus S$ is the complement.  For a capacity $c$, the
+\emph{capacity} of $S$ is
+$$c(S) = \sum_{(n,n') \in S \times S^c} c(n,n').$$
+
+A preflow $f$ is \emph{bounded} by a capacity $c$ if $f(n,n') \le
+c(n,n')$ for all $(n,n')$.  It is intuitive, and not hard to prove
+formally, that if $f$ is a flow bounded by $c$ abd $S$ is a cut for
+$c$, then $|f| \le c(S)$, so the maximum value of any flow is not
+greater than the minimum capacity of a cut.  The max-flow min-cut
+theorem \citep{FoFu56} asserts that these two quantities are equal.
+
+The computational problems of finding the maximum flow or a minimal
+cut for a network $(N,A)$ and a capacity $c$ are very well studied,
+and many algorithms have been developed.  The push-relabel algorithm
+is relatively simple, and certainly fast enough for our purposes.
+(The literature continues to advance, and algorithms (e.g.,
+\cite{CKLGS22}) with better asymptotic worst case bounds have been
+developed.)
+  
+Let $f \colon N \times N \to \Re$ be a preflow that is bounded by $c$.
+The \emph{excess} of $f$ at $n$ is $$e_f(n) = \sum_{n' \in N} f(n',n).$$
+Of course $e_f(n) \ge 0$, and $f$ is a flow if and only if $e_f(n) =
+0$ for all $n \in N \setminus \{s,t\}$.  The \emph{residual capacity}
+of $(n,n')$ is $$r_f(n,n') = c(n,n') - f(n,n').$$  We say that $(n,n')$
+is a \emph{residual edge} if $r_f(n,n') > 0$.  This can happen either
+because $c(n,n') > f(n,n') \ge 0$ or because $f(n,n') < 0$.
+
+A \emph{valid labelling} for $f$ and $c$ is a function $d \colon N \to
+\{0,1,2,\ldots\} \cup \{\infty\}$ such that $d(t) = 0$ and $d(n) \le
+d(n') + 1$ whenever $(n,n')$ is a residual edge.  We say that $n \in N
+\setminus \{s,t\}$ is \emph{active} for $f$ and $d$ if $d(n) < \infty$
+and $e_f(n) > 0$.
+
+The algorithm is initialized by setting $d(s) = |N|$, $d(n) = 0$ for
+all other $n$, $f(s,n) = c(s,n)$ for all $n$ such that $(s,n) \in A$,
+and setting $f(n,n') = 0$ for all other $n$ and $n'$.  The algorithm
+then consists of repeatedly applying the following two
+\emph{elementary operations}, in any order, until there is no longer
+any valid application of them:
+\begin{enumerate}
+  \item[(a)] $\mathrm{Push}(n,n')$ is valid if $n$ is active, $(n,n')
+    \in A_f$ and $d(n') = d(n) - 1$.  The operation resets $f(n,n')$
+    to $f(n,n') + \delta$ and $f(n',n)$ to $f(n',n) - \delta$ where
+    $\delta = \min\{e_f(n),r_f(n,n')\}$.
+  \item[(b)] $\mathrm{Relabel}(n)$ is valid if $n$ is active and $d(n)
+    \le d(n')$ for all $n'$ such that $(n,n') \in A_f$.  The operation
+    resets $d(n)$ to $\infty$ if there is no $n'$ such that $(n,n')
+    \in A_f$ (this never actually happens) and otherwise it resets
+    $d(n)$ to $1 + \min_{n' : (n,n') \in A_f} d(n')$.
+\end{enumerate}
+One intuitive understanding of the algorithm is that we imagine excess
+as water flowing downhill, so that $d(n)$ can be thought of as a
+height, (Goldberg and Tarjan offer a somewhat different intuition in
+which $d$ is a measure of distance.) We think of $\mathrm{Push}(n,n')$
+as moving $\delta$ units of excess from a node $n$ to an adjacent node
+$n'$ that is one step lower.  The operation $\mathrm{Relabel}(n)$ is
+valid when there is excess ``trapped'' at $n$, and this operation
+increases $d(n)$ to the largest value allowed by the definition of a
+valid labelling, which is the smallest value such that there is a
+neighboring node the excess can flow to.
+
+Based on the description above, it is not obvious that the
+push-relabel algorithm is, in fact, an algorithm in the sense of
+always terminating, nor is it obvious that it can only terminate at a
+maximum flow.  Goldberg and Tarjan's proofs of these facts are subtle
+and interesting, and their paper is recommended to the curious reader.
+
+\subsection{School Choice Communal Endowment Economies} \label{subsec:Algorithms}
+
+A \emph{school choice communal endowment economy} (CEE) is a quadruple
+$E = (I,O,q,g)$ in which $I$ is a nonempty finite set of
+\emph{students}, $O$ is a nonempty finite set of \emph{schools}, $q
+\in \Re_+^O$, and $g \in \Re_+^{I \times O}$.  For $i \in I$ and $j
+\in O$ we say that $q_j$ is the \emph{quota} of $j$, and that $g_{ij}$
+is \emph{$i$'s $j$-max}.
+
+We apply the push-relabel algorithm to a particular directed graph
+$(N_E,A_E)$ in which the set of nodes is $$N_E = \{s\} \cup I \cup O
+\cup \{t\}.$$ For $i \in I$ and $j \in O$ let $a_i = (s,i)$, $a_{ij} =
+(i,j)$, and $a_j = (j,t)$, and let
+$$A_E = \{\, a_i : i \in I \,\} \cup \{\, a_{ij} : i \in I, j \in O
+\,\} \cup \{\, a_j : j \in O \,\}.$$ Let $c_E$ be the capacity in
+which $c_E(a_i) = 1$ for all $i$, $c_E(a_{ij}) = g_{ij}$ for all $i$
+and $j$, and $c_E(a_j) = q_j$ for all $j$.  It turns out that when the
+push-relabel algorithm is applied to a graph of this form, it is
+possible to speed it up by initializing $d$ by setting $d(s) = 2|O| +
+2$ and $d(n) = 0$ for all other $n$.  Roughly (this is not the place
+to explain the details) this works because $2|O| + 2$ is an upper
+bound on the number of nodes on a simple (no repeating nodes) path
+from $s$ to $t$ when $|O| \le |I|$.
+
+An \emph{allocation} for $E$ is a matrix $p \in \Re_+^{I \times O}$.
+A \emph{partial allocation} for $E$ is an allocation $p$ such that
+$\sum_j p_{ij} \le 1$ for all $i$, $\sum_i p_{ij} \le q_j$ for all
+$j$, and $p_{ij} \le g_{ij}$ for all $i$ and $j$. A \emph{feasible
+allocation} is a partial allocation $m$ such that $\sum_j m_{ij} =
+1$ for all $i$.  A \emph{possible allocation} is an allocation $p$
+such that there is a feasible allocation $m$ such that $p \le m$.  
+
+If $p$ is an allocation, there is a unique flow $f_p$ such that
+$f_p(a_{ij}) = p_{ij}$ for all $i$ and $j$ that has $f_p(a_i) = \sum_j
+p_{ij}$ for all $i$ and $f_p(a_j) = \sum_i p_{ij}$ for all
+$j$. Evidently $p$ is a feasible allocation if and only if $f_p$ is
+bounded by $c_E$ and $f_p(a_i) = 1$ for all $i$, which is the case if
+and only if $|f_p| = |I|$.  Conversely, if $f$ is a flow bounded by
+$c_E$ with $|f| = |I|$ and thus $f(a_i) = 1$ for all $i$, then setting
+$p_{ij} = f(a_{ij})$ gives a feasible allocation $p$.  Thus there is a
+feasible allocation if and only if the maximum value of a flow bounded
+by $c_E$ is $|I|$.  Although our primary use of the push-relabel
+algorithm is to compute a feasible allocation, it also provides an
+efficient method of determining whether a feasible allocation exists.
+
+\section{Junk}
+
+\subsection{\texttt{gcps\_solver.h} and \texttt{gcps\_solver.c}}
+\label{subsec:Solver}
+
+The files \texttt{gcps\_solver.h} and \texttt{gcps\_solver.c}
+implement the algorithm for computing the GCPS allocation.  This
+algorithm is also described in Appendix \ref{subsec:Algorithms}, and
+again the best way to approach it is examine the code only after the
+description has been read and understood.  In this case it is best to
+work backwards from the ends of \texttt{gcps\_solver.h} and
+\texttt{gcps\_solver.c}, because that follows a top-down understanding
+of how the algorithm is implemented.
+
+\subsection{\texttt{solve.c} and  \texttt{purify.c}}
+
+The files \texttt{solve.c} and \texttt{purify.c} contain the
+\texttt{main} functions of the executables \texttt{gcps} and
+\texttt{purify} respectively.  These \texttt{main} functions are
+mostly simple and straightforward.
+
+In \texttt{solve.c} there are \texttt{int*} variables
+\texttt{segments}, \texttt{splits}, \texttt{pivots}, and
+\texttt{h\_sum}.  These are, respectively, the number of linear
+segments of the piecewise linear function $(p,\barp)$ described in
+Appendix \ref{subsec:Algorithms}, the number of time the algorithm
+descends recursively to two derived subproblems, the number of times
+that the algorithm modifies $\theta$, as described iin Appendix
+\ref{subsec:Algorithms}, and the sum of the indices $h$ that arise in
+paths $i_0,j_1, i_1, \ldots, i_h, j_h$ that are used to pivot.  These
+provide interesting information about the algorithm's performance, and
+there is a sample print statement below for them.
+
+
+\end{appendix}
+
+\bibliographystyle{agsm}
+\bibliography{pa_ref}
+
+\end{document}
+

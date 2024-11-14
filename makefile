@@ -19,20 +19,31 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: make_ex gcps purify
+all: gcps lpgcps mcc emcc purify makex 
 
-make_ex: example.c normal.o
-	$(CC) -o make_ex example.c normal.o $(LDFLAGS)
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o gcpscode.o $(LDFLAGS)
 
-gcps: solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o pivot.o endpoint.o gcps_solver.o
-	$(CC) -o gcps solve.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o push_relabel.o pivot.o endpoint.o gcps_solver.o $(LDFLAGS)
+lpgcps: lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o
+	$(CC) -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o $(LDFLAGS)
 
-purify: purify.c normal.o parser.o subset.o partalloc.o implement.o
-	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o implement.o $(LDFLAGS)
+mcc: mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o
+	$(CC) -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o  $(LDFLAGS)
 
+emcc: emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o
+	$(CC) -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o  $(LDFLAGS)
+
+purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o
+	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o $(LDFLAGS)
+
+makex: makex.c normal.o linprog.o  makexcode.o
+	$(CC) -o makex makex.c normal.o linprog.o makexcode.o $(LDFLAGS)
 
 normal.o: normal.h normal.c
-	$(CC) $(CFLAGS) -c normal.c
+	$(CC) $(CFLAGS) -c normal.c 
+
+makexcode.o: makexcode.h makexcode.c
+	$(CC) $(CFLAGS) -c makexcode.c
 
 parser.o: parser.h parser.c
 	$(CC) $(CFLAGS) -c parser.c
@@ -40,11 +51,8 @@ parser.o: parser.h parser.c
 subset.o: subset.h subset.c
 	$(CC) $(CFLAGS) -c subset.c
 
-cee.o: cee.h cee.c
-	$(CC) $(CFLAGS) -c cee.c
-
-push_relabel.o: push_relabel.h push_relabel.c
-	$(CC) $(CFLAGS) -c push_relabel.c
+pushrelabel.o: pushrelabel.h pushrelabel.c
+	$(CC) $(CFLAGS) -c pushrelabel.c
 
 pivot.o: pivot.h pivot.c
 	$(CC) $(CFLAGS) -c pivot.c 
@@ -52,8 +60,14 @@ pivot.o: pivot.h pivot.c
 endpoint.o: endpoint.h endpoint.c
 	$(CC) $(CFLAGS) -c endpoint.c
 
-gcps_solver.o: gcps_solver.h gcps_solver.c
-	$(CC) $(CFLAGS) -c gcps_solver.c
+critpair.o: critpair.h critpair.c
+	$(CC) $(CFLAGS) -c critpair.c
+
+gcpscode.o: gcpscode.h gcpscode.c
+	$(CC) $(CFLAGS) -c gcpscode.c
+
+lpgcpscode.o: lpgcpscode.h lpgcpscode.c
+	$(CC) $(CFLAGS) -c lpgcpscode.c
 
 partalloc.o: partalloc.h partalloc.c
 	$(CC) $(CFLAGS) -c partalloc.c
@@ -61,10 +75,19 @@ partalloc.o: partalloc.h partalloc.c
 schchprob.o: schchprob.h schchprob.c
 	$(CC) $(CFLAGS) -c schchprob.c
 
-implement.o: implement.h implement.c
-	$(CC) $(CFLAGS) -c implement.c
+linprog.o: linprog.h linprog.c
+	$(CC) $(CFLAGS) -c linprog.c 
+
+mcccode.o: mcccode.h mcccode.c
+	$(CC) $(CFLAGS) -c mcccode.c
+
+emcccode.o: emcccode.h emcccode.c
+	$(CC) $(CFLAGS) -c emcccode.c
+
+purifycode.o: purifycode.h purifycode.c
+	$(CC) $(CFLAGS) -c purifycode.c
 
 
 clean:
-	rm *.o *~ gcps make_ex purify
+	rm *.o *~ gcps lpgcps mcc emcc purify makex 
 

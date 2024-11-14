@@ -1,0 +1,36 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{The GCPS Mechanism}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{The MCC Mechanism}{section.1}% 3
+\BOOKMARK [2][-]{subsection.1.3}{Enhanced MCC Mechanisms}{section.1}% 4
+\BOOKMARK [2][-]{subsection.1.4}{The Main Competitor: Deferred Acceptance}{section.1}% 5
+\BOOKMARK [2][-]{subsection.1.5}{Generating a Random Deterministic Assignment}{section.1}% 6
+\BOOKMARK [1][-]{section.2}{For the User}{}% 7
+\BOOKMARK [2][-]{subsection.2.1}{Downloading and Setting Up}{section.2}% 8
+\BOOKMARK [2][-]{subsection.2.2}{Input Files}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.3}{gcps, mcc, and emcc}{section.2}% 10
+\BOOKMARK [2][-]{subsection.2.4}{purify}{section.2}% 11
+\BOOKMARK [2][-]{subsection.2.5}{makex}{section.2}% 12
+\BOOKMARK [1][-]{appendix.A}{About the Code}{}% 13
+\BOOKMARK [2][-]{subsection.A.1}{Overview of the Code}{appendix.A}% 14
+\BOOKMARK [2][-]{subsection.A.2}{normal.c}{appendix.A}% 15
+\BOOKMARK [2][-]{subsection.A.3}{subset.c}{appendix.A}% 16
+\BOOKMARK [2][-]{subsection.A.4}{schchprob.c}{appendix.A}% 17
+\BOOKMARK [2][-]{subsection.A.5}{makex.c and makexcode.c}{appendix.A}% 18
+\BOOKMARK [2][-]{subsection.A.6}{partalloc.h and partalloc.c}{appendix.A}% 19
+\BOOKMARK [2][-]{subsection.A.7}{parser.c}{appendix.A}% 20
+\BOOKMARK [2][-]{subsection.A.8}{purify.c and purifycode.c}{appendix.A}% 21
+\BOOKMARK [1][-]{appendix.B}{Market Clearing Cutoffs, Enhanced}{}% 22
+\BOOKMARK [2][-]{subsection.B.1}{mcc.c and mcccode.c}{appendix.B}% 23
+\BOOKMARK [2][-]{subsection.B.2}{emcc.c and emcccode.c}{appendix.B}% 24
+\BOOKMARK [1][-]{appendix.C}{Computing the GCPS Allocation}{}% 25
+\BOOKMARK [2][-]{subsection.C.1}{Theoretical Background}{appendix.C}% 26
+\BOOKMARK [2][-]{subsection.C.2}{Linear Programming}{appendix.C}% 27
+\BOOKMARK [2][-]{subsection.C.3}{gcps.c}{appendix.C}% 28
+\BOOKMARK [2][-]{subsection.C.4}{Computing the GCPS Allocation}{appendix.C}% 29
+\BOOKMARK [2][-]{subsection.C.5}{gcps.c}{appendix.C}% 30
+\BOOKMARK [2][-]{subsection.C.6}{push\137relabel.h and push\137relabel.c}{appendix.C}% 31
+\BOOKMARK [2][-]{subsection.C.7}{Push-Relabel}{appendix.C}% 32
+\BOOKMARK [2][-]{subsection.C.8}{School Choice Communal Endowment Economies}{appendix.C}% 33
+\BOOKMARK [1][-]{appendix.D}{Junk}{}% 34
+\BOOKMARK [2][-]{subsection.D.1}{gcps\137solver.h and gcps\137solver.c}{appendix.D}% 35
+\BOOKMARK [2][-]{subsection.D.2}{solve.c and purify.c}{appendix.D}% 36
