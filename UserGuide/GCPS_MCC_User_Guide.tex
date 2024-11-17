@@ -88,7 +88,7 @@
 
 \begin{document}
 
-\title{GCPS MCC Schools: A User's Guide}
+\title{Better School Choice: \\A User's Guide to GCPS MCC Schools}
 
 \author{Andrew McLennan\footnote{School of Economics, University of
     Queensland, {\tt a.mclennan@economics.uq.edu.au}}}
@@ -108,7 +108,7 @@ This document provides a brief introduction to the software package GCPS MCC Sch
 From time immemorial until about 25 or 30 years ago, each school had a
 district, and each student was required to attend the school whose
 district contained her residence, unless she enrolled in a private
-school.  This has various problems, e.g., de facto school segregation
+school.  This had various problems, e.g., de facto school segregation
 echoing residential segregation, but the main issue for us is that it
 forbids students from trading their assignments in ways that are
 mutually beneficial.
@@ -120,12 +120,16 @@ attend.  Each school has an eligibility rule (it may be a single sex
 school, and a selective school may have a minimum test score or GPA)
 and in addition it may have a ranking of eligible students called a
 \emph{priority} that might, for example, give preference for minority
-status or students who live nearby.  A \emph{school choice mechanism}
-is an algorithm that takes the preferences and the priorities as
-inputs and outputs an assignment of each student to one of the schools
-she ranked that is \emph{feasible}, in the sense that the number of
-students assigned to each school is not greater than the school's
-capacity.
+status or students who live nearby.
+
+A \emph{school choice mechanism} is an algorithm that takes the
+preferences and the priorities as inputs and outputs an assignment of
+each student to one of the schools she ranked that is \emph{feasible},
+in the sense that the number of students assigned to each school is
+not greater than the school's capacity.  The most commonly used school
+choice mechanism, known as \emph{deferred acceptance}, has some
+undesible features, which we describe in Subsection
+\ref{subsec:DeferredAcceptance}.
 
 The academic paper ``Efficient Computationally Tractable School Choice
 Mechanisms'' (joint with Shino Takayama and Yuki Tamura) describes two
@@ -134,19 +138,19 @@ probabilistic serial} (GCPS) \emph{mechanism} and the \emph{market
 clearing cutoffs} (MCC) \emph{mechanism}, in formal mathematical
 detail.  \emph{GCPS MCC Schools} is a software package that implements
 the algorithms that define these mechanisms, and related algorithms
-that are required to apply these algorithms, and that allows the
+that are required to apply these algorithms, and that allow the
 algorithms to be tested.
 
 The primary purpose of this document is provide a guide to users of
 \emph{GCPS MCC Schools}.  In the remainder of this section we first
-describes a bit more about the history of school choice, the mechanism
+describe our mechanisms informally, but in some detail.  We then
+explain a bit more about the history of school choice, the mechanism
 that is currently most popular, and the problems with this mechanism
-that our mechanisms solve.  We then describe our mechanisms
-informally, but in some detail.  The next section explains how to use
-the software, with step-by-step instructions.  The final section
-describes the code for programmers who would like to have a general
-overview of its structure, and who might be interested in modifying or
-extending it.
+that our mechanisms solve.  The next section explains how to use the
+software, with step-by-step instructions.  The final section describes
+the code for programmers who would like to have a general overview of
+its structure, and who might be interested in modifying or extending
+it in some way.
 
 \subsection{The GCPS Mechanism}
 
@@ -159,8 +163,8 @@ each agent has a strict preference ordering of the objects.  The goal
 is to come up with a probability distribution over possible
 assignments that respects the agents' preferences and is fair.
 
-A common method of dealing with such problems is \emph{random
-priority}.  An ordering of the agents is chosen randomly, with each of
+\emph{Random priority} is a common method of dealing with such
+problems.  An ordering of the agents is chosen randomly, with each of
 the $n!$ orderings having probability $1/n!$.  The first agent claims
 her favorite object, the second agent claims her favorite of those
 that remain after the first agent's choice, and so forth.
@@ -181,7 +185,7 @@ that realizes all of the assignment probabilities.
 
 The main advantage of the PS mechanism, in comparison with random
 priority, is that it is more efficient.  For a given agent, one
-probability distribution over $|O|$ \emph{stochastically dominates} a
+probability distribution over $O$ \emph{stochastically dominates} a
 second distribution if, for each object $o$, the probability of
 receiving an object that is better than $o$ under the first
 distribution is at least as large as the probability under the second
@@ -254,9 +258,10 @@ and revises the students' sets of available schools in response, if
 there is a feasible allocation, the allocation it computes at time one
 is feasible.  (This is a consequence of a significant theorem, so it
 should not be obvious at this point.)  Since the number of subsets of
-$|O|$ is $2^{|O|}$, one might expect that the complexity of the
-computation is exponential, but it turns out that there is a bit of
-algorithmic magic that gets around this problem.
+$O$ is $2^{|O|}$, where $|O|$ is the number of elements of $O$, one
+might expect that the complexity of the computation is exponential,
+but it turns out that there is a bit of algorithmic magic that gets
+around this problem.
 
 The \emph{generalized constrained probabilistic serial} (GCPS)
 mechanism is implemented in the command \texttt{gcps}, which takes the
@@ -266,10 +271,9 @@ exists.  In order for \texttt{gcps} to produce a feasible allocation,
 a feasible allocation must exist, of course, and insuring that this is
 the case is a responsibility of the user.  One way to do this is to
 choose an assignment of safe schools that is feasible, in the sense
-that no school is assigned more students than its capacity.  Let $Q$
-be the polytope\footnote{A \emph{polytope} is a bounded set defined by
-some system of finitely many weak linear inequalities.} of feasible
-allocations.
+that no school is assigned more students than its capacity.  If there
+is no feasible allocation, \texttt{gcps} will simply tell that and
+quit, so in some contexts it may be possible to apply trial and error.
 
 There is a lot more to say about the GCPS mechanism, but for the time
 being we only make a couple comments.  First, the feasible allocations
@@ -279,39 +283,45 @@ allocations produced by the mechanism that is currently most commonly
 used for school choice are not $sd$-efficient.
 
 A mechanism is \emph{strategy-proof} if reporting a preference that is
-different from your true preference is never beneficial.  It is easy
-to see that random priority is strategy-proof: when your time to
-choose comes, there is nothing better than to choose your favorite
-from the objects that remain.
+different from your true preference is never beneficial.
+Strategy-proof mechanisms are seemingly straightforward, and don't
+punish lack of strategic sophistication.  A mechanism that is not
+strategy-proof is not what it seems to be on its surface, at best
+simply because it allows some students to get away with things, and at
+worst because it creates a tricky game in which each student has to
+anticipate how others will try to manipulate it.
 
-A simple example shows that the PS mechanism is not strategy proof.
-Suppose that there is one other person for whom your favorite object
-is their favorite object, and there are two other people for whom your
-second favorite object is their favorite.  Suppose also that no one
-else has any interest in either of these objects, and the two people
-who have the same second favorite object as you have no interest in
-your favorite object.  If you report your true preference you will
-divide your favorite object with the other person who likes it until
-time $\tfrac12$, at which point your second favorite object will also
-have been fully allocated.  If you say that your second favorite
-object is actually your favorite, you will share it with the two
-others until time $\tfrac13$, after which two thirds of your favorite
-object will remain, and you will get half of it.  In short, if you
-tell the truth your total probability of your two favorite objects
-will be $\tfrac12$, and if you misreport your total probability of
-your two favorite objects will be $\tfrac23$.  If your main concern is
-to maximize the probability of receiving one of your two favorite
-objects, this can be beneficial.
+It is easy to see that random priority is strategy-proof: when your
+time to choose comes, there is nothing better than to choose your
+favorite from the objects that remain.  A simple example shows that
+the PS mechanism is not strategy proof.  Suppose that there is one
+other person for whom your favorite object is their favorite object,
+and there are two other people for whom your second favorite object is
+their favorite.  Suppose also that no one else has any interest in
+either of these objects, and the two people who have the same second
+favorite object as you have no interest in your favorite object.  If
+you report your true preference you will divide your favorite object
+with the other person who likes it until time $\tfrac12$, at which
+point your second favorite object will also have been fully allocated.
+If you say that your second favorite object is actually your favorite,
+you will share it with the two others until time $\tfrac13$, after
+which two thirds of your favorite object will remain, and you will get
+half of it.  In short, if you tell the truth your total probability of
+your two favorite objects will be $\tfrac12$, and if you misreport
+your total probability of your two favorite objects will be
+$\tfrac23$.  If your main concern is to maximize the probability of
+receiving one of your two favorite objects, this can be beneficial.
 
 Although the GCPS mechanism is not strategy-proof, it does satisfy a
 weaker condition that is good enough for practical purposes.  This
 concept considers applying a mechanism to a sequence of problems with
-an increasing number of agents.  We assume that each agent's beliefs
-about the types of the other agents are that they are independent
-draws from a distribution over a finite set of types that assigns
-positive probability to the agent's own type.  The mechanism is
-\emph{strategy-proof in the large} \citep{ab19res} if the maximum
-expected benefits of manipulation decrease asymptotically to zero as
+an increasing number of agents.  The \emph{type} of an agent is here
+preference ordering of the objects.  We assume that each agent's
+beliefs about the types of the other agents are that they are
+independent draws from a distribution over a finite set of types that
+assigns positive probability to the agent's own type.  The mechanism
+is \emph{strategy-proof in the large} \citep{ab19res} if the maximum
+expected benefit of manipulation decreases asymptotically to zero as
 the population size goes to infinity.  Among other things,
 strategy-proofness in the large assures us that we have not failed to
 notice a ``one weird trick'' manipulation that provides significant
@@ -328,25 +338,23 @@ determined by the distribution over types in the population, and when
 the population is large, the agent's beliefs about the probability
 distribution over such distributions is only slightly affected by the
 agent's own preference declaration.
-
+ 
 \subsection{The MCC Mechanism}
 
 The MCC and EMCC mechanisms are appropriate when the schools'
-priorities are not dichotomous.  We assume that for each school and
-each student who is eligible to attend that school, the student's
-priority at the school is a nonnegative integer.  We may imagine that
-the school ``prefers'' to admit students with higher priority.  The
-pathways by which this results in a better utilization of society's
-educational resources are often not obvious and straightforward, but
-we will simply take this as a given.
+priorities are not dichotomous.  The inputs for the these mechanisms
+are \emph{school choice problems}.  A school choice problem has given
+sets of students and schools.  For each student there is a strict
+preference ordering of some of the schools, with her safe school at
+the bottom of the list.  Her \emph{eligible schools} are those she
+ranks.  For each student and each of her eligible schools, the
+student's \emph{priority} at the school is a positive integer.
 
-The inputs for the MCC and EMCC mechanisms are \emph{school choice
-problems}.  A school choice problem has given sets of students and
-schools.  For each student there is a strict preference ordering of
-some of the schools, with her safe school at the bottom of the list.
-Her \emph{eligible schools} are those she ranks.  For each student and
-each of her eligible schools, the student's \emph{priority} at the
-school is a nonnegative integer.
+We may imagine that the school ``prefers'' to admit students with
+higher priority.  The pathways by which honoring the priorities
+results in a better utilization of society's educational resources are
+often not obvious and straightforward, but we will simply take the
+desirability of doing so as a given.
 
 A \emph{coarse cutoff} for a school is a nonnegative integer, and a
 \emph{coarse cutoff profile} is a specification of a coarse cutoff for
@@ -380,46 +388,47 @@ fine cutoff profile if:
     the school is equal to the school's coarse priority $C_o$, then
     the probability that $i$ is assigned to $o$ is not greater than
     $C_o + 1 - c_o$, where $c_o$ is $o$'s fine cutoff;
-  \item[(c)] when a school's capacity is not fully utilized the
+  \item[(c)] when a school's capacity is not fully utilized, the
     school's fine cutoff is zero.
 \end{enumerate}
 
-For a given profile of fine cutoffs $c$ we compute a student's
+Fix a profile of fine cutoffs $c$, and let $C$ be the profile of
+coarse priorities that $c$ refines.  We compute a student's
 \emph{demand} by having her consume as much of her favorite school as
 she is allowed to, then as much of her second favorite school as
-allowed, and so on until she has one unit of probability.  If $C$ is
-the profile of coarse priorities that $c$ refines, then the student's
-consumption of her favorite school $o_1$ is $0$ if her coarse priority
-at $o_1$ is less than $C_{o_1}$, $C_{o_1} + 1 - c_{o_1}$ if her coarse
-priority at $o_1$ is $C_{o_1}$, and $1$ if her coarse priority at
-$o_1$ is greater than $C_{o_1}$.  Her consumption of her second
-favorite school $o_2$, here third favorite school $o_3$, and so forth,
-are defined similarly, except that she stops consuming when her total
-consumption reaches one unit of probability.  Thus she is consuming
-the allowed amount of each school except for the last one, where her
-consumption is the amount needed to complete a probability
-distribution.
+allowed, and so on until she has one unit of probability.  That is,
+the student's consumption of her favorite school $o_1$ is $0$ if her
+coarse priority at $o_1$ is less than $C_{o_1}$, $C_{o_1} + 1 -
+c_{o_1}$ if her coarse priority at $o_1$ is $C_{o_1}$, and $1$ if her
+coarse priority at $o_1$ is greater than $C_{o_1}$.  Her consumption
+of her second favorite school $o_2$, here third favorite school $o_3$,
+and so forth, are defined similarly, except that she stops consuming
+when her total consumption reaches one unit of probability.  Thus she
+is consuming the allowed amount of each school except for the last
+one, where her consumption is the amount needed to complete a
+probability distribution.
 
 The \emph{market clearing cutoffs} (MCC) mechanism is implemented in
 the command \texttt{mcc}, which takes the students' preferences and
-the schools' priorities as inputs and outputs a feasible allocation.
-To begin with we compute the students' demands for the profile of fine
-cutoffs in which each school's fine cutoff is $0$.  If no school has
-excess demand then we are done, but otherwise we iterate as follows.
-For each school with demand greater than its capacity we compute the
-fine cutoff for that school that would reduce the demand, as
-previously computed, enough to equate supply and demand for seats in
-that school.  This gives a second profile of fine cutoffs, for which
-we compute the students' demands.  For each school $o$, the increase
-in the other schools' cutoffs increases demand for $o$, so again there
-may be schools with excess demand, and again we compute the fine
-cutoff for each school that would equate supply and demand for seats
-in that school if all other schools' fine cutoffs stayed the same,
-which gives a third profile of fine cutoffs.  Iterating in this way
-need not converge in finitely many steps, but it does converge
-geometrically (i.e., with exponential decay of excess demands) and
-\texttt{mcc} outputs the allocation of demands when the total excess
-demand is zero to within some tolerable bound.
+the schools' priorities as inputs and outputs a feasible allocation
+that fulfills a profile of fine cutoffs.  To begin with we compute the
+students' demands for the profile of fine cutoffs in which each
+school's fine cutoff is $0$.  If no school has excess demand then we
+are done, but otherwise we iterate as follows.  For each school with
+demand greater than its capacity we compute the fine cutoff for that
+school that would reduce the demand, as previously computed, enough to
+equate supply and demand for seats in that school.  This gives a
+second profile of fine cutoffs, for which we compute the students'
+demands.  For each school $o$, the increase in the other schools'
+cutoffs increases demand for $o$, so again there may be schools with
+excess demand, and again we compute the fine cutoff for each school
+that would equate supply and demand for seats in that school if all
+other schools' fine cutoffs stayed the same, which gives a third
+profile of fine cutoffs.  Iterating in this way need not converge in
+finitely many steps, but it does converge geometrically (i.e., with
+exponential decay of excess demands) and \texttt{mcc} outputs the
+allocation of demands when the total excess demand is zero to within
+some tolerable bound.
 
 The MCC mechanism is strategy proof in the large.  If the fine cutoffs
 of the schools are given, utility is maximized by the demand of the
@@ -470,255 +479,6 @@ A student may benefit, even when the population is large, in elevating
 a popular school in her reported preference, if she is confident that
 she will be able to trade probability of that school for probability
 of a school she really wants.
-
-\subsection{The Main Competitor: Deferred Acceptance}
-
-One of the first school choice mechanisms to be used in practice,
-called the \emph{Boston mechanism} or \emph{immediate acceptance},
-requires each student to submit a ranking of the schools.  The
-mechanism first assigns as many students as possible to their top
-ranked schools, then assigns as many of the remaining students to the
-schools they ranked second, and so forth.
-
-A school choice mechanism is \emph{strategy-proof} for the students if
-a student can never improve her outcome by reporting a false
-preference.  strategy-proof mechanisms are seemingly straightforward,
-and don't punish lack of strategic sophistication.  A mechanism that
-is not strategy-proof is not what it seems to be on its surface, at
-best simply because it allows some students to get away with things,
-and at worst because it creates a tricky game in which each student
-has to anticipate how others will try to manipulate it.
-
-A big problem with the Boston mechanism is that it is not strategy
-proof for the students.  For example, suppose there are three high
-schools, called Harvard High, Yale High, and Cornell High.  Harvard
-High and Yale High each have 200 seats in their entering class, and
-Cornell High has 600 seats.  Almost everyone prefers Harvard High to
-Yale High, and almost everyone strongly prefers Yale High to Cornell
-High.  If all students state their preferences truthfully, then each
-has a 20\% chance of going to Harvard High, a 20\% chance of going to
-Yale High, and a 60\% chance of going to Cornell High.  If everyone
-else is truthful, and you list Yale High as your top choice, then you
-go there for sure.  But everyone can see this, and many people will
-not be truthful, so before you can figure out what to do, you have to
-try to guess what others are doing.
-
-The \emph{student proposes deferred acceptance} (DA) mechanism was
-first proposed in the academic literature by \cite{GaSh62}, but
-later people realized that it had already been used, very
-successfully, for several years to match medical school graduates with
-residencies.  In a seminal article \cite{as03aer} recommend applying it
-to school choice, and it is now the dominant mechanism for school
-choice, and is used around the world.  DA requires that each school
-has a \emph{priority} that strictly ranks all students.  We will say more
-later about where these priorities might come from, but for the time
-being we simply assume they are given.
-
-In the first round of deferred acceptance each student applies to her
-favorite school.  Each school with more applicants than seats
-tentatively accepts its favorite applicants, up to its capacity, and
-rejects all the others.  In the second round each student who was
-rejected in the first round applies to her second favorite school, and
-each school tentatively retains its favorite applicants from those who
-applied in both rounds, up to its capacity, and rejects the others.
-In each subsequent round each student who was rejected in the
-preceeding round applies to her favorite school among those that have
-not yet rejected her, and each school hangs on to its favorite
-applicants, from all rounds, up to its capacity, and rejects all
-others.  This continues until there is a round with no rejections, at
-which point the existing tentative acceptances become the final assignment.
-
-An assignment of each student to some school is \emph{feasible} if the
-number of students assigned to each school is not greater than the
-school's capacity.  A \emph{blocking pair} for a feasible assignment
-is a student-school pair $(i,o)$ such that the $i$ prefers $o$ to the
-school she has been assigned to and $o$ either has an empty seat or
-has a higher priority for $i$ than some other student that has been
-assigned to $o$.  A feasible assignment is \emph{stable} if there are
-no blocking pairs.  The assignment produced by DA is stable: if $i$ prefers
-$o$ to the school she has been assigned to, $o$ must have rejected $i$
-at some stage, and $o$'s pool of applicants only expanded after that,
-so $o$ never came to regret this rejection.
-
-In fact DA produces an assignment that is at least as good, for each
-student $i$, as any other stable assignment.  If $i$ is rejected by
-her favorite school in the first round of DA, then $i$ is not matched
-with that school in any stable assignment, because there are enough
-students with higher priority at that school who would certainly block
-such an assignment if they were not already matched to that school.
-Now suppose that $i$ is rejected in the second round, either by her
-favorite school or by her second favorite school.  For all the
-students that the school retains after the second round, the school is
-either their favorite, or it is their second favorite and they are not
-matched to their favorite in any stable assignment, so each of them
-would block an assignment of $i$ to that school if they were not
-already matched to that school.  In general, whenever $i$ is rejected
-by a school, each student the school retains has higher priority than
-$i$ and is not matched to a school she prefers in any stable
-assignment.
-
-It turns out that DA is strategy-proof for the students.  The proof of
-this is rather hard.  For the curious, we will go through it anyway,
-but nothing later on depends on you understanding it, and you should
-feel free to skip it if you don't like this sort of stuff.
-
-It will be somewhat easier to work with Gale and Shapley's original,
-more romantic, setting of one-to-one matching of boys and girls, with
-the boys proposing.  (You can think of each student as a boy and each
-seat in each school as a girl.)  Let $B$ and $G$ be the sets of boys
-and girls.  A \emph{matching} is a function $\mu \colon B \cup G \to B
-\cup G$ such that $\mu(b) \in G \cup \{b\}$ for each boy $b$, $\mu(g)
-\in B \cup \{g\}$ for each girl $g$, and $\mu \circ \mu$ is the
-identity function.  (You have exactly one partner, and your partner's
-partner is yourself.)  For the sake of simplicity we assume that there
-are at least as many girls as boys, and that everyone prefers any
-partner of the opposite sex to being alone, so every boy is matched
-with a girl in any stable matching.
-
-Let $\mu$ denote the DA matching when everyone reports their true
-preference.  The proof is by contradiction, so we suppose that there
-is a boy Albert who, when he reports some false preference, induces a
-DA matching $\mu'$ that is better for him.  Let $R$ be the set of boys
-who prefer their partner in $\mu'$ to their partner in $\mu$.  Since
-Albert is an element of $R$, $R$ is nonempty.  Let $S = \mu'(R)$.  Of
-course $\mu'(S) = R$.
-
-We claim that each girl in $S$ prefers her partner in $\mu$ to her
-partner in $\mu'$.  Suppose that Abe is in $R$, $\mathrm{Beth} =
-\mu'(\mathrm{Abe})$, and $\textrm{Carl} = \mu(\textrm{Beth})$. Since
-Abe has different partners in $\mu$ and $\mu'$, Beth has different
-partners in $\mu$ and $\mu'$, which means that Abe and Carl are
-different.  Since Abe prefers Beth to his partner in $\mu$ and $\mu$
-is stable, Beth must prefer Carl to Abe.  Among other things, this
-implies that Carl is a boy and not Beth herself.
-
-We can say a bit more: since Beth has different partners in $\mu$ and
-$\mu'$, Carl has different partners in $\mu$ and $\mu'$, and since
-Beth prefers Carl to Abe, if Carl and Albert are different, then the
-stability of $\mu'$ (with respect to the preferences modified by
-Albert's manipulation) implies that Carl prefers his partner in $\mu'$
-to Beth, so Carl is an element of $R$.  Of course if Carl is Albert,
-then Carl is an element of $R$, so we have shown that $\mu(S) = R$.
-
-Under DA for the true preferences, leading to $\mu$, there is a last
-round in which an element of $R$ makes a proposal.  Now let Don be one
-of the elements of $R$ who proposes in this round, and let
-$\textrm{Ella} = \mu(\textrm{Don})$ be the girl he proposes to.  Since
-every boy in $R$ prefers his partner in $\mu'$, every girl in $S$ has
-already rejected her partner in $\mu'$, so when Don proposes to Ella,
-she is holding a proposal from a boy Fred who she rejects in favor of
-Don.  Since Fred has more proposing to do, Fred is not an element of
-$R$ and thus Fred is not Ella's partner in $\mu'$.  Since Ella
-rejected her partner in $\mu'$ on her way to holding a proposal from
-Fred, she prefers Fred to her partner in $\mu'$.  Since Fred was
-rejected by Ella, Fred prefers Ella to his partner in $\mu$, and since
-Fred is not in $R$, Fred weakly prefers his partner in $\mu$ to his
-partner in $\mu'$, so Fred prefers Ella to his partner in $\mu'$.
-Thus Ella and Fred are a blocking pair for $\mu'$.  This contradiction
-of the stability of $\mu'$ completes the proof.
-
-It turns out that DA is not strategy-proof for the girls.  It can
-happen that when Alice is holding a proposal from Harry and receives a
-proposal from Bob, who she prefers to Harry, she might nevertheless do
-better by rejecting Bob if the result is that Bob proposes to Carol,
-who then dumps David, after which David proposes to Alice, which is
-what Alice really wanted all along.
-
-If you understood all of these arguments, congratulations!  The main
-reason for presenting all this theory, about a mechanism that isn't
-even one of the ones the software implements, is to explain why
-students, parents, and school administrators find DA extremely
-confusing.  The strategy-proofness of DA for students was discovered
-two decades after Gale and Shapley's paper, so it should come as no
-surprise that students and parents do not understand it.  Experimental
-studies find that misreporting of preferences is quite common.
-Largely for these reasons, the Boston mechanism continued to be used
-around the world for many years, in spite of its clear cut theoretical
-inferiority.  An important practical advantage of our mechanisms is
-that they are at least somewhat easier to explain than DA.
-
-Where do the schools' priorities come from?  We will distinguish
-between a school's \emph{given priority}, which is a weak ordering of
-the students that embodies social values, and the school's \emph{final
-priority}, which is the strict ordering that is an input to the DA
-algorithm.
-
-At one extreme the given priorities may be \emph{dichotomous}: a
-student is either eligible or ineligible to attend a school, and each
-school gives equal consideration to all of its eligible students.  In
-this case each school's final priority is a random strict ordering of
-its eligible students.  (In order to be fair, the possible orderings
-should each have equal probability.)  When DA is applied to such
-priorities, inefficiencies can result.  For example, if Bob likes
-Carol School and Ted likes Alice School, the mechanism may still match
-Bob with Alice School and Ted with Carol School if Carol School
-``prefers'' Ted and Alice School ``prefers'' Bob.  Longer cycles of
-potentially improving trades are also possible.  Such inefficiencies
-have been found to be quantitatively important in practice.  In a
-study of New York City data \citep{apr09aer} it was found that if all
-schools used the same ordering of students, out of roughly 90,000
-students, 1500 students' placements in the DA assignment could be
-improved without harming anyone, and if different schools used
-different orderings, 4500 placements could be improved.  Our GCPS
-mechanism avoids such inefficiencies.
-
-A common example of given priorities that express actual social values
-is that, among eligible students, those with a sibling at the school
-who live in the school's walk zone have highest priority, those with a
-sibling at the school who live outside the walk zone have second
-priority, those without a sibling at the school who live in the walk
-zone have third priority, and other eligible students have lowest
-priority.  It is common for given priorities to value a residential
-location near the school, a high test score or grade point average, or
-minority status.  In order to apply DA there must be (usually randomly
-generated) strict priorities that refine the given priorities, and
-again the DA allocation may be inefficient, insofar as there are
-mutually beneficial trades.  Applying our enhanced MCC mechanism
-avoids such inefficiencies while honoring the given priorities to the
-extent possible.
-
-Almost all school choice mechanisms limit the number of schools that a
-student is allowed to rank.  With this limitation DA is no longer
-strategy-proof, and can be quite tricky.  In the 2006 New York City
-High School Match students were allowed to rank 12 schools.  Of the
-roughly 100,000 participants, over 8000 were unmatched after the first
-round, having not received an offer from any school they ranked.
-These students participated in a supplementary round, in which they
-submitted ranked lists of schools that had remaining capacity after
-the first round.  Students who did not receive an offer in the
-supplementary round were assigned administratively.  The overall
-mechanism is clearly not strategy proof because it may be best in the
-first round to rank schools that are ``realistic'' rather than most
-preferred, in order to avoid the supplementary round.
-
-A way around these difficulties is to arrange for each student $i$ to
-have a \emph{safe school} which is guaranteed to not have more
-students ranked above $i$ than the school's capacity, so that $i$ will
-not be rejected by the school if she applies to it.  Some school
-systems have \emph{neighborhood schools}, which is a guarantee that
-each student has the right to attend the school whose district
-contains her residence.  Assigning safe schools that the students can
-be expected to like is consistent with the main goal of school choice,
-which is to place students in schools they are happy to attend.
-
-We suppose that each student knows which school is her safe school, so
-she only needs to submit a ranked list of the schools she prefers to
-it. If the number of such schools is not greater than the number she
-is allowed to rank, strategy-proofness for her is restored, because it
-is as if she submits a ranking of all schools.  We expect safe schools
-to be popular with students and parents because they simplify the
-application process, and because the lower bound on the outcome that
-they provide is intuitively appealing.
-
-Safe schools also make sense for the GCPS, MCC, and enhanced MCC
-mechanisms, and in fact the structure of the GCPS mechanism solves an
-algorithmic problem created by safe schools.  In abstract theory these
-mechanisms can be applied in multiround systems by having the safe
-school in the first round be participation in the second round, having
-the safe school in the second round be participation in the third
-round, and so forth. However, our software presumes that there are
-safe schools, and applying it more generally will probably require
-at least some modifications by the user.
 
 \subsection{Generating a Random Deterministic Assignment}
 
@@ -829,6 +589,259 @@ in $m$ or there is a school whose total assignment probability in $m$
 is not integral and is integral in $m^\alpha$, and we choose $\beta$
 similarly, then all the conditions described above are satisfied.
 
+\subsection{The Main Competitor: Deferred Acceptance} \label{subsec:DeferredAcceptance}
+
+We now briefly describe the history of school choice, the mechanism
+that is currently most popular, and the reasons that our mechanisms
+are better.  One of the first school choice mechanisms to be used in
+practice, called the \emph{Boston mechanism} or \emph{immediate
+acceptance}, requires each student to submit a ranking of the schools.
+The mechanism first assigns as many students as possible to their top
+ranked schools, then assigns as many of the remaining students to the
+schools they ranked second, and so forth.
+
+A big problem with the Boston mechanism is that it is not strategy
+proof for the students.  For example, suppose there are three high
+schools, called Harvard High, Yale High, and Cornell High.  Harvard
+High and Yale High each have 200 seats in their entering class, and
+Cornell High has 600 seats.  Almost everyone prefers Harvard High to
+Yale High, and almost everyone strongly prefers Yale High to Cornell
+High.  If all students state their preferences truthfully, then each
+has a 20\% chance of going to Harvard High, a 20\% chance of going to
+Yale High, and a 60\% chance of going to Cornell High.  If everyone
+else is truthful, and you list Yale High as your top choice, then you
+go there for sure.  But everyone can see this, and many people will
+not be truthful, so before you can figure out what to do, you have to
+try to guess what others are doing.
+
+The \emph{student proposes deferred acceptance} (DA) mechanism was
+first proposed in the academic literature by \cite{GaSh62}, but later
+people realized that it had already been used, very successfully, for
+several years to match medical school graduates with residencies.  In
+a seminal article \cite{as03aer} recommend applying it to school
+choice, and it is now the dominant mechanism for school choice, and is
+used around the world.  DA requires that each school has a priority
+that strictly ranks all of its eligible students.  We will say more
+later about where these priorities might come from, but for the time
+being we simply assume they are given.
+
+In the first round of deferred acceptance each student applies to her
+favorite school.  Each school with more applicants than seats
+tentatively accepts its favorite applicants, up to its capacity, and
+rejects all the others.  In the second round each student who was
+rejected in the first round applies to her second favorite school, and
+each school tentatively retains its favorite applicants from those who
+applied in both rounds, up to its capacity, and rejects the others.
+In each subsequent round each student who was rejected in the
+preceeding round applies to her favorite school among those that have
+not yet rejected her, and each school hangs on to its favorite
+applicants, from all rounds, up to its capacity, and rejects all
+others.  This continues until there is a round with no rejections, at
+which point the existing tentative acceptances become the final assignment.
+
+An assignment of each student to some school is \emph{feasible} if the
+number of students assigned to each school is not greater than the
+school's capacity.  A \emph{blocking pair} for a feasible assignment
+is a student-school pair $(i,o)$ such that the $i$ prefers $o$ to the
+school she has been assigned to and $o$ either has an empty seat or
+has a higher priority for $i$ than some other student that has been
+assigned to $o$.  A feasible assignment is \emph{stable} if there are
+no blocking pairs.  The assignment produced by DA is stable: if $i$ prefers
+$o$ to the school she has been assigned to, $o$ must have rejected $i$
+at some stage, and $o$'s pool of applicants only expanded after that,
+so $o$ never came to regret this rejection.
+
+In fact DA produces an assignment that is at least as good, for each
+student $i$, as any other stable assignment.  If $i$ is rejected by
+her favorite school in the first round of DA, then $i$ is not matched
+with that school in any stable assignment, because there are enough
+students with higher priority at that school who would certainly block
+such an assignment if they were not already matched to that school.
+Now suppose that $i$ is rejected in the second round, either by her
+favorite school or by her second favorite school.  For all the
+students that the school retains after the second round, the school is
+either their favorite, or it is their second favorite and they are not
+matched to their favorite in any stable assignment, so each of them
+would block an assignment of $i$ to that school if they were not
+already matched to that school.  In general, whenever $i$ is rejected
+by a school, each student the school retains has higher priority than
+$i$ and is not matched to a school she prefers in any stable
+assignment.
+
+It turns out that DA is strategy-proof for the students.  The proof of
+this is rather hard.  For the curious, we will go through it anyway,
+but nothing later on depends on you understanding it, and you should
+feel free to skip it if you don't like this sort of stuff.
+
+It will be somewhat easier to work with Gale and Shapley's original,
+more romantic, setting of one-to-one matching of boys and girls, with
+the boys proposing.  (You can think of each student as a boy and each
+seat in each school as a girl.)  Let $B$ and $G$ be the sets of boys
+and girls.  A \emph{matching} is a function $\mu \colon B \cup G \to B
+\cup G$ such that $\mu(b) \in G \cup \{b\}$ for each boy $b$, $\mu(g)
+\in B \cup \{g\}$ for each girl $g$, and $\mu \circ \mu$ is the
+identity function.  (You have exactly one partner, and your partner's
+partner is yourself.)
+
+A matching is stable if there is pair consisting of a boy and a girl
+who prefer each other to their partners in the matching, and also no
+one is matched to a partner that is worse for them than being matched
+to themself.  For the sake of simplicity we assume that there are at
+least as many girls as boys, and that everyone prefers any partner of
+the opposite sex to being alone, so every boy is matched with a girl
+in any stable matching.
+
+Let $\mu$ denote the DA matching when everyone reports their true
+preference.  The proof is by contradiction: we assume the desired
+conclusion is false and show that that assumption, in conjunction with
+the given conditions, implies something that is impossible.  So, we
+suppose that there is a boy Albert who, when he reports some false
+preference, induces a DA matching $\mu'$ that is better for him.  Let
+$R$ be the set of boys who prefer their partner in $\mu'$ to their
+partner in $\mu$.  Since Albert is an element of $R$, $R$ is nonempty.
+Let $S = \mu'(R)$ where $\mu'(R) = \{\, \mu'(b) : b \in R \}$.  Of
+course $\mu'(S) = R$.
+
+We claim that $\mu(S) = R$.  Let Beth be an element of $S$.  Then
+there is an element of $R$, say Abe, such that $\mathrm{Beth} =
+\mu'(\mathrm{Abe})$.  Let $\textrm{Carl} = \mu(\textrm{Beth})$, and
+let $\textrm{Doris} = \mu'(\textrm{Carl})$.  Since Abe has different
+partners in $\mu$ and $\mu'$, Beth has different partners in $\mu$ and
+$\mu'$, so Abe and Carl are different.  Since Abe prefers Beth to his
+partner in $\mu$ and $\mu$ is stable, Beth must prefer Carl to Abe.
+Among other things, this implies that Carl is a boy and not Beth
+herself.  Since Beth's partners in $\mu$ and $\mu'$ are different,
+Carl has different partners in $\mu$ and $\mu'$, so Beth and Doris are
+different.  Since Beth prefers Carl to Abe, if Carl and Albert are
+different, then the stability of $\mu'$ (with respect to the
+preferences modified by Albert's manipulation) implies that Carl
+prefers Doris to Beth, so Carl is an element of $R$.  Of course if
+Carl is Albert, then Carl is an element of $R$, so we have shown that
+$\mu(S)$ is a subset of $R$.  Since the matching is one-to-one, it
+follows that $\mu(S) = R$.
+
+Under DA for the true preferences, leading to $\mu$, there is a last
+round in which an element of $R$ makes a proposal.  Since every boy in
+$R$ prefers his partner in $\mu'$ to his partner in $\mu$, every girl
+in $S$ has already rejected her partner in $\mu'$ prior to this round.
+Let Don be one of the elements of $R$ who proposes in this round, and
+let Ella be the girl he proposes to.  When Don proposes to Ella, she
+is holding a proposal from a boy Fred who she rejects in favor of Don.
+Since Fred has more proposing to do, Fred is not an element of $R$ and
+thus Fred is not Ella's partner in $\mu'$.  Since Ella rejected her
+partner in $\mu'$ on her way to holding a proposal from Fred, she
+prefers Fred to her partner in $\mu'$.  Since Fred was rejected by
+Ella, Fred prefers Ella to his partner in $\mu$, and since Fred is not
+in $R$, Fred weakly prefers his partner in $\mu$ to his partner in
+$\mu'$, so Fred prefers Ella to his partner in $\mu'$.  Thus Ella and
+Fred are a blocking pair for $\mu'$.  This contradiction of the
+stability of $\mu'$ completes the proof.
+
+It turns out that DA is not strategy-proof for the girls.  It can
+happen that when Alice is holding a proposal from Harry and receives a
+proposal from Bob, who she prefers to Harry, she might nevertheless do
+better by rejecting Bob if the result is that Bob proposes to Carol,
+who then dumps David, after which David proposes to Alice, which is
+what Alice really wanted all along.
+
+If you understood all of these arguments, congratulations!  The main
+reason for presenting all this theory, about a mechanism that isn't
+even one of the ones the software implements, is to explain why
+students, parents, and school administrators find DA extremely
+confusing.  The strategy-proofness of DA for students was discovered
+two decades after Gale and Shapley's paper, so it should come as no
+surprise that students and parents do not understand it.  Experimental
+studies find that misreporting of preferences is quite common.
+Largely for these reasons, the Boston mechanism continued to be used
+around the world for many years, in spite of its clear cut theoretical
+inferiority.  An important practical advantage of our mechanisms is
+that they are at least somewhat easier to explain than DA, and in
+particular the strategy-proofness in the large of GCPS and MCC are
+much easier to understand than the strategy proofness of DA.
+
+Where do the schools' priorities come from?  We will distinguish
+between a school's \emph{given priority}, which is a weak ordering of
+the students that embodies social values, and the school's \emph{final
+priority}, which is the strict ordering that is an input to the DA
+algorithm.
+
+At one extreme the given priorities may be \emph{dichotomous}: a
+student is either eligible or ineligible to attend a school, and each
+school gives equal consideration to all of its eligible students.  In
+this case each school's final priority is a random strict ordering of
+its eligible students.  (In order to be fair, the possible orderings
+should each have equal probability.)  When DA is applied to such
+priorities, inefficiencies can result.  For example, if Bob likes
+Carol School and Ted likes Alice School, the mechanism may still match
+Bob with Alice School and Ted with Carol School if Carol School
+``prefers'' Ted and Alice School ``prefers'' Bob.  Longer cycles of
+potentially improving trades are also possible.  Such inefficiencies
+have been found to be quantitatively important in practice.  In a
+study of New York City data \citep{apr09aer} it was found that if all
+schools used the same ordering of students, out of roughly 90,000
+students, 1500 students' placements in the DA assignment could be
+improved without harming anyone, and if different schools used
+different orderings, 4500 placements could be improved.  Our GCPS
+mechanism avoids such inefficiencies.
+
+A common example of given priorities that express actual social values
+is that, among eligible students, those with a sibling at the school
+who live in the school's walk zone have highest priority, those with a
+sibling at the school who live outside the walk zone have second
+priority, those without a sibling at the school who live in the walk
+zone have third priority, and other eligible students have lowest
+priority.  It is common for given priorities to value a residential
+location near the school, a high test score or grade point average, or
+minority status.  In order to apply DA there must be (usually randomly
+generated) strict priorities that refine the given priorities, and
+again the DA allocation may be inefficient, insofar as there can be
+mutually beneficial trades.  Applying our enhanced MCC mechanism
+avoids such inefficiencies while honoring the given priorities to the
+extent possible.
+
+Almost all school choice mechanisms limit the number of schools that a
+student is allowed to rank.  With this limitation DA is no longer
+strategy-proof, and can be quite tricky.  In the 2006 New York City
+High School Match students were allowed to rank 12 schools.  Of the
+roughly 100,000 participants, over 8000 were unmatched after the first
+round, having not received an offer from any school they ranked.
+These students participated in a supplementary round, in which they
+submitted ranked lists of schools that had remaining capacity after
+the first round.  Students who did not receive an offer in the
+supplementary round were assigned administratively.  The overall
+mechanism is clearly not strategy proof because it may be best in the
+first round to rank schools that are ``realistic'' rather than most
+preferred, in order to avoid the supplementary round.
+
+A way around these difficulties is to arrange for each student $i$ to
+have a \emph{safe school} which is guaranteed to not have more
+students ranked above $i$ than the school's capacity, so that $i$ will
+not be rejected by the school if she applies to it.  Some school
+systems have \emph{neighborhood schools}, which is a guarantee that
+each student has the right to attend the school whose district
+contains her residence.  Assigning safe schools that the students can
+be expected to like is consistent with the main goal of school choice,
+which is to place students in schools they are happy to attend.
+
+Safe schools also make sense for the GCPS, MCC, and enhanced MCC
+mechanisms, and in fact the structure of the GCPS mechanism solves an
+algorithmic problem created by safe schools.  In abstract theory these
+mechanisms can be applied in multiround systems by having the safe
+school in the first round be participation in the second round, having
+the safe school in the second round be participation in the third
+round, and so forth. However, our software presumes that there are
+safe schools, and applying it more generally will probably require
+at least some modifications by the user.
+
+We suppose that each student knows which school is her safe school, so
+she only needs to submit a ranked list of the schools she prefers to
+it. If the number of such schools is not greater than the number she
+is allowed to rank, the strategy-proofness of DA is restored, and the
+strategy-proofness in the large of GCPS and MCC are restored, because
+it is as if she submits a ranking of all schools.  We expect safe
+schools to be popular with students and parents because they simplify
+the application process, and because the lower bound on the outcome
+that they provide is intuitively appealing.
 
 \section{For the User}
 
@@ -1772,7 +1785,8 @@ such that $m_{io} = 0$ for all $i$ and $o$ such that $o \notin
 \alpha_i$, $\sum_o m_{io} = 1$ for all $i$, and $\sum_i m_{io} \le
 q_o$ for all $O$.  Let $Q$ be the set of feasible allocations.  As a
 bounded set of points satisfying a finite system of weak linear
-inequalities, $Q$ is a polytope.
+inequalities, $Q$ is a polytope\footnote{A \emph{polytope} is a bounded set
+defined by some system of finitely many weak linear inequalities.}.
 
 A \emph{possible allocation} is a point $p \in \Re^{I \times O}_+$
 such that $p \le m$ for some $m \in Q$.  Let $R$ be the set of
