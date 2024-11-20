@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     school_valence_std_dev = 1.0;
     idiosyncratic_std_dev = 1.0;
     test_std_dev = 1.0;
-    no_priority_grades = 1;
+    no_priority_grades = 2;
   }
 
   if (argc == 8) {

@@ -5,7 +5,7 @@
 
 void make_example(int nsc, int no_students_per_school, int school_capacity,
 		  double school_valence_std_dev, double idiosyncratic_std_dev,
-		  double test_std_dev, int no_priority_grades);
+		  double test_std_dev, int no_nontop_priority_grades);
 
   /* The schools are the integers 0..nsc, with 0 and nsc identified.  location[i]
      is the point i/no_students_per_school. */
@@ -55,29 +55,26 @@ double* compute_test_scores(int nst, double test_std_dev);
 double** compute_raw_priorities(int nst, int nsc, double* test_score,
 				double** distance);
 
-  /* We increase each student's raw priority at her safe school. */
-
-void increase_safe_school_raw_priorities(int nst,int nsc, double** raw_priorities,
-					 int* safe_school);
-
   /* schools_rankings_of_students[j-1] is j's eligible students, listed from highest 
      to lowest raw_priority. */
 
-int** compute_schools_rankings_of_students(int nst,int nsc, int** eligible, double** raw_priority);
+int** compute_schools_rankings_of_students(int nst, int nsc, int** eligible,
+					   int* no_eligible_students, double** raw_priority);
 
   /* For each school the eligible students are divided into no_priority_grade groups
      of roughly equal size, with highest priority assignments to the highest raw priorities. */
 
-int** finalize_priorities(int nst, int nsc, int no_priority_grades, int* no_eligible_students,
-			 int** eligible, int** schools_rankings_of_students);
+int** finalize_priorities(int nst, int nsc, int no_nontop_priority_grades,
+			  int* no_eligible_students, int** schools_rankings_of_students,
+			  int* safe_school);
 
-int** compute_schools_priorities(int nst, int nsc, double test_std_dev, int no_priority_grades,
-				 double** distance, int* safe_school, int* no_eligible_students,
-				 int** eligible);
+int** compute_schools_priorities(int nst, int nsc, double test_std_dev,
+				 int no_nontop_priority_grades, double** distance,
+				 int* safe_school, int* no_eligible_students, int** eligible);
 
 void print_results_makex(int nst, int nsc, int no_students_per_school, int school_capacity,
 			 double school_valence_std_dev, double idiosyncratic_std_dev,
-			 double test_std_dev, int no_priority_grades,
+			 double test_std_dev, int no_nontop_priority_grades,
 			 int** priority, int* no_ranked_schools, int** preferences);
 
 void clean_up_makex(int nst, double* location, double** distance, double* valence,

@@ -883,9 +883,27 @@ contents:
     \$ tar xvf gcps\_mcc\_schools.tar
     \$ cd gcps\_mcc\_schools
     \$ ls
+GCPS\_MCC\_User\_Guide.pdf allocate.mat critpair.c critpair.h              
+emcc.c emcccode.c emcccode.h endpoint.c
+endpoint.h gcps.c gcpscode.h linprog.c
+linprog.h lpgcps.c lpgcpscode.c lpgcpscode.h
+makefile makex.c makexcode.c makexcode.h
+mcc.c mcccode.c mcccode.h normal.c
+normal.h parser.c parser.h partalloc.c
+partalloc.h pivot.c pivot.h purify.c
+purifycode.c purifycode.h pushrelabel.c pushrelabel.h
+schchprob.c schchprob.h schools.scp script.sh
+subset.c subset.h
     }
 \end{obeylines}
 \bigskip
+In addition to a copy of this document, there are number of files
+ending in \texttt{.h}, and for each such file there is a corresponding
+file ending in \texttt{.c}.  There are also a number of \texttt{.c}
+files with no corresponding \texttt{.h} file.  Finally, there are
+files \texttt{schools.scp} and \texttt{allocate.mat}, which are input
+files described below, and a file \texttt{script.sh} which (as we
+will see) illustrates how the executables can be combined.
 
 To compile the executables we need the tools \texttt{make} and
 \texttt{gcc}, and we can check for their presence using
@@ -904,54 +922,66 @@ text that the command directs to the screen:
 \begin{obeylines}
   \texttt{
     \$ make
-gcc -I. -Wall -Wextra -fsanitize=address -g -c normal.c 
-gcc -I. -Wall -Wextra -fsanitize=address -g -c parser.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c subset.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c cee.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c schchprob.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c partalloc.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c pushrelabel.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c pivot.c 
-gcc -I. -Wall -Wextra -fsanitize=address -g -c endpoint.c
-gcc -I. -Wall -Wextra -fsanitize=address -g -c gcpscode.c
-gcc -o gcps gcps.c normal.o parser.o subset.o cee.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o gcpscode.o -fsanitize=address -static-libasan -lm
-gcc -I. -Wall -Wextra -fsanitize=address -g -c mcccode.c
-gcc -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o cee.o schchprob.o  -fsanitize=address -static-libasan -lm
-gcc -I. -Wall -Wextra -fsanitize=address -g -c emcccode.c
-gcc -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o cee.o schchprob.o  -fsanitize=address -static-libasan -lm
-gcc -I. -Wall -Wextra -fsanitize=address -g -c purifycode.c
-gcc -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o -fsanitize=address -static-libasan -lm
-gcc -I. -Wall -Wextra -fsanitize=address -g -c makexcode.c
-gcc -o makex makex.c normal.o makexcode.o -fsanitize=address -static-libasan -lm
+gcc -I. -Wall -Wextra  -c normal.c 
+gcc -I. -Wall -Wextra  -c parser.c
+gcc -I. -Wall -Wextra  -c subset.c
+gcc -I. -Wall -Wextra  -c schchprob.c
+gcc -I. -Wall -Wextra  -c partalloc.c
+gcc -I. -Wall -Wextra  -c pushrelabel.c
+gcc -I. -Wall -Wextra  -c pivot.c 
+gcc -I. -Wall -Wextra  -c endpoint.c
+gcc -I. -Wall -Wextra  -c critpair.c
+gcc -I. -Wall -Wextra  -c gcpscode.c
+gcc -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o gcpscode.o -lm
+gcc -I. -Wall -Wextra  -c linprog.c 
+gcc -I. -Wall -Wextra  -c lpgcpscode.c
+gcc -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o -lm
+gcc -I. -Wall -Wextra  -c mcccode.c
+gcc -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o  -lm
+gcc -I. -Wall -Wextra  -c emcccode.c
+gcc -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o -lm
+gcc -I. -Wall -Wextra  -c purifycode.c
+gcc -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o -lm
+gcc -I. -Wall -Wextra  -c makexcode.c
+gcc -o makex makex.c normal.o linprog.o makexcode.o -lm
     } 
 \end{obeylines}
 \bigskip
 
-We have now constructed the executable files \texttt{gcps},
-\texttt{mcc}, \texttt{emcc}, \texttt{purify}, and \texttt{makex}.
-(The compilation process also constructed various ``object'' files
-with file names ending with \texttt{.o}, that are intermediated steps
-in the compilation process.)  On many Unix's
-these can invoked simply by typing the executable name on the command
-line, but it may be the case that, for security reasons, the current
-directory is not in the \texttt{path} (the list of directories that
-the command line looks in when a command is invoked) in which case you
-will need to type \texttt{./gcps}, \texttt{./mcc}, etc.
+If you do \texttt{ls} again you will see that, in addition to the
+files we started with, for each \texttt{.h} file there is now a
+\texttt{.o} file (these are called \emph{object} files) and there are
+the executable files \texttt{gcps}, \texttt{mcc}, \texttt{emcc},
+\texttt{purify}, and \texttt{makex}.   The command \texttt{make clean}
+removes all the new files (as well as the files ending in \texttt{~}
+that the \texttt{emacs} editor leaves behind when a file is edited)
+and doing this, and then doing \texttt{make} again, is recommended.
 
 \subsection{Input Files}
 
+The executable \texttt{makex} produces a \emph{school choice problem}.
 The executables \texttt{gcps}, \texttt{mcc}, and \texttt{emcc} act on
-\emph{school choice problem} input files.  The executable
-\texttt{purify} acts on \emph{partial allocation} input files.  We now
-describe the formats of these files. We will study an example of a
-school choice input file, but the rules specified below apply to both
-types of files.
+an input file containing a school choice problem and produce
+\emph{partial allocations}.  The executable \texttt{purify} acts on an
+input file containing a partial allocation and produces a
+deterministic assignment of students to schools.
 
-Among the files you downloaded, there is a sample school choice
-problem file \texttt{my.scp}:
+In the Unix OS the user has a \texttt{PATH}, which is a list of
+directories.  When you issue a command from the command line, the
+first item on the command line is the name of the command, and the
+computer goes through the directories in the \texttt{PATH} looking for
+an executable with that name.  On many Unix's the current directory
+(denoted by \texttt{\ .\ }) is in the \texttt{PATH}, in which case the
+executables in the current directory can be invoked simply by typing
+the executable name on the command line.  However, for security
+reasons some flavors of Unix do not put the current directory in the
+\texttt{PATH}, in which case you need to tell the computer that that
+is where you want it to look, and you will need to type \texttt{./makex},
+\texttt{./gcps}, \texttt{./mcc}, \texttt{./emcc}, and \texttt{./purify}.
 
+We will follow a simple example through this process, emphasizing the formatting requirements.
 \begin{obeylines}\texttt{
-    \$ cat my.scp
+    \$ ./makex
 /* This file was generated by makex with 2 schools,
 3 students per school, capacity 4 for all schools,
 school valence std dev 1.00, idiosyncratic std dev 1.00,
@@ -986,24 +1016,30 @@ useful to you, but it is mandatory insofar as the computer will insist
 that the first two characters of the file are \texttt{/*}, and it will
 only start extracting information after it sees the \texttt{*/}.  As
 you can see, when \texttt{makex} makes an input file, it uses the
-comment to provide some information concerning how the file was made;
-removing or replacing this won't change how the file is processed by
-\texttt{gcps}, \texttt{mcc}, and \texttt{emcc}.
+comment to provide some information concerning how the file was made.
+(The parameters \texttt{makex} uses can be modified by running it with
+more command line arguments.)  Removing or replacing the comment
+(while leaving the \texttt{/*} and \texttt{*/}) won't change how the
+file is processed by \texttt{gcps}, \texttt{mcc}, and \texttt{emcc}.
 
 The computer divides the remainder of the file into ``generalized
 white space'' and ``tokens.''  Generalized white space includes the
 usual white space characters (spaces, tabs, and new lines), and in
 addition `\texttt{(}', `\texttt{)}', and `\texttt{,}' are treated as
 white space.  Tokens are contiguous sequences of characters without
-any of the generalized white space characters.  Tokens are either
-prescribed words, nonnegative integers, positive integers, or student
-or school tags (a student or school number followed by `\texttt{:}').
-Everything must be more or less exactly as shown above, modulo white
-space, so, for example, the first line must not be \texttt{There are 3
-  students and 1 school}, but it could be \texttt{There are 3 students
-  and \ \ 1 schools}.  If one of the GCPS executables tries to read a
-file and finds a violation of the format requirements, it will print a
-short statement describing the problem and quit.
+any of the generalized white space characters.  White space is
+discarded, so the first stage of parsing the input file reduces it to
+a sequence of tokens.
+
+Tokens are either prescribed words, nonnegative integers, positive
+integers, or student or school tags (a student or school number
+followed by `\texttt{:}').  Everything must be more or less exactly as
+shown above, modulo white space, so, for example, the first line must
+not be \texttt{There are 3 students and 1 school}, but it could be
+\texttt{There are 3 students and \ \ 1 schools}.  If one of the GCPS
+executables tries to read a file and finds a violation of the format
+requirements, it will print a short statement describing the problem
+and quit.
 
 The second line after the comment gives the quotas (i.e., the
 capacities) of the schools, so both schools have four seats.
@@ -1014,8 +1050,9 @@ Here we see the convenience of making `\texttt{(}', `\texttt{)}', and
 In general the lowest priority level is 0, which means that the
 student may receive some probability of a seat at the school if she is
 eligible and not crowded out by students with higher priorities.  The
-schools' priorities play no role in \texttt{gcps}, which is to say
-that in \texttt{gcps} the priorities are \emph{dichotomous}: for each
+schools' priorities are only relevant to \texttt{mcc} and
+\texttt{emcc}, and play no role in \texttt{gcps}, which is to say that
+in \texttt{gcps} the priorities are \emph{dichotomous}: for each
 school and student, either the student is eligible to attend the
 school (and her preferences rank that school) or she is not, and the
 school gives equal consideration to all eligible students.  A student
@@ -1030,17 +1067,32 @@ input knew what they were doing.  After that come the students'
 preferences: for each student, that student's tag followed by the
 schools she might attend, listed from best to worst.  The collection
 of information provided by such an input file is a \emph{school choice
-problem}.  We recommend file names for input files for \texttt{gcps}
-that end with \texttt{.scp}, but the software does not enforce this.
+problem}.
+
+We recommend file names for school choice problem files (which are the
+input files for \texttt{gcps}, \texttt{mcc}, and \texttt{emcc}) that
+end with \texttt{.scp}, but the software does not enforce this.  We
+now \emph{redirect} the output of \texttt{makex} to a suitably named
+file.
+
+\begin{obeylines}\texttt{
+    \$ ./makex > my.scp
+  }
+\end{obeylines}
+
+\bigskip \noindent
+In practical applications the hard work for the user consists of
+determining the information that goes in to the school choice problem,
+namely figuring out what each school's capacity is, which schools each
+student is eligible to attend, assigning a safe school to each
+student, and getting each student to provide the rank ordered list of
+schools she is eligible for and likes at least as much as her safe
+school.
+
 
 \subsection{\texttt{gcps}, \texttt{mcc}, and \texttt{emcc}}
 
-We now imagine that you've done the hard work of figuring out what
-each school's capacity is, which schools each student is eligible to
-attend, assigning a safe school to each student, and getting each
-student to provide the rank ordered list of schools she is eligible
-for and likes at least as much as her safe school.  All this
-information has been encoded in an input file \texttt{my.scp} that is
+We now assume that  an input file \texttt{my.scp} is
 in the current directory.  We assume that the executable \texttt{gcps}
 is also in this directory.  The next step could be to issue the
 command:

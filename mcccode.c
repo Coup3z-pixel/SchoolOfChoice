@@ -25,7 +25,7 @@ struct partial_alloc MCC_alloc_plus_coarse_cutoffs(struct process_scp* myscp, in
     }
       
     for (j = 1; j <= nsc; j++) {
-      if (excesses[j-1] > myscp->quotas[j-1] - 0.000001) {
+      if (excesses[j-1] > 0.000001) {
 	fine_cutoffs[j-1] = naive_eq_cutoff(myscp, j, &demands, fine_cutoffs[j-1]);
       }
     }
