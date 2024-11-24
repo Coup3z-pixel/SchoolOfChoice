@@ -74,63 +74,6 @@ void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addit
   }
 }
 
-int student_qualified_for_school(int i, int j,
-				 struct partial_alloc* feasible_guide,
-				 int** theta, int* favorites) {
-  if (feasible_guide->allocations[i-1][j-1] > 0.000001) {
-    return 1;
-  }
-  else {
-    if (theta[i-1][j-1] > 0 && (j != favorites[i-1] || theta[i-1][j-1] > 1)) {
-      return 1;
-    }
-    else {
-      return 0;
-    }
-  }
-}
-
-int school_qualified_for_student(int i, int j,
-				 struct partial_alloc* feasible_guide,
-				 int** theta,
-				 struct process_scp* working_cee) {
-  if (theta[i-1][j-1] < 0 || feasible_guide->allocations[i-1][j-1] + 0.000001 <
-      working_cee->eligible[i-1][j-1] * working_cee->time_remaining) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
-int pivot_is_valid(struct pivot* my_pivot, int** theta, int* theta_sums, struct index* alpha,
-		   struct partial_alloc* feasible_guide, struct process_scp* working_cee,
-		   int* favorites, int* fully_allocated) {
-  int g, h, i, j, k;
-  h = my_pivot->h;
-
-  if (!fully_allocated[my_pivot->schools[0]-1] || theta_sums[my_pivot->schools[0]-1] <= 0) {
-    return 0;
-  }
-  
-  for (g = 1; g <= h; g++) {
-    i = my_pivot->students[g-1];
-    j = my_pivot->schools[g-1];
-    k = my_pivot->schools[g];
-    if (!index_has_element(&alpha[i-1],j) || !index_has_element(&alpha[i-1],k) ||
-	!student_qualified_for_school(i, j, feasible_guide, theta, favorites) ||
-	!school_qualified_for_student(i, k, feasible_guide, theta, working_cee)) {
-      return 0;
-    }
-  }
-
-  if (fully_allocated[my_pivot->schools[h]-1] && theta_sums[my_pivot->schools[h]-1] >= 0) {
-    return 0;
-  }
-
-  return 1;
-}
-
 void execute_pivot(struct pivot* my_pivot, int** theta, int* theta_sums) {
   int g;
 
@@ -140,32 +83,6 @@ void execute_pivot(struct pivot* my_pivot, int** theta, int* theta_sums) {
     theta[my_pivot->students[g-1]-1][my_pivot->schools[g]-1]++;
   }
   theta_sums[my_pivot->schools[my_pivot->h]-1]++;
-}
-
-void reuse_prior_pivots(struct pivot_list* old_list, struct pivot_list* new_list,
-		       int** theta, int* theta_sums, struct index* alpha,
-		       struct partial_alloc* feasible_guide, struct process_scp* working_cee,
-			int* favorites, int* fully_allocated, int* no_old_pivots, int* h_sum) {
-  struct pivot_list_node* probe = old_list->first_node;
-  if (probe->the_pivot != NULL) {
-    if (pivot_is_valid(probe->the_pivot, theta, theta_sums, alpha, feasible_guide, working_cee,
-		       favorites, fully_allocated)) {
-      (*no_old_pivots)++;
-      *h_sum += probe->the_pivot->h;
-      execute_pivot(probe->the_pivot, theta, theta_sums);
-      add_pivot_to_list(new_list, probe->the_pivot);
-    }
-  }
-  while (probe->next != NULL) {
-    probe = probe->next;
-    if (pivot_is_valid(probe->the_pivot, theta, theta_sums, alpha, feasible_guide, working_cee,
-		       favorites, fully_allocated)) {
-      (*no_old_pivots)++;
-      *h_sum += probe->the_pivot->h;
-      execute_pivot(probe->the_pivot, theta, theta_sums);
-      add_pivot_to_list(new_list, probe->the_pivot);
-    }
-  }
 }
 
 struct pivot_list reduced_pivot_list(struct pivot_list* given_list,

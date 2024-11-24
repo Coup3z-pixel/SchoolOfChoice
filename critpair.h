@@ -1,5 +1,5 @@
-#ifndef GCPSCOMMON_H
-#define GCPSCOMMON_H
+#ifndef CRITPAIR_H
+#define CRITPAIR_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +10,30 @@
 #include "pivot.h"
 #include "endpoint.h"
 #include "parser.h"
+
+int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites);
+
+/* theta_sums[j-1] is the sum of the theta[i-1][j-1] */
+
+int* initialize_theta_sums(int **theta, int nst, int nsc);
+
+int student_qualified_for_school(int i, int j, struct partial_alloc* feasible_guide,int** theta,
+				 int* favorites);
+
+int school_qualified_for_student(int i, int j,
+				 struct partial_alloc* feasible_guide,
+				 int** theta,
+				 struct process_scp* working_cee);
+
+int pivot_is_valid(struct pivot* my_pivot, int** theta, int* theta_sums, struct index* alpha,
+		   struct partial_alloc* feasible_guide, struct process_scp* working_cee,
+		   int* favorites, int* fully_allocated);
+
+
+void reuse_prior_pivots(struct pivot_list* old_list, struct pivot_list* new_list,
+		       int** theta, int* theta_sums, struct index* alpha,
+		       struct partial_alloc* feasible_guide, struct process_scp* working_cee,
+			int* favorites, int* fully_allocated, int* no_old_pivots, int* h_sum);
 
 void massage_theta_or_find_critical_pair(int** theta, int* theta_sums, struct subset* P_subset,
 					 struct subset* J_subset, struct process_scp* working_scp,
@@ -62,22 +86,14 @@ void next_P_h(struct subset* next_P_subset, struct subset* J_subset,
 
 void get_alpha(struct process_scp* working_scp, struct index* alpha);
 
-void destroy_alpha_or_omega(struct index* alpha, int nst);
-
-void destroy_theta(int** theta, int nst);
-
 /* fully_allocated[j-1] is 1 if feasible_guide fully allocates working_scp's j, 0 otherwise */
 
 int* compute_fully_allocated(struct process_scp* working_scp,struct partial_alloc* feasible_guide);
 
-/* The paper describes how theta is initialized */
-
-int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites);
-
 void print_theta(int** theta, int nst, int nsc);
 
-/* new_theta_sums[j-1] is the sum of the theta[i-1][j-1] */
+void destroy_alpha_or_omega(struct index* alpha, int nst);
 
-int* initialize_theta_sums(int **theta, int nst, int nsc);
+void destroy_theta(int** theta, int nst);
 
-#endif /* GCPSCOMMON_H */
+#endif /* CRITPAIR_H */

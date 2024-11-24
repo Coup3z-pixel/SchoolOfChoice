@@ -331,7 +331,7 @@ void print_results_makex(int nst, int nsc, int no_students_per_school, int schoo
 	 no_students_per_school, school_capacity);
   printf("school valence std dev %1.2f, idiosyncratic std dev %1.2f,\n",
 	 school_valence_std_dev, idiosyncratic_std_dev);
-  printf("student test std dev %1.2f, and %i priority grades. */\n",
+  printf("student test std dev %1.2f, and %i nontop priority grades. */\n",
 	 test_std_dev, no_nontop_priority_grades);
   printf("There are %i students and %i schools\n",nst,nsc);
   printf("The vector of quotas is (");

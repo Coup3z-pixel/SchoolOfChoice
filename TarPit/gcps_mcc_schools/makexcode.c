@@ -5,7 +5,7 @@
 
 void make_example(int nsc, int no_students_per_school, int school_capacity,
 		  double school_valence_std_dev, double idiosyncratic_std_dev,
-		  double test_std_dev, int no_priority_grades) {
+		  double test_std_dev, int no_nontop_priority_grades) {
   
   int nst = nsc * no_students_per_school;
 
@@ -28,12 +28,12 @@ void make_example(int nsc, int no_students_per_school, int school_capacity,
 
   int** preferences = compute_preferences(nst, nsc, safe_school, no_ranked_schools, utility);
 
-  int** priorities = compute_schools_priorities(nst, nsc, test_std_dev, no_priority_grades,
+  int** priorities = compute_schools_priorities(nst, nsc, test_std_dev, no_nontop_priority_grades,
 						distance, safe_school, no_eligible_students,
 						eligible);
 
   print_results_makex(nst, nsc, no_students_per_school, school_capacity, school_valence_std_dev,
-		      idiosyncratic_std_dev, test_std_dev, no_priority_grades,
+		      idiosyncratic_std_dev, test_std_dev, no_nontop_priority_grades,
 		      priorities, no_ranked_schools, preferences);
 
   clean_up_makex(nst, location, distance, valence, utility, safe_school, no_ranked_schools,
@@ -204,8 +204,7 @@ double* compute_test_scores(int nst, double test_std_dev) {
   return answer;
 }
 
-double** compute_raw_priorities(int nst, int nsc, double* test_score,
-				double** distance) {
+double** compute_raw_priorities(int nst, int nsc, double* test_score, double** distance) {
   int i, j;
   
   double** answer = malloc(nst * sizeof(double*));
@@ -218,117 +217,102 @@ double** compute_raw_priorities(int nst, int nsc, double* test_score,
   return answer;
 }
 
-void increase_safe_school_raw_priorities(int nst,int nsc, double** raw_priorities,
-					 int* safe_school) {
-  int i, j;
+int** compute_schools_rankings_of_students(int nst, int nsc, int** eligible,
+					   int* no_eligible_students, double** raw_priority) {
+  int i, j, k, index;
 
-  int* raw_max = malloc(nsc * sizeof(int));
-
+  int** answer = malloc(nsc * sizeof(int*));
   for (j = 1; j <= nsc; j++) {
-    raw_max[j-1] = -100000.0;
+    answer[j-1] = malloc(no_eligible_students[j-1] * sizeof(int));
     for (i = 1; i <= nst; i++) {
-      raw_max[j-1] = max(raw_priorities[i-1][j-1],raw_max[j-1]);
+      if (eligible[i-1][j-1]) {
+	index = 1;
+	for (k = 1; k <= nst; k++) {
+	  if (eligible[k-1][j-1] && raw_priority[i-1][j-1] < raw_priority[k-1][j-1]) {
+	    index++;
+	  }
+	}
+	answer[j-1][index-1] = i;
+      }
     }
   }
-
-  for (i = 1; i <= nst; i++) {
-    raw_max[safe_school[i-1]-1] += 1.0;
-    raw_priorities[i-1][safe_school[i-1]-1] = raw_max[safe_school[i-1]-1];
-  }
-
-  free(raw_max);
+  
+  return answer;
 }
 
-int** compute_schools_rankings_of_students(int nst,int nsc, int** eligible,double** raw_priority) {
-  int i, j, k;
-  
+int** finalize_priorities(int nst, int nsc, int no_nontop_priority_grades,
+			  int* no_eligible_students, int** schools_rankings_of_students,
+			  int* safe_school) {  
+  int i, j, k, quotient, remainder, cursor, scan_no;
+
   int** answer = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
     answer[i-1] = malloc(nsc * sizeof(int));
-  }
-
-  for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
       answer[i-1][j-1] = 0;
-      if (eligible[i-1][j-1] == 1) {
-	answer[i-1][j-1] = 1;
-	for (k = 1; k <= nst; k++) {
-	  if (k != i && eligible[k-1][j-1] > 0 && raw_priority[i-1][j-1] > raw_priority[k-1][j-1]){
-	    answer[i-1][j-1]++;
-	  }
+    }
+  }
+
+  int* no_nonsafe_eligible = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    no_nonsafe_eligible[j-1] = no_eligible_students[j-1];
+  }
+    
+  for (i = 1; i <= nst; i++) {
+    answer[i-1][safe_school[i-1]-1] = no_nontop_priority_grades;
+    no_nonsafe_eligible[safe_school[i-1]-1]--;
+  }
+  
+  for (j = 1; j <= nsc; j++) {
+    quotient = no_nonsafe_eligible[j-1] / no_nontop_priority_grades;
+    remainder = no_nonsafe_eligible[j-1] % no_nontop_priority_grades;
+    cursor = 0;
+    for (k = no_nontop_priority_grades; k >= 1; k--) {
+      
+      scan_no = quotient;
+      if (k <= remainder) {
+	scan_no++;
+      }
+      
+      while (scan_no > 0) {
+	cursor++;
+	i = schools_rankings_of_students[j-1][cursor-1];	
+	if (safe_school[i-1] != j) {
+	  answer[i-1][j-1] = k - 1;
+	  scan_no--;
 	}
       }
     }
   }
   
-  return answer;
-}
-
-int** finalize_priorities(int nst, int nsc, int no_priority_grades, int* no_eligible_students,
-			 int** eligible, int** schools_rankings_of_students) {  
-  int i, j, k, l, cursor;
-
-  int** answer = malloc(nst * sizeof(int*));
-  for (i = 1; i <= nst; i++) {
-    answer[i-1] = malloc(nsc * sizeof(int));
-  }
-  
-  for (j = 1; j <= nsc; j++) {
-    int quotient = no_eligible_students[j-1] / no_priority_grades;
-    int remainder = no_eligible_students[j-1] % no_priority_grades;
-    int* index = malloc(no_eligible_students[j-1] * sizeof(int));
-    cursor = 0;
-    for (k = 1; k <= no_priority_grades; k++) {
-      if (k <= remainder) {
-	cursor++;
-	index[cursor - 1] = k-1;
-      }
-      for (l = 1; l <= quotient; l++) {
-	cursor++;
-	index[cursor - 1] = k-1;
-      }
-    }
-
-    for (i = 1; i <= nst; i++) {
-      if (eligible[i-1][j-1] == 1) {
-	answer[i-1][j-1] = index[schools_rankings_of_students[i-1][j-1]-1];
-      }
-      else {
-	answer[i-1][j-1] = 0;
-      }
-    }
-
-    free(index);
-  }
+  free(no_nonsafe_eligible);
 
   return answer;
 }
 
-int** compute_schools_priorities(int nst, int nsc, double test_std_dev, int no_priority_grades,
-				 double** distance, int* safe_school, int* no_eligible_students,
-				 int** eligible) {
-  int i;
+int** compute_schools_priorities(int nst, int nsc, double test_std_dev,
+				 int no_nontop_priority_grades, double** distance,
+				 int* safe_school, int* no_eligible_students, int** eligible) {
+  int i, j;
 
   double* test_score = compute_test_scores(nst, test_std_dev);
 
   double** raw_priority = compute_raw_priorities(nst, nsc, test_score, distance);
 
-  increase_safe_school_raw_priorities(nst, nsc, raw_priority, safe_school);
-
   int** schools_rankings_of_students = compute_schools_rankings_of_students(nst, nsc,
-									    eligible,
-									    raw_priority);
+						  eligible, no_eligible_students, raw_priority);
   
-  int** final_priorities = finalize_priorities(nst, nsc, no_priority_grades, no_eligible_students,
-					       eligible, schools_rankings_of_students);
+  int** final_priorities = finalize_priorities(nst, nsc, no_nontop_priority_grades,
+					       no_eligible_students, schools_rankings_of_students,
+					       safe_school);
 
   free(test_score);
   for (i = 1; i <= nst; i++) {
     free(raw_priority[i-1]);
   }
   free(raw_priority);
-  for (i = 1; i <= nst; i++) {
-    free(schools_rankings_of_students[i-1]);
+  for (j = 1; j <= nsc; j++) {
+    free(schools_rankings_of_students[j-1]);
   }
   free(schools_rankings_of_students);
 
@@ -337,7 +321,7 @@ int** compute_schools_priorities(int nst, int nsc, double test_std_dev, int no_p
 
 void print_results_makex(int nst, int nsc, int no_students_per_school, int school_capacity,
 			 double school_valence_std_dev, double idiosyncratic_std_dev,
-			 double test_std_dev, int no_priority_grades,
+			 double test_std_dev, int no_nontop_priority_grades,
 			 int** priority, int* no_ranked_schools, int** preferences) {
   int i, j, k;
   
@@ -347,8 +331,8 @@ void print_results_makex(int nst, int nsc, int no_students_per_school, int schoo
 	 no_students_per_school, school_capacity);
   printf("school valence std dev %1.2f, idiosyncratic std dev %1.2f,\n",
 	 school_valence_std_dev, idiosyncratic_std_dev);
-  printf("student test std dev %1.2f, and %i priority grades. */\n",
-	 test_std_dev, no_priority_grades);
+  printf("student test std dev %1.2f, and %i nontop priority grades. */\n",
+	 test_std_dev, no_nontop_priority_grades);
   printf("There are %i students and %i schools\n",nst,nsc);
   printf("The vector of quotas is (");
   for (j = 1; j < nsc; j++) {

@@ -7,23 +7,6 @@
 int main(int argc, char *argv[]) {
   int nsc, no_students_per_school, school_capacity, no_priority_grades;
   double school_valence_std_dev, idiosyncratic_std_dev, test_std_dev, answer;
-
-  /*
-  struct tableau vanderbei = robert_vanderbei_example();
-
-  printf("The initial tableau is:\n");
-  print_tableau(&vanderbei);
-
-  printf("\n\nWe now start doing full solve.\n");
-  
-  answer = full_solve(&vanderbei);
-
-  printf("\nIn the end we did in fact get the value %1.3f.\n", answer);
-  
-  destroy_tableau(vanderbei);
-  
-  exit(0);
-  */
   
   if (argc != 1 && argc != 5 && argc != 8) {
     fprintf(stderr, "The number of arguments is wrong.\n");
@@ -37,7 +20,7 @@ int main(int argc, char *argv[]) {
     school_valence_std_dev = 1.0;
     idiosyncratic_std_dev = 1.0;
     test_std_dev = 1.0;
-    no_priority_grades = 1;
+    no_priority_grades = 2;
   }
 
   if (argc == 8) {

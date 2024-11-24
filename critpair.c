@@ -1,10 +1,155 @@
 #include "critpair.h"
 
+
+int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites) {
+  int i, j, done;
+  
+  int nst = feasible_guide->no_students;
+  int nsc = feasible_guide->no_schools;
+  
+  int** theta = malloc(nst * sizeof (int*));
+  for (i = 1; i <= nst; i++) {
+    theta[i-1] = malloc(nsc * sizeof(int));
+  }  
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      theta[i-1][j-1] = 0;
+    }
+  }
+  
+  for (i = 1; i <= nst; i++) {
+    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
+      theta[i-1][favorites[i-1]-1] = 1;
+    }
+  }
+  
+  for (i = 1; i <= nst; i++) {
+    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
+      
+      theta[i-1][favorites[i-1]-1] = 1;
+    
+      done = 0;
+      j = 1;
+      while (!done) {
+		if (j != favorites[i-1] && feasible_guide->allocations[i-1][j-1] > 0.000001) {
+	  done = 1;
+	  theta[i-1][j-1] = -1;
+	}
+	else {
+	  j++;
+	}
+      }
+    }
+  }
+
+  return theta;
+}
+
+int* initialize_theta_sums(int **theta, int nst, int nsc) {
+  int i, j;
+  int* new_theta_sums;
+  
+  new_theta_sums = malloc(nsc * sizeof(int));
+  for (j = 1; j <= nsc; j++) {
+    new_theta_sums[j-1] = 0;
+    for (i = 1; i <= nst; i++) {
+      new_theta_sums[j-1] += theta[i-1][j-1];
+    }
+  }
+
+  return new_theta_sums;
+}
+
+int student_qualified_for_school(int i, int j,
+				 struct partial_alloc* feasible_guide,
+				 int** theta, int* favorites) {
+  if (feasible_guide->allocations[i-1][j-1] > 0.000001) {
+    return 1;
+  }
+  else {
+    if (theta[i-1][j-1] > 0 && (j != favorites[i-1] || theta[i-1][j-1] > 1)) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+}
+
+int school_qualified_for_student(int i, int j,
+				 struct partial_alloc* feasible_guide,
+				 int** theta,
+				 struct process_scp* working_cee) {
+  if (theta[i-1][j-1] < 0 || feasible_guide->allocations[i-1][j-1] + 0.000001 <
+      working_cee->eligible[i-1][j-1] * working_cee->time_remaining) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+int pivot_is_valid(struct pivot* my_pivot, int** theta, int* theta_sums, struct index* alpha,
+		   struct partial_alloc* feasible_guide, struct process_scp* working_cee,
+		   int* favorites, int* fully_allocated) {
+  int g, h, i, j, k;
+  h = my_pivot->h;
+
+  if (!fully_allocated[my_pivot->schools[0]-1] || theta_sums[my_pivot->schools[0]-1] <= 0) {
+    return 0;
+  }
+  
+  for (g = 1; g <= h; g++) {
+    i = my_pivot->students[g-1];
+    j = my_pivot->schools[g-1];
+    k = my_pivot->schools[g];
+    if (!index_has_element(&alpha[i-1],j) || !index_has_element(&alpha[i-1],k) ||
+	!student_qualified_for_school(i, j, feasible_guide, theta, favorites) ||
+	!school_qualified_for_student(i, k, feasible_guide, theta, working_cee)) {
+      return 0;
+    }
+  }
+
+  if (fully_allocated[my_pivot->schools[h]-1] && theta_sums[my_pivot->schools[h]-1] >= 0) {
+    return 0;
+  }
+
+  return 1;
+}
+
+
+void reuse_prior_pivots(struct pivot_list* old_list, struct pivot_list* new_list,
+		       int** theta, int* theta_sums, struct index* alpha,
+		       struct partial_alloc* feasible_guide, struct process_scp* working_cee,
+			int* favorites, int* fully_allocated, int* no_old_pivots, int* h_sum) {
+  struct pivot_list_node* probe = old_list->first_node;
+  if (probe->the_pivot != NULL) {
+    if (pivot_is_valid(probe->the_pivot, theta, theta_sums, alpha, feasible_guide, working_cee,
+		       favorites, fully_allocated)) {
+      (*no_old_pivots)++;
+      *h_sum += probe->the_pivot->h;
+      execute_pivot(probe->the_pivot, theta, theta_sums);
+      add_pivot_to_list(new_list, probe->the_pivot);
+    }
+  }
+  while (probe->next != NULL) {
+    probe = probe->next;
+    if (pivot_is_valid(probe->the_pivot, theta, theta_sums, alpha, feasible_guide, working_cee,
+		       favorites, fully_allocated)) {
+      (*no_old_pivots)++;
+      *h_sum += probe->the_pivot->h;
+      execute_pivot(probe->the_pivot, theta, theta_sums);
+      add_pivot_to_list(new_list, probe->the_pivot);
+    }
+  }
+}
+
 void massage_theta_or_find_critical_pair(int** theta, int* theta_sums, struct subset* P_subset,
 					 struct subset* J_subset, struct process_scp* working_scp,
 					 struct partial_alloc* feasible_guide,
 					 struct index* alpha, struct index* active_schools_index,
-					 struct index* omega,int* favorites,
+					 struct index* omega, int* favorites,
 					 int* fully_allocated,
 					 struct pivot_list* my_list,
 					 int* critical_pair_found,
@@ -254,17 +399,10 @@ void next_P_h(struct subset* next_P_subset, struct subset* J_subset,
 
 
 
-
 /* COMBINATORIC CALCULATIONS */
 
 
 void get_alpha(struct process_scp* working_scp, struct index* alpha) {
-
-  /*
-  printf("Going into get_alpha, working_scp is:\n");
-  print_process_scp(working_scp);
-  */
-	 
   int i, j, nst, nsc;
   struct subset alpha_subset;
   
@@ -289,20 +427,6 @@ void get_alpha(struct process_scp* working_scp, struct index* alpha) {
     alpha[i-1] = index_of_subset(&alpha_subset);
     destroy_subset(alpha_subset);
   }
-}
-
-void destroy_alpha_or_omega(struct index* alpha, int nst) {    
-    for (int i = 1; i <= nst; i++) {
-      destroy_index(alpha[i-1]);
-    }
-    free(alpha);
-}
-
-void destroy_theta(int** theta, int nst) {
-  for (int i = 1; i <= nst; i++) {
-    free(theta[i-1]);
-  }
-  free(theta);
 }
 
 int* compute_fully_allocated(struct process_scp* working_scp,
@@ -333,51 +457,6 @@ int* compute_fully_allocated(struct process_scp* working_scp,
   return fully_allocated;
 }
 
-int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites) {
-  int i, j, done;
-  
-  int nst = feasible_guide->no_students;
-  int nsc = feasible_guide->no_schools;
-  
-  int** theta = malloc(nst * sizeof (int*));
-  for (i = 1; i <= nst; i++) {
-    theta[i-1] = malloc(nsc * sizeof(int));
-  }  
-
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      theta[i-1][j-1] = 0;
-    }
-  }
-  
-  for (i = 1; i <= nst; i++) {
-    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
-      theta[i-1][favorites[i-1]-1] = 1;
-    }
-  }
-  
-  for (i = 1; i <= nst; i++) {
-    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
-      
-      theta[i-1][favorites[i-1]-1] = 1;
-    
-      done = 0;
-      j = 1;
-      while (!done) {
-		if (j != favorites[i-1] && feasible_guide->allocations[i-1][j-1] > 0.000001) {
-	  done = 1;
-	  theta[i-1][j-1] = -1;
-	}
-	else {
-	  j++;
-	}
-      }
-    }
-  }
-
-  return theta;
-}
-
 void print_theta(int** theta, int nst, int nsc) {
   int i, j;
 
@@ -389,17 +468,16 @@ void print_theta(int** theta, int nst, int nsc) {
   }
 }
 
-int* initialize_theta_sums(int **theta, int nst, int nsc) {
-  int i, j;
-  int* new_theta_sums;
-  
-  new_theta_sums = malloc(nsc * sizeof(int));
-  for (j = 1; j <= nsc; j++) {
-    new_theta_sums[j-1] = 0;
-    for (i = 1; i <= nst; i++) {
-      new_theta_sums[j-1] += theta[i-1][j-1];
+void destroy_alpha_or_omega(struct index* alpha, int nst) {    
+    for (int i = 1; i <= nst; i++) {
+      destroy_index(alpha[i-1]);
     }
-  }
+    free(alpha);
+}
 
-  return new_theta_sums;
+void destroy_theta(int** theta, int nst) {
+  for (int i = 1; i <= nst; i++) {
+    free(theta[i-1]);
+  }
+  free(theta);
 }
