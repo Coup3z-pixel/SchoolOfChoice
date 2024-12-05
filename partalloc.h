@@ -23,6 +23,8 @@ struct pure_alloc {
 
 int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second);
 
+int students_are_fully_allocated(struct partial_alloc* my_alloc);
+
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp);
 
 double* school_sums(struct partial_alloc* my_alloc);

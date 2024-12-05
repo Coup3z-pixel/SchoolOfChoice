@@ -20,6 +20,11 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  if (!safe_schools_are_safe(&input_scp)) {
+    fprintf(stderr, "We got an unsafe input_scp.\n");
+    exit(0);
+  }
+
   struct process_scp pr_scp = process_scp_from_input(&input_scp);
 
   if (!satisfies_the_GMC(&pr_scp)) {
@@ -30,6 +35,11 @@ int main(int argc, char *argv[]) {
   int* coarse = malloc(pr_scp.no_schools * sizeof(int));
   
   struct partial_alloc mcc_alloc = MCC_alloc_plus_coarse_cutoffs(&pr_scp,coarse);
+
+  if (!students_are_fully_allocated(&mcc_alloc)) {
+    printf("mcc was about to return a nonallocation.\n");
+    exit(0);
+  }
   
   print_partial_alloc(&mcc_alloc); 
 

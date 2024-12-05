@@ -25,20 +25,25 @@ int main(int argc, char const *argv[])
     exit(0);
   }
   
-  struct partial_alloc lpgcps_alloc = simple_LPGCPS_alloc(&input_process_scp);  
+  struct partial_alloc lpgcps_alloc = simple_LPGCPS_alloc(&input_process_scp);
+
+  /*
   struct partial_alloc gcps_alloc = simple_GCPS_alloc(&input_process_scp);
 
   if (!partial_allocs_are_same(&lpgcps_alloc, &gcps_alloc)) {
     fprintf(stderr, "lpgcps and gcps produced different allocations!!!!\n");
     exit(0);
   }
+  */
 
   print_partial_alloc(&lpgcps_alloc); 
   
   destroy_input_sch_ch_prob(input_scp);
   destroy_process_scp(input_process_scp);
   destroy_partial_alloc(lpgcps_alloc);
+  /*
   destroy_partial_alloc(gcps_alloc);
+  */
 
   return 0;
 }

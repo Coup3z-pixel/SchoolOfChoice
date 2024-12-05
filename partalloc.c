@@ -18,6 +18,23 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
   return 1;
 }
 
+int students_are_fully_allocated(struct partial_alloc* my_alloc) {
+  int i, j;
+  double sum;
+
+  for (i = 1; i <= my_alloc->no_students; i++) {
+    sum = 0.0;
+    for (j = 1; j <= my_alloc->no_schools; j++) {
+      sum += my_alloc->allocations[i-1][j-1];
+    }
+    if (sum <= 0.999999 || sum >= 1.000001) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp) {
   int i,j;
   int nst = my_scp->no_students;

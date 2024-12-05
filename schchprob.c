@@ -331,10 +331,55 @@ struct process_scp make_toy_process_scp() {
   return my_scp;
 }
 
-void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp) {
+int safe_schools_are_safe(struct input_sch_ch_prob* my_scp) {
+  int i, j, k, l, nst, nsc, top_pr, top_count;
+
+  nst = my_scp->no_students;
+  nsc = my_scp->no_schools;
+  
+  k = my_scp->no_eligible_schools[0];
+  l = my_scp->preferences[0][k-1];
+
+  top_pr = my_scp->priorities[0][l-1];
+
+  for (i = 2; i <= nst; i++) {
+    k = my_scp->no_eligible_schools[i-1];
+    l = my_scp->preferences[i-1][k-1];
+    if (my_scp->priorities[i-1][l-1] != top_pr) {
+      fprintf(stderr, "Safe school priorities disagree.\n");
+      return 0;
+    }
+  }
+
+  top_count = 0;
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      if (my_scp->priorities[i-1][j-1] > top_pr) {
+	fprintf(stderr, "Priority above safe school priority.\n");
+	return 0;
+      }
+      if (my_scp->priorities[i-1][j-1] == top_pr) {
+	top_count++;
+      }
+    }
+  }
+  if (top_count != nst) {
+    fprintf(stderr, "Too many top priorities.\n");
+    return 0;
+  }
+
+  return 1;
+}
+
+void print_generic_header() {
+  printf("/* This is a sample introductory comment. */\n");
+}
+
+void print_input_scp_body(struct input_sch_ch_prob* my_scp) {
   int i, j, nst, nsc;
 
-  printf("/* This is a sample introductory comment. */\n");
+  nst = my_scp->no_students;
+  nsc = my_scp->no_schools;
   
   printf("There are %d students and %d schools\n", my_scp->no_students, my_scp->no_schools);
     
@@ -344,12 +389,18 @@ void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp) {
   }
   printf("%d)\n",my_scp->quotas[my_scp->no_schools-1]);
   
-  printf("\n");
+  /*  printf("\n"); */
+  
+  printf("The priority matrix is\n");
+  for (i = 1; i <= nst; i++) {
+    printf("    ");
+    for (j = 1; j <= nsc; j++) {
+      printf("%i    ",  my_scp->priorities[i-1][j-1]);
+    }
+    printf("\n");
+  }
 
-  nst = my_scp->no_students;
-  nsc = my_scp->no_schools;
-
-  printf("The students numbers of ranked schools are ");
+  printf("The students numbers of ranked schools are\n");
   printf("(");
   for (i = 1; i <= nst - 1; i++) {
     printf("%i,", my_scp->no_eligible_schools[i-1]);
@@ -364,15 +415,11 @@ void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp) {
     }
     printf("\n");
   }
-  
-  printf("The priority matrix is\n");
-  for (i = 1; i <= nst; i++) {
-    printf("%i:  ", i);
-    for (j = 1; j <= nsc; j++) {
-      printf("%i  ",  my_scp->priorities[i-1][j-1]);
-    }
-    printf("\n");
-  }
+}
+
+void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp) {
+  print_generic_header();
+  print_input_scp_body(my_scp);
 }
 
 void print_process_scp(struct process_scp* my_scp) {

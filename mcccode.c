@@ -25,7 +25,7 @@ struct partial_alloc MCC_alloc_plus_coarse_cutoffs(struct process_scp* myscp, in
     }
       
     for (j = 1; j <= nsc; j++) {
-      if (excesses[j-1] > 0.000001) {
+      if (excesses[j-1] > 0.000000001) {
 	fine_cutoffs[j-1] = naive_eq_cutoff(myscp, j, &demands, fine_cutoffs[j-1]);
       }
     }
@@ -134,19 +134,30 @@ double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands)
 }
 
 struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cutoffs) {
-  int i, j, k;
+  int i, j, k, nst, nsc;
+  double unfilled_demand;
+  struct partial_alloc answer;
   
-  int nst = myscp->no_students;
-  int nsc = myscp->no_schools;
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
 
   int* coarse_cutoffs = malloc (nsc * sizeof(int));
   for (j = 1; j <= nsc; j++) {
     coarse_cutoffs[j-1] = floor(fine_cutoffs[j-1]);
   }
 
-  struct partial_alloc answer = zero_alloc_for_process_scp(myscp);
   for (i = 1; i <= nst; i++) {
-    double unfilled_demand = 1.0;
+    int l = myscp->no_eligible_schools[i-1];
+    j = myscp->preferences[i-1][l-1];
+    if (coarse_cutoffs[j-1] >= myscp->priorities[i-1][j-1]) {
+      printf("We seem to have a safe school priority violation.\n");
+      exit(0);
+    }
+  }
+
+  answer = zero_alloc_for_process_scp(myscp);
+  for (i = 1; i <= nst; i++) {
+    unfilled_demand = 1.0;
     for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
       if (unfilled_demand > 0.000001) {
 	j = myscp->preferences[i-1][k-1];
@@ -157,12 +168,17 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
 	  answer.allocations[i-1][j-1] = min(unfilled_demand,
 				       1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1]));  
 	}
-	unfilled_demand = unfilled_demand - answer.allocations[i-1][j-1];
+	unfilled_demand -= answer.allocations[i-1][j-1];
       }
     }
   }
 
   free(coarse_cutoffs);
+
+  if (!students_are_fully_allocated(&answer)) {
+    printf("compute_demands was about to return not fully allocated demands.\n");
+    exit(0);
+  }
 
   return answer;
 }

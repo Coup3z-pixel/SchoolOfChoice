@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "normal.h"
+#include "schchprob.h"
 
 void make_example(int nsc, int no_students_per_school, int school_capacity,
 		  double school_valence_std_dev, double idiosyncratic_std_dev,
@@ -72,12 +73,15 @@ int** compute_schools_priorities(int nst, int nsc, double test_std_dev,
 				 int no_nontop_priority_grades, double** distance,
 				 int* safe_school, int* no_eligible_students, int** eligible);
 
-void print_results_makex(int nst, int nsc, int no_students_per_school, int school_capacity,
-			 double school_valence_std_dev, double idiosyncratic_std_dev,
-			 double test_std_dev, int no_nontop_priority_grades,
-			 int** priority, int* no_ranked_schools, int** preferences);
+void print_makex_header(int nsc, int no_students_per_school, int school_capacity,
+			double school_valence_std_dev, double idiosyncratic_std_dev,
+			double test_std_dev, int no_nontop_priority_grades);
+
+void print_makex_output(int nsc, int no_students_per_school, int school_capacity,
+			double school_valence_std_dev, double idiosyncratic_std_dev,
+			double test_std_dev, int no_nontop_priority_grades,
+			struct input_sch_ch_prob* my_scp);
 
 void clean_up_makex(int nst, double* location, double** distance, double* valence,
-		    double** utility, int* safe_school, int* no_ranked_schools, int** priority,
-		    int** preferences, int* no_eligible_students,
-		    int** schools_rankings_of_students);
+		    double** utility, int** eligible, int* safe_school,
+		    int* no_ranked_schools, int* no_eligible_students);

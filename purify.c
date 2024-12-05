@@ -18,7 +18,6 @@ int main(int argc, char const *argv[])
     fprintf(stderr, "purify invoked with too many (> 2) command line arguments.\n");
     exit(0);
   }
-  
   purified = random_pure_allocation(&input_alloc);
   destroy_partial_alloc(input_alloc);
   

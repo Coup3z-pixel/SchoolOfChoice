@@ -48,15 +48,22 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double
   
   my_graph.stu_sch_edges = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
+    int nbr_count = 0;
     my_graph.stu_sch_edges[i-1] = malloc(nsc * sizeof(int));
     for (j = 1; j <= nsc; j++) {
       if (my_alloc->allocations[i-1][j-1] > 0.00001 && my_alloc->allocations[i-1][j-1] < 0.99999) {
 	my_graph.stu_sch_edges[i-1][j-1] = 1;
 	my_graph.no_edges++;
+
+	nbr_count++;
       }
       else {
 	my_graph.stu_sch_edges[i-1][j-1] = 0;
       }
+    }
+    if (nbr_count == 1) {
+      printf("We have a student with one nonintegral neighbor.\n");
+      exit(0);
     }
   }
 

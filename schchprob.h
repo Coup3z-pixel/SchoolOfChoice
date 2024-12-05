@@ -13,7 +13,7 @@ struct input_sch_ch_prob {
   int* quotas;
   int* no_eligible_schools; /* for each student, the number of eligible schools */
   int** preferences; /* each student's list of eligible schools, from best to worst */
-  int** priorities; /* each schools's priorities of eligible students, with 0 for ineligible */
+  int** priorities; /* each schools's priorities of eligible students */
 };
 
 struct process_scp {
@@ -47,6 +47,12 @@ int* get_favorites(struct process_scp* working_scp);
 struct input_sch_ch_prob make_toy_sch_ch_prob();
 
 struct process_scp make_toy_process_scp();
+
+int safe_schools_are_safe(struct input_sch_ch_prob* my_scp);
+
+void print_generic_header();
+
+void print_input_scp_body(struct input_sch_ch_prob* my_scp);
 
 void print_input_sch_ch_prob(struct input_sch_ch_prob* my_scp);
 

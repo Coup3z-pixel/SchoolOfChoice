@@ -36,8 +36,8 @@ emcc: emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchpr
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o $(LDFLAGS)
 
-makex: makex.c normal.o linprog.o  makexcode.o
-	$(CC) -o makex makex.c normal.o linprog.o makexcode.o $(LDFLAGS)
+makex: makex.c normal.o linprog.o subset.o schchprob.o  makexcode.o
+	$(CC) -o makex makex.c normal.o linprog.o subset.o schchprob.o makexcode.o $(LDFLAGS)
 
 normal.o: normal.h normal.c
 	$(CC) $(CFLAGS) -c normal.c 
