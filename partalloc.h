@@ -25,17 +25,21 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
 
 int students_are_fully_allocated(struct partial_alloc* my_alloc);
 
+int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* my_scp);
+
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp);
 
 double* school_sums(struct partial_alloc* my_alloc);
 
-struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide,
+struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					    struct subset* J_subset, struct subset* P_subset);
 
+/*
 struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
 					 struct subset* J_subset);
+*/
 
-struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
+struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					  struct subset* J_subset, struct subset* P_subset);
 
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,

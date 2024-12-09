@@ -96,6 +96,11 @@ int pivot_is_valid(struct pivot* my_pivot, int** theta, int* theta_sums, struct 
   int g, h, i, j, k;
   h = my_pivot->h;
 
+  if (pivot_has_zero_zeroth_school(my_pivot)) {
+    printf("At this point my_pivot has a zeroth zero school.\n");
+    /* exit(0); */
+  }
+
   if (!fully_allocated[my_pivot->schools[0]-1] || theta_sums[my_pivot->schools[0]-1] <= 0) {
     return 0;
   }
@@ -308,6 +313,11 @@ struct pivot* extract_pivot(int** theta, struct index* alpha, int o_h,
   my_pivot = malloc(sizeof(struct pivot));
   *my_pivot = initialized_pivot(h);
 
+  if (o_h == 0) {
+    printf("We are about to assign the zero school.\n");
+    exit(0);
+  }
+
   my_pivot->schools[h] = o_h;
   
   current_o = o_h;
@@ -339,6 +349,11 @@ struct pivot* extract_pivot(int** theta, struct index* alpha, int o_h,
 	  student_qualified_for_school(i,j,feasible_guide,theta,favorites)) {
 	done = 1;
 	current_o = j;
+
+	if (j == 0) {
+	  printf("Down below, we are about to assign the zero school.\n");
+	  exit(0);
+	}
 
 	my_pivot->schools[g-1] = j;
 	

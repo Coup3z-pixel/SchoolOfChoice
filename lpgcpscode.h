@@ -19,7 +19,7 @@ void find_critical_pair(struct process_scp* working_scp,
 
 void LPdescend_to_left_subproblem(struct process_scp* working_scp,
 				  struct partial_alloc* final_alloc,
-				  struct subset* J_subset);
+				  struct subset* J_subset, struct subset* P_subset);
 
 void LPdescend_to_right_subproblem(struct process_scp* working_scp,
 				   struct partial_alloc* final_alloc,

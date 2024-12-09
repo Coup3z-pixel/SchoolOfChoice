@@ -81,7 +81,7 @@ struct partial_alloc LPGCPS_allocation_with_guide(struct process_scp* input) {
     find_critical_pair(&working_scp, &P_subset, &J_subset, critical_pair_found);
 
     if (J_subset.subset_size > 0) {
-      LPdescend_to_left_subproblem(&working_scp, &final_alloc, &J_subset);
+      LPdescend_to_left_subproblem(&working_scp, &final_alloc, &J_subset, &P_subset);
     }
 
     if (J_subset.subset_size < J_subset.large_set_size) {
@@ -101,14 +101,14 @@ struct partial_alloc LPGCPS_allocation_with_guide(struct process_scp* input) {
 
 void LPdescend_to_left_subproblem(struct process_scp* working_scp,
 				  struct partial_alloc* final_alloc,
-				  struct subset* J_subset) {  
+				  struct subset* J_subset, struct subset* P_subset) {  
   struct process_scp left_scp;
   struct partial_alloc left_increment;
   struct index J_index, P_index;
 
   int nsc = working_scp->no_schools;
   
-  left_scp = critical_sub_process_scp(working_scp, J_subset);
+  left_scp = left_sub_process_scp(working_scp, J_subset, P_subset);
     
   left_increment = LPGCPS_allocation_with_guide(&left_scp);
     
@@ -129,7 +129,7 @@ void LPdescend_to_right_subproblem(struct process_scp* working_scp,
   struct partial_alloc right_increment;
   struct index J_index, P_index;
 
-  right_scp = crit_compl_sub_process_scp(working_scp, J_subset, P_subset);
+  right_scp = right_sub_process_scp(working_scp, J_subset, P_subset);
 
   right_increment = LPGCPS_allocation_with_guide(&right_scp);
     

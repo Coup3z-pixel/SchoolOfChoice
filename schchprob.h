@@ -33,10 +33,10 @@ void copy_process_scp(struct process_scp* my_scp, struct process_scp* copy);
 
 struct process_scp process_scp_from_input(struct input_sch_ch_prob* my_scp);
 
+struct process_scp left_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
+					    struct subset* P_subset);
 
-struct process_scp critical_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset);
-
-struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
+struct process_scp right_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
 					struct subset* P_subset);
 
 

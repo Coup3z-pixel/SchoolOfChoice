@@ -35,6 +35,27 @@ int students_are_fully_allocated(struct partial_alloc* my_alloc) {
   return 1;
 }
 
+int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* my_scp) {
+  int i, j;
+  double sum;
+  
+  if (!students_are_fully_allocated(my_alloc)) {
+    return 0;
+  }
+
+  for (j = 1; j <= my_scp->no_schools; j++) {
+    sum = 0.0;
+    for (i = 1; i <= my_scp->no_students; i++) {
+      sum += my_alloc->allocations[i-1][j-1];
+    }
+    if (sum > my_scp->quotas[j-1] + 0.000001) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp) {
   int i,j;
   int nst = my_scp->no_students;
@@ -68,7 +89,7 @@ double* school_sums(struct partial_alloc* my_alloc) {
   return sums;
 }
 
-struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide,
+struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					    struct subset* J_subset, struct subset* P_subset) {
   int i, j, old_std_no, old_sch_no;
 
@@ -103,7 +124,7 @@ struct partial_alloc reduced_feasible_guide(struct partial_alloc* feasible_guide
 
   return new_guide;
 }
-
+/*
 struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
 					 struct subset* J_subset) {
   struct subset all_schools = fullset(feasible_guide->no_schools);
@@ -114,13 +135,15 @@ struct partial_alloc left_feasible_guide(struct partial_alloc* feasible_guide,
 
   return new_guide;
 }
+*/
 
-struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
+struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					  struct subset* J_subset, struct subset* P_subset) {
   struct subset J_compl = complement_of_subset(J_subset);
   struct subset P_compl = complement_of_subset(P_subset);
 
-  struct partial_alloc new_guide = reduced_feasible_guide(feasible_guide, &J_compl, &P_compl);
+  struct partial_alloc new_guide = left_sub_process_feasible_guide(feasible_guide,
+								   &J_compl, &P_compl);
 
   destroy_subset(J_compl);
   destroy_subset(P_compl);
@@ -131,8 +154,21 @@ struct partial_alloc right_feasible_guide(struct partial_alloc* feasible_guide,
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
 			     struct index* stu_index,struct index* sch_index) {
   int i,j;
+
+  if (stu_index->no_elements != increment->no_students ||
+      sch_index->no_elements != increment->no_schools) {
+    printf("We have mismatched indices and increments.\n");
+    exit(0);
+  }
+  
   for (i = 1; i <= increment->no_students; i++) {
     for (j = 1; j <= increment->no_schools; j++) {
+
+      if (stu_index->indices[i-1] == 0 || sch_index->indices[j-1] == 0) {
+	printf("We have screwed up the indices, somehow.\n");
+	exit(0);
+      }
+      
       base->allocations[stu_index->indices[i-1]-1][sch_index->indices[j-1]-1] +=
 	increment->allocations[i-1][j-1]; 
     }

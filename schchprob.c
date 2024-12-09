@@ -107,56 +107,85 @@ void copy_process_scp(struct process_scp* my_scp, struct process_scp* copy) {
   copy->time_remaining = my_scp->time_remaining;
 }
 
-struct process_scp critical_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset) {
+struct process_scp left_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
+					      struct subset* P_subset) {
   struct process_scp new_scp;
   
-  int i, j, k;
-  struct index J_index;
-  J_index = index_of_subset(J_subset);
+  int i, j, l, count;
 
+  struct index J_index, P_index;
+  J_index = index_of_subset(J_subset);
+  P_index = index_of_subset(P_subset);
+
+  int* reverse_P_index = malloc(my_scp->no_schools * sizeof(int));
+  count = 0;
+
+  for (j = 1; j <= my_scp->no_schools; j++) {
+    if (P_subset->indicator[j-1] == 1) {
+      count++;
+      reverse_P_index[j-1] = count;
+    }
+    else {
+      reverse_P_index[j-1] = 0;
+    }
+  }
+  
   int nst = J_subset->subset_size;
-  int nsc = my_scp->no_schools;
+  int nsc = P_subset->subset_size;
 
   new_scp.no_students = nst;
   new_scp.no_schools = nsc;
 
   new_scp.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
-    new_scp.quotas[j-1] = my_scp->quotas[j-1];
+    new_scp.quotas[j-1] = my_scp->quotas[P_index.indices[j-1]-1];
   }
 
   new_scp.no_eligible_schools = malloc(nst * sizeof(int));
-  for (i = 1; i <= nst; i++) {
-    new_scp.no_eligible_schools[i-1] = my_scp->no_eligible_schools[J_index.indices[i-1]-1];
-  }
-  
   new_scp.preferences = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
+    new_scp.no_eligible_schools[i-1] = 0;
+    for (l = 1; l <= my_scp->no_eligible_schools[J_index.indices[i-1]-1]; l++) {
+      if (P_subset->indicator[my_scp->preferences[J_index.indices[i-1]-1][l-1]-1] == 1) {
+	new_scp.no_eligible_schools[i-1]++;
+      }
+    }
     new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
-    for (k = 1; k <= new_scp.no_eligible_schools[i-1]; k++) {
-      new_scp.preferences[i-1][k-1] = my_scp->preferences[J_index.indices[i-1]-1][k-1];
+    count = 0;
+    for (l = 1; l <= my_scp->no_eligible_schools[J_index.indices[i-1]-1]; l++) {
+      if (P_subset->indicator[my_scp->preferences[J_index.indices[i-1]-1][l-1]-1] == 1) {
+	new_scp.preferences[i-1][count] =
+	  reverse_P_index[my_scp->preferences[J_index.indices[i-1]-1][l-1]-1];
+	count++;
+      }
     }
   }
 
   compute_eligibility_matrix(&new_scp);
-  
+
   new_scp.priorities = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
     new_scp.priorities[i-1] = malloc(nsc * sizeof(int));
     for (j = 1; j <= nsc; j++) {
-      new_scp.priorities[i-1][j-1] = my_scp->priorities[J_index.indices[i-1]-1][j-1];
+      new_scp.priorities[i-1][j-1] =
+	  my_scp->priorities[J_index.indices[i-1]-1][P_index.indices[j-1]-1];
     }
   }
 
   new_scp.time_remaining = my_scp->time_remaining;
 
+  /*
+  destroy_subset(J_compl);
+  destroy_subset(P_compl);
+  */
   destroy_index(J_index);
-  
+  destroy_index(P_index);
+  free(reverse_P_index); 
+
   return new_scp;    
 }
 
-
-struct process_scp crit_compl_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
+struct process_scp right_sub_process_scp(struct process_scp* my_scp, struct subset* J_subset,
 					      struct subset* P_subset) {
   struct process_scp new_scp;
   

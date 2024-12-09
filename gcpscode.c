@@ -175,11 +175,9 @@ void descend_to_left_subproblem(struct process_scp* working_scp, struct partial_
   struct partial_alloc left_increment;
   struct pivot_list left_list;
   struct index J_index, P_index;
-
-  int nsc = working_scp->no_schools;
   
-  left_scp = critical_sub_process_scp(working_scp, J_subset);    
-  left_feas_guide = left_feasible_guide(feasible_guide, J_subset);
+  left_scp = left_sub_process_scp(working_scp, J_subset, P_subset);    
+  left_feas_guide = left_sub_process_feasible_guide(feasible_guide, J_subset, P_subset);  
   left_list = left_reduced_pivot_list(probe_list, J_subset, P_subset);
     
   left_increment = GCPS_allocation_with_guide(&left_scp, &left_feas_guide, &left_list,
@@ -187,7 +185,8 @@ void descend_to_left_subproblem(struct process_scp* working_scp, struct partial_
 						no_old_pivots, h_sum);
     
   J_index = index_of_subset(J_subset);
-  P_index = index_of_fullset(nsc);
+  P_index = index_of_subset(P_subset);
+  
   increment_partial_alloc(final_alloc, &left_increment, &J_index, &P_index);
 
   destroy_pivot_list(left_list);
@@ -200,10 +199,10 @@ void descend_to_left_subproblem(struct process_scp* working_scp, struct partial_
 
 void descend_to_right_subproblem(struct process_scp* working_scp,
 				 struct partial_alloc* final_alloc,
-				struct partial_alloc* feasible_guide, 
-				struct pivot_list* probe_list,
-				struct subset* P_subset, struct subset* J_subset,
-				int* no_segments, int* no_splits, int* no_new_pivots,
+				 struct partial_alloc* feasible_guide, 
+				 struct pivot_list* probe_list,
+				 struct subset* P_subset, struct subset* J_subset,
+				 int* no_segments, int* no_splits, int* no_new_pivots,
 				 int* no_old_pivots, int* h_sum) {
   struct process_scp right_scp;
   struct partial_alloc right_feas_guide;
@@ -211,9 +210,10 @@ void descend_to_right_subproblem(struct process_scp* working_scp,
   struct pivot_list right_list;
   struct index J_index, P_index;
 
-  right_scp = crit_compl_sub_process_scp(working_scp, J_subset, P_subset);
-  right_feas_guide = right_feasible_guide(feasible_guide, J_subset, P_subset);
+  right_scp = right_sub_process_scp(working_scp, J_subset, P_subset);
+  right_feas_guide = right_sub_process_feasible_guide(feasible_guide, J_subset, P_subset);  
   right_list = right_reduced_pivot_list(probe_list, J_subset, P_subset);
+  
 
   right_increment = GCPS_allocation_with_guide(&right_scp,&right_feas_guide, &right_list,
 					       no_segments, no_splits, no_new_pivots,
@@ -221,6 +221,7 @@ void descend_to_right_subproblem(struct process_scp* working_scp,
     
   J_index = index_of_complement(J_subset);    
   P_index = index_of_complement(P_subset);
+  
   increment_partial_alloc(final_alloc, &right_increment, &J_index, &P_index);
     
   destroy_pivot_list(right_list);

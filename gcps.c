@@ -17,14 +17,21 @@ int main(int argc, char const *argv[])
     exit(0);
   }
   
-  struct process_scp input_process_scp = process_scp_from_input(&input_scp);
+  struct process_scp input_process_scp;
+  input_process_scp = process_scp_from_input(&input_scp);
 
   if (!satisfies_the_GMC(&input_process_scp)) {
     fprintf(stderr, "The input_scp does not satisfy the GMC.\n");
     exit(0);
   }
   
-  struct partial_alloc gcps_alloc = simple_GCPS_alloc(&input_process_scp);
+  struct partial_alloc gcps_alloc;
+  gcps_alloc = simple_GCPS_alloc(&input_process_scp);
+
+  if (!is_a_feasible_allocation(&gcps_alloc, &input_process_scp)) {
+    fprintf(stderr, "We have produced a nonallocation!!\n");
+    exit(0);
+  }
 
   print_partial_alloc(&gcps_alloc); 
   

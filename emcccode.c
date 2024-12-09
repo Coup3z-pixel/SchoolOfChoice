@@ -164,10 +164,12 @@ void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node**
 
   while(*found_cycle && envygr[i-1][j-1] != NULL) {
     *found_cycle = 0;
-    all_nodes_reached = NULL;
     new_layer_nonempty = 1;
+    all_nodes_reached = NULL;
+    all_nodes_reached_tip = NULL;
     
     while (!(*found_cycle) && new_layer_nonempty && envygr[i-1][j-1] != NULL) {
+      
       if (all_nodes_reached == NULL) {
 	all_nodes_reached = copy_of_list(envygr[i-1][j-1]);
 	all_nodes_reached_tip = all_nodes_reached;
@@ -182,22 +184,39 @@ void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node**
 	  chart[probe->stuno-1][probe->schno-1] = create_stu_sch_node(i,j);
 	  probe = probe->next;
 	}
+
+	if (all_nodes_reached_tip == NULL) {
+	  printf("Somehow after initialization all_nodes_reached_tip is NULL.\n");
+	  exit(0);
+	}
       }
+      
       else {
+
+	if (all_nodes_reached != NULL && all_nodes_reached_tip == NULL) {
+	  printf("Somehow all_nodes_reached_tip is NULL.\n");
+	  exit(0);
+	}
+	
 	new_layer =  get_new_layer(envygr, chart, last_layer, found_cycle, i, j);
 	if (new_layer == NULL) {
 	  new_layer_nonempty = 0;
 	}
-	
-	all_nodes_reached_tip->next = new_layer;
-	while (all_nodes_reached_tip != NULL) {
-	  all_nodes_reached_tip = all_nodes_reached_tip->next;
+	else {
+	  all_nodes_reached_tip->next = new_layer;
+	  while (all_nodes_reached_tip->next != NULL) {
+	    all_nodes_reached_tip = all_nodes_reached_tip->next;
+	  }
 	}
 	last_layer = new_layer;
       }
+      
     }
 
     if (*found_cycle) {
+
+      /*      fprintf(stderr, "We actually found an inefficiency!\n"); */
+      
       process_cycle(envygr, enviedgr, chart, alloc_to_adjust, i, j);
     }
 
