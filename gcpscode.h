@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "critpair.h"
+#include "efficient.h"
 
 struct partial_alloc simple_GCPS_alloc(struct process_scp* input); 
 

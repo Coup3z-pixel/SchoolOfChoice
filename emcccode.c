@@ -49,28 +49,6 @@ struct partial_alloc EMCC_allocation(struct process_scp* myscp) {
   return alloc_to_adjust;
 }
 
-int** get_active_pairs(struct process_scp* myscp, struct partial_alloc* alloc_to_adjust) {
-  int i, j, nst, nsc;
-  
-  nst = myscp->no_students;
-  nsc = myscp->no_schools;
-
-  int** answer = malloc(nst * sizeof(int*));
-  for (i = 1; i <= nst; i++) {
-    answer[i-1] = malloc(nsc * sizeof(int));
-    for (j = 1; j <= nsc; j++) {
-      if (alloc_to_adjust->allocations[i-1][j-1] > 0.00001 && j != myscp->preferences[i-1][0]) {
-	answer[i-1][j-1] = 1;
-      }
-      else {
-	answer[i-1][j-1] = 0;
-      }
-    }
-  }
-
-  return answer;
-}
-
 struct stu_sch_node*** get_envy_graph(struct process_scp* myscp,
 				      struct partial_alloc* alloc_to_adjust, int* coarse) {
   int h, i, j, k, l, nst, nsc;
@@ -88,7 +66,7 @@ struct stu_sch_node*** get_envy_graph(struct process_scp* myscp,
     }
   }
 
-  active = get_active_pairs(myscp, alloc_to_adjust);
+  active = get_pairs_that_can_envy(myscp, alloc_to_adjust);
 
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
@@ -118,33 +96,6 @@ struct stu_sch_node*** get_envy_graph(struct process_scp* myscp,
   free(active);
   
   return envygr;
-}
-
-struct stu_sch_node*** get_envied_graph(struct stu_sch_node*** envygr, int nst, int nsc) {
-  int i, j, k, l;
-  struct stu_sch_node* probe;
-
-  struct stu_sch_node*** enviedgr = malloc(nst * sizeof(struct stu_sch_node**));
-  for (i = 1; i <= nst; i++) {
-    enviedgr[i-1] = malloc(nsc * sizeof(struct stu_sch_node*));
-    for (j = 1; j <= nsc; j++) {
-      enviedgr[i-1][j-1] = NULL;
-    }
-  }
-
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      probe = envygr[i-1][j-1];
-      while (probe != NULL) {
-	k = probe->stuno;
-	l = probe->schno;
-	append_node_to_stu_sch_list(&(enviedgr[k-1][l-1]), i, j);
-	probe = probe->next;
-      }
-    }
-  }
-  
-  return enviedgr;
 }
 
 void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node*** enviedgr,
@@ -184,20 +135,9 @@ void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node**
 	  chart[probe->stuno-1][probe->schno-1] = create_stu_sch_node(i,j);
 	  probe = probe->next;
 	}
-
-	if (all_nodes_reached_tip == NULL) {
-	  printf("Somehow after initialization all_nodes_reached_tip is NULL.\n");
-	  exit(0);
-	}
       }
       
       else {
-
-	if (all_nodes_reached != NULL && all_nodes_reached_tip == NULL) {
-	  printf("Somehow all_nodes_reached_tip is NULL.\n");
-	  exit(0);
-	}
-	
 	new_layer =  get_new_layer(envygr, chart, last_layer, found_cycle, i, j);
 	if (new_layer == NULL) {
 	  new_layer_nonempty = 0;
@@ -225,46 +165,6 @@ void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node**
 
   free(found_cycle);
   remove_pair_from_envy_and_envied_graphs(envygr, enviedgr, i, j);
-}
-
-struct stu_sch_node* get_new_layer(struct stu_sch_node*** envygr, struct stu_sch_node*** chart,
-				   struct stu_sch_node* last_layer, int* found_cycle, int i, int j) {
-  int g, h, k, l;
-  struct stu_sch_node* new_layer;
-  struct stu_sch_node* new_layer_tip;
-  struct stu_sch_node* probe;
-  struct stu_sch_node* subprobe;
-  
-  new_layer = NULL;
-  new_layer_tip = NULL;
-  probe = last_layer;
-  while (probe != NULL) {
-    g = probe->stuno;
-    h = probe->schno;
-    subprobe = envygr[g-1][h-1];
-    while (subprobe != NULL) {
-     k = subprobe->stuno;
-      l = subprobe->schno;
-      if (k == i && l == j) {
-	*found_cycle = 1;
-      }
-      if (chart[k-1][l-1] == NULL) {	
-	chart[k-1][l-1] = create_stu_sch_node(g, h);
-	if (new_layer == NULL) {
-	  new_layer = create_stu_sch_node(k, l);
-	  new_layer_tip = new_layer;
-	}
-	else {
-	  new_layer_tip->next = create_stu_sch_node(k, l);
-	  new_layer_tip = new_layer_tip->next;
-	}
-      }
-      subprobe = subprobe->next;
-    }
-    probe = probe->next;
-  }
-
-  return new_layer;
 }
 
 void process_cycle(struct stu_sch_node*** envygr, struct stu_sch_node*** enviedgr,
@@ -360,150 +260,7 @@ void adjust_partial_alloc_along_cycle(struct partial_alloc* alloc, struct stu_sc
     probe = probe->next;
   }
   alloc->allocations[probe->stuno-1][cycle->schno-1] += Delta;
-}
-
-void clean_up_chart_and_nodes(struct stu_sch_node*** chart, struct stu_sch_node* found_list) {
-  int g, h;
-  struct stu_sch_node* probe;
-
-  probe = found_list;
-  while (probe != NULL) {
-    g = probe->stuno;
-    h = probe->schno;
-    free(chart[g-1][h-1]);
-    chart[g-1][h-1] = NULL;
-    probe = probe->next;
-  }
-
-  destroy_stu_sch_list(found_list);
-}
-
-void remove_pair_from_list(struct stu_sch_node** list, int k, int l) {
-  if (!stu_sch_list_contains_pair(*list, k, l)) {
-    printf("We are trying to remove something that isn't there.\n");
-    exit(0);
-  }
-  
-  struct stu_sch_node* probe;
-  struct stu_sch_node* preprobe;
-
-  probe = *list;
-  
-  preprobe = *list;
-  while (probe->stuno != k || probe->schno != l) {
-    
-    probe = probe->next;
-    
-    if (preprobe->next != probe) {
-      preprobe = preprobe->next;
-    }
-  }
-
-  if (probe != *list) {
-    preprobe->next = probe->next;
-  }
-  else {
-    *list = probe->next;
-  }
-  free(probe);
-}
-
-void remove_pair_from_envy_and_envied_graphs(struct stu_sch_node*** envygr,
- 					     struct stu_sch_node*** enviedgr, int k, int l) {
-  struct stu_sch_node* probe;
-  struct stu_sch_node* yprobe;
-  struct stu_sch_node* iedprobe;
-
-  yprobe = copy_of_list(envygr[k-1][l-1]);
-  iedprobe = copy_of_list(enviedgr[k-1][l-1]);
-
-  probe = yprobe;
-  while (probe != NULL) {
-    remove_pair_from_list(&(enviedgr[probe->stuno-1][probe->schno-1]), k, l);
-    probe = probe->next;
-  }
-
-  probe = iedprobe;
-  probe = enviedgr[k-1][l-1];
-  while (probe != NULL) {
-    remove_pair_from_list(&(envygr[probe->stuno-1][probe->schno-1]), k, l);
-    probe = probe->next;
-  }
-
-  destroy_stu_sch_list(yprobe);
-  destroy_stu_sch_list(iedprobe);
-
-  destroy_stu_sch_list(envygr[k-1][l-1]);
-  destroy_stu_sch_list(enviedgr[k-1][l-1]);
-  envygr[k-1][l-1] = NULL;
-  enviedgr[k-1][l-1] = NULL;
-}
-
-struct stu_sch_node* create_stu_sch_node(int i, int j) {
-  struct stu_sch_node* new_node;
-  
-  new_node = malloc(sizeof(struct stu_sch_node));
-  new_node->stuno = i;
-  new_node->schno = j;
-  new_node->next = NULL;
-
-  return new_node;
-}
-
-int stu_sch_list_contains_pair(struct stu_sch_node* list, int i, int j) {
-  struct stu_sch_node* probe = list;
-  
-  while (probe != NULL) {
-    if (probe->stuno == i && probe->schno == j) {
-      return 1;
-    }
-    probe = probe->next;
-  }
-
-  return 0;
-}
-
-void append_node_to_stu_sch_list(struct stu_sch_node** stu_sch, int i, int j) {
-
-  struct stu_sch_node* probe;
-  
-  if (*stu_sch == NULL) {
-    *stu_sch = create_stu_sch_node(i, j);
-  }
-  else {
-    if (!stu_sch_list_contains_pair(*stu_sch, i, j)) {
-      probe = *stu_sch;
-      while (probe->next != NULL) {
-	probe = probe->next;
-      }
-      probe->next = create_stu_sch_node(i, j);
-    }
-  }
-}
-
-struct stu_sch_node* copy_of_list(struct stu_sch_node* given) {
-  struct stu_sch_node* answer;
-  struct stu_sch_node* reader;
-  struct stu_sch_node* constructor;
-  struct stu_sch_node* new_node;
-
-  if (given == NULL) {
-    answer = NULL;
-  }
-  else {
-    answer = create_stu_sch_node(given->stuno,given->schno);
-    reader = given;
-    constructor = answer;
-    while (reader->next != NULL) {
-      reader = reader->next;
-      new_node = create_stu_sch_node(reader->stuno,reader->schno);
-      constructor->next = new_node;
-      constructor = constructor->next;
-    }
-  }
-
-  return answer;
-}
+} 
 
 /*
 void print_graph(struct stu_sch_node*** graph, int nst, int nsc) {
@@ -574,37 +331,3 @@ int envygr_and_enviedgr_are_consistent(struct stu_sch_node*** envygr,
   return 1;
 }
 */
-
-void destroy_stu_sch_list(struct stu_sch_node* node) {
-  struct stu_sch_node* probe;
-  
-  if (node != NULL) {
-    if (node->next != NULL) {
-      while (node->next != NULL) {
-	probe = node;
-	while (probe->next->next != NULL) {
-	  probe = probe->next;
-	}
-	free(probe->next);
-	probe->next = NULL;
-      }
-    }
-    
-    free(node);
-  }
-}
-
-void destroy_matrix_of_lists(struct stu_sch_node*** envygr, int nst, int nsc) {
-  int i, j;
-
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      destroy_stu_sch_list(envygr[i-1][j-1]);
-    }
-  }
-
-  for (i = 1; i <= nst; i++) {
-    free(envygr[i-1]);
-  }
-  free(envygr);
-}

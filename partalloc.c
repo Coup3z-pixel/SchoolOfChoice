@@ -175,7 +175,6 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
   }
 }
 
-
 void print_partial_alloc(struct partial_alloc* my_partial_alloc) {
   int i,j;
   int nst = my_partial_alloc->no_students;

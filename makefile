@@ -21,17 +21,17 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 
 all: gcps lpgcps mcc emcc purify makex 
 
-gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o gcpscode.o
-	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o gcpscode.o $(LDFLAGS)
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o  gcpscode.o $(LDFLAGS)
 
 lpgcps: lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o
 	$(CC) -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o $(LDFLAGS)
 
-mcc: mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
-	$(CC) -o mcc mcc.c mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o  $(LDFLAGS)
+mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
+	$(CC) -o mcc mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o  $(LDFLAGS)
 
-emcc: emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
-	$(CC) -o emcc emcc.c emcccode.o mcccode.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o $(LDFLAGS)
+emcc: emcc.c emcccode.o mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o
+	$(CC) -o emcc emcc.c emcccode.o mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o $(LDFLAGS)
@@ -71,6 +71,9 @@ lpgcpscode.o: lpgcpscode.h lpgcpscode.c
 
 partalloc.o: partalloc.h partalloc.c
 	$(CC) $(CFLAGS) -c partalloc.c
+
+efficient.o: efficient.h efficient.c
+	$(CC) $(CFLAGS) -c efficient.c
 
 schchprob.o: schchprob.h schchprob.c
 	$(CC) $(CFLAGS) -c schchprob.c

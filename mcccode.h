@@ -3,7 +3,7 @@
 
 #include "normal.h"
 #include "schchprob.h"
-#include "partalloc.h"
+#include "efficient.h"
 
 struct partial_alloc MCC_alloc_plus_coarse_cutoffs(struct process_scp* myscp, int* coarse);
 

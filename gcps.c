@@ -29,8 +29,14 @@ int main(int argc, char const *argv[])
   gcps_alloc = simple_GCPS_alloc(&input_process_scp);
 
   if (!is_a_feasible_allocation(&gcps_alloc, &input_process_scp)) {
-    fprintf(stderr, "We have produced a nonallocation!!\n");
+    fprintf(stderr, "gcps has produced a nonallocation!!\n");
     exit(0);
+  }
+  else {
+    if (!allocation_is_efficient(&gcps_alloc, &input_process_scp)) {
+      fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
+      exit(0);
+    }
   }
 
   print_partial_alloc(&gcps_alloc); 
