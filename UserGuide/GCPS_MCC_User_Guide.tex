@@ -193,17 +193,18 @@ distribution.  The domination is \emph{strict} if the two
 distributions are different. When one distribution stochastically
 dominates a second distribution, we can think of the difference as a
 matter of moving a certain amount of probability to better objects, so
-it is an improvement no matter how much or how little one cares about
-the differences between particular objects.
+it is a clearcut improvement no matter how much or how little one
+cares about the differences between particular objects.
 
 We say that a bistochastic matrix of assignment probabilities is
 \emph{$sd$-efficient} if there does not exist a second such matrix
 that gives each agent a distribution over $O$ that stochastically
 dominates the distribution given by the first matrix, with strict
-domination for some agents.  It turns out that random priority can
-produce a matrix of assignment probabilities that is not
-$sd$-efficient, but the matrix of assignment probabilities produced by
-the PS mechanism is always $sd$-efficient.
+domination for some agents.  A surprising finding of Bogolmolnaia and
+Moulin is that random priority can produce a matrix of assignment
+probabilities that is not $sd$-efficient.  In contrast, the matrix of
+assignment probabilities produced by the PS mechanism is always
+$sd$-efficient.
 
 The PS mechanism was generalized by \cite{bckm13aer} to the
 \emph{generalized probabilistic serial} mechanism, and further
@@ -310,8 +311,8 @@ remain, and you will get half of it.  In short, if you tell the truth
 your total probability of your two favorite objects will be
 $\tfrac12$, and if you misreport your total probability of your two
 favorite objects will be $\tfrac23$.  If your main concern is to
-maximize the probability of receiving one of your two favorite
-objects, this can be beneficial.
+maximize the probability of receiving one of your top two objects,
+this can be beneficial.
 
 Although the GCPS mechanism is not strategy-proof, it does satisfy a
 weaker condition that is good enough for practical purposes.  This
@@ -360,21 +361,22 @@ desirability of doing so as a given.
 A \emph{coarse cutoff} for a school $o$ is a nonnegative integer
 $C_o$, a \emph{fine cutoff} for $o$ is a nonnegative real number
 $c_o$, and $c_o$ \emph{refines} $C_o$ if $C_o \le c_o < C_o + 1$.
-Evidently a fine priority refines a unique coarse priority.  A
+Evidently a fine cutoff refines a unique coarse cutoff.  A
 \emph{coarse cutoff profile} $C = (C_o)_{o \in O}$ is a specification
 of a coarse cutoff for each school, and a \emph{fine cutoff profile}
 $c = (c_o)_{o \in O}$ is a specification of a fine cutoff for each
 school.  For such a $c$ there is a unique $C$ such that for each $o$,
-$c_o$ refines $C_o$.  If $c$ is a profile of fine cutoffs and $C$ is
-the profile of coarse cutoffs that it refines, a feasible allocation
-\emph{fulfills} $c$ if:
+$c_o$ refines $C_o$.
+
+If $c$ is a profile of fine cutoffs and $C$ is the profile of coarse
+cutoffs that it refines, a feasible allocation \emph{fulfills} $c$ if:
 \begin{enumerate}
   \item[(a)] when a student's priority at school $o$ is less than
     $C_o$, the probability that the student is assigned a seat in the
     school is zero;
   \item[(b)] when a student's priority at school $o$ is equal to
     $C_o$, the probability that the student is assigned to $o$ is not
-    greater than $C_o + 1 - c_o$;
+    greater than $1 - (c_o - C_o)$;
   \item[(c)] when a student's priority at school $o$ is greater than
     $C_o$, the student's consumption of the school is not rationed, in
     the sense that the probability that the student is assigned a seat
@@ -388,8 +390,8 @@ coarse priorities that $c$ refines.  We compute a student's
 she is allowed to, then as much of her second favorite school as
 allowed, and so on until she has one unit of probability.  That is,
 the student's consumption of her favorite school $o_1$ is $0$ if her
-coarse priority at $o_1$ is less than $C_{o_1}$, $C_{o_1} + 1 -
-c_{o_1}$ if her coarse priority at $o_1$ is $C_{o_1}$, and $1$ if her
+coarse priority at $o_1$ is less than $C_{o_1}$, $1 - (c_{o_1} -
+C_{o_1})$ if her coarse priority at $o_1$ is $C_{o_1}$, and $1$ if her
 coarse priority at $o_1$ is greater than $C_{o_1}$.  Her consumption
 of her second favorite school $o_2$, her third favorite school $o_3$,
 and so forth, are defined similarly, except that she stops consuming
@@ -437,9 +439,9 @@ allocation fulfills, and $C$ is the profile of coarse cutoffs that $c$
 refines.  It is possible that the MCC allocation is strictly
 $sd$-dominated by another feasible allocation that fulfills $c$.  For
 example, suppose the priorities of Anne and Bob at school $A$ are both
-$C_A$, their priorities at school $B$ are both $C_B$, and Anne
-and Bob both receive $C_A + 1 - c_A$ units of school $A$ and $C_B
-+ 1 - c_B$ units of school $B$.  If Anne prefers $A$ to $B$ while Bob
+$C_A$, their priorities at school $B$ are both $C_B$, and Anne and Bob
+both receive $1 - (c_A - C_A)$ units of school $A$ and $1 - (c_B -
+C_B)$ units of school $B$.  If Anne prefers $A$ to $B$ while Bob
 prefers $B$ to $A$, then they can achieve $sd$-dominating probability
 distributions by having Anne give Bob some of her probability of $B$
 in exchange for an equal amount of Bob's probability of $A$.  In
@@ -1027,14 +1029,14 @@ command line arguments.)  Removing or replacing the comment (while
 leaving the \texttt{/*} and \texttt{*/}) won't change how the file is
 processed by \texttt{gcps}, \texttt{mcc}, and \texttt{emcc}.
 
-The computer divides the remainder of the file into ``generalized
-white space'' and ``tokens.''  Generalized white space includes the
-usual white space characters (spaces, tabs, and new lines), and in
-addition `\texttt{(}', `\texttt{)}', and `\texttt{,}' are treated as
-white space.  Tokens are contiguous sequences of characters without
-any of the generalized white space characters.  White space is
-discarded, so the first stage of parsing the input file reduces it to
-a sequence of tokens.
+The computer divides the remainder of an input file, after the initial
+comment, into ``generalized white space'' and ``tokens.''  Generalized
+white space includes the usual white space characters (spaces, tabs,
+and new lines), and in addition `\texttt{(}', `\texttt{)}', and
+`\texttt{,}' are treated as white space.  Tokens are contiguous
+sequences of characters without any of the generalized white space
+characters.  White space is discarded, so the first stage of parsing
+the input file reduces it to a sequence of tokens.
 
 Tokens are either prescribed words, nonnegative integers, positive
 integers, or student or school tags (a student or school number
@@ -1127,7 +1129,7 @@ student's \emph{raw priority} at a school is her test score minus the
 distance from her house to the school.  The raw priorities give an
 ordinal ranking of the students who have ranked the school.  The
 students for whom the school is the safe school are assigned to the
-tope priority class, and the remaining students are divided, as
+top priority class, and the remaining students are divided, as
 equally as possible, into the specified number of priority classes.
 To the extent that equal division is not possible, a lower priority
 class will have one fewer student than a higher priority class.  For

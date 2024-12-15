@@ -1,5 +1,5 @@
-#ifndef IMPLEMENT_H
-#define IMPLEMENT_H
+#ifndef PURIFYCODE_H
+#define PURIFYCODE_H
 
 #include <stdio.h>
 #include <math.h>
@@ -17,21 +17,14 @@
 struct nonintegral_graph {
   int no_students;
   int no_schools;
-  int no_edges;
   int** stu_sch_edges;
   int* sch_sink_edges;
-};
-
-struct neighbor_lists {
-  int no_students;
-  int no_schools;
   int* stu_no_nbrs;
-  int* sch_no_nbrs; /* only student neighbors here */
+  int* sch_no_nbrs;
   int sink_no_nbrs;
-  int** stu_sch_nbrs;
-  int** sch_stu_nbrs;
-  int* sch_sink_nbrs; /* sch_sink_nbrs[j-1] = 1 if j and sink are neighbors, 0 otherwise. */
-  int* sink_sch_nbrs;
+  int** stu_nbrs;
+  int** sch_nbrs;
+  int* sink_nbrs;
 };
 
 struct path_node {
@@ -40,26 +33,35 @@ struct path_node {
   struct path_node* next;
 };
 
+
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
+
+void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my_alloc);
 
 struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double* sch_sums);
 
-struct neighbor_lists neighbor_lists_from_graph(struct nonintegral_graph* my_graph);
+int graph_is_nonempty(struct nonintegral_graph* my_graph);
 
-int graph_is_nonempty(struct neighbor_lists* my_lists);
-
-struct path_node* find_cyclic_path(struct neighbor_lists* my_lists);
+struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph);
 
 double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
 		      struct path_node* my_cycle);
 
-void student_edge_removal(struct neighbor_lists* my_lists, int i, int j);
+void student_edge_removal(struct nonintegral_graph* my_graph, int i, int j);
 
-void sink_edge_removal(struct neighbor_lists* my_lists, int j);
+void sink_edge_removal(struct nonintegral_graph* my_graph, int j);
+
+void cycle_adjustment_of_allocation(struct partial_alloc* my_alloc, double* sch_sums, int up,
+				    double adjustment, struct path_node* my_cycle);
+
+void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
+			       struct nonintegral_graph* my_graph, struct path_node* my_cycle);
 
 void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
-		      struct neighbor_lists* my_lists, int up,
+		      struct nonintegral_graph* my_graph, int up,
 		      double adjustment, struct path_node* my_cycle);
+
+int* list_with_element_removed(int* old_list, int old_no_elements, int elt);
 
 /* At the end we need to pass from a partial_alloc whose values (which
    are doubles) are all close to 0 and 1, to the corresponding pure
@@ -67,11 +69,14 @@ void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
 
 struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
 
-
 void destroy_nonintegral_graph(struct nonintegral_graph* my_graph);
-
-void destroy_neighbor_lists(struct neighbor_lists* my_lists);
 
 void destroy_cycle(struct path_node* cycle);
 
-#endif /* IMPLEMENT_H */
+
+int alloc_and_sch_sums_are_consistent(double* sch_sums, struct partial_alloc* my_alloc);
+
+int graph_and_alloc_are_consistent(struct nonintegral_graph* my_graph, double* sch_sums,
+				   struct partial_alloc* my_alloc);
+
+#endif /* PURIFYCODE_H */

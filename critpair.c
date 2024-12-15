@@ -19,20 +19,20 @@ int** initialize_theta(struct partial_alloc* feasible_guide, int* favorites) {
   }
   
   for (i = 1; i <= nst; i++) {
-    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
+    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000000001) {
       theta[i-1][favorites[i-1]-1] = 1;
     }
   }
   
   for (i = 1; i <= nst; i++) {
-    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000001) {
+    if (feasible_guide->allocations[i-1][favorites[i-1]-1] < 0.000000001) {
       
       theta[i-1][favorites[i-1]-1] = 1;
     
       done = 0;
       j = 1;
       while (!done) {
-		if (j != favorites[i-1] && feasible_guide->allocations[i-1][j-1] > 0.000001) {
+		if (j != favorites[i-1] && feasible_guide->allocations[i-1][j-1] > 0.000000001) {
 	  done = 1;
 	  theta[i-1][j-1] = -1;
 	}
@@ -64,7 +64,7 @@ int* initialize_theta_sums(int **theta, int nst, int nsc) {
 int student_qualified_for_school(int i, int j,
 				 struct partial_alloc* feasible_guide,
 				 int** theta, int* favorites) {
-  if (feasible_guide->allocations[i-1][j-1] > 0.000001) {
+  if (feasible_guide->allocations[i-1][j-1] > 0.000000001) {
     return 1;
   }
   else {
@@ -81,7 +81,7 @@ int school_qualified_for_student(int i, int j,
 				 struct partial_alloc* feasible_guide,
 				 int** theta,
 				 struct process_scp* working_cee) {
-  if (theta[i-1][j-1] < 0 || feasible_guide->allocations[i-1][j-1] + 0.000001 <
+  if (theta[i-1][j-1] < 0 || feasible_guide->allocations[i-1][j-1] + 0.000000001 <
       working_cee->eligible[i-1][j-1] * working_cee->time_remaining) {
     return 1;
   }
@@ -427,8 +427,8 @@ void get_alpha(struct process_scp* working_scp, struct index* alpha) {
   for (i = 1; i <= nst; i++) {
     alpha_subset = nullset(nsc);
     for (j = 1; j <= nsc; j++) {
-      if (working_scp->eligible[i-1][j-1] == 1 && working_scp->time_remaining > 0.000001 &&
-	  working_scp->quotas[j-1] > 0.000001) {
+      if (working_scp->eligible[i-1][j-1] == 1 && working_scp->time_remaining > 0.000000001 &&
+	  working_scp->quotas[j-1] > 0.000000001) {
 	alpha_subset.indicator[j-1] = 1;
 	alpha_subset.subset_size++;
       }
@@ -461,7 +461,7 @@ int* compute_fully_allocated(struct process_scp* working_scp,
     for (i = 1; i <= nst; i++) {
       school_sum += feasible_guide->allocations[i-1][j-1];
     }
-    if (school_sum > working_scp->quotas[j-1] - 0.000001) {
+    if (school_sum > working_scp->quotas[j-1] - 0.000000001) {
       fully_allocated[j-1] = 1;
     }
     else {

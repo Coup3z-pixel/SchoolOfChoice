@@ -17,6 +17,15 @@ struct partial_alloc EMCC_allocation(struct process_scp* myscp) {
   coarse = malloc(nsc * sizeof(int));
   alloc_to_adjust = MCC_alloc_plus_coarse_cutoffs(myscp, coarse);
 
+  /*
+  if (allocation_is_efficient(&alloc_to_adjust, myscp)) {
+    fprintf(stderr, "The mcc allocation is absolutely efficient.\n");
+  }
+  else  {
+    fprintf(stderr, "The mcc allocation is not absolutely efficient.\n");
+  }
+  */
+
   envygr = get_envy_graph(myscp, &alloc_to_adjust, coarse);
   enviedgr = get_envied_graph(envygr, nst, nsc);
 
@@ -155,7 +164,7 @@ void process_cycles_at_pair(struct stu_sch_node*** envygr, struct stu_sch_node**
 
     if (*found_cycle) {
 
-      /*      fprintf(stderr, "We actually found an inefficiency!\n"); */
+      /* fprintf(stderr, "We actually found an inefficiency!\n"); */
       
       process_cycle(envygr, enviedgr, chart, alloc_to_adjust, i, j);
     }

@@ -126,7 +126,7 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
 						    no_segments, no_new_pivots,
 						    no_old_pivots, h_sum);
 
-    if (working_scp.time_remaining < 0.000001) {  
+    if (working_scp.time_remaining < 0.000000001) {  
 
       /* destroy_pivot_list(*probe_list); */
       destroy_subset(P_subset);

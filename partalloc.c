@@ -175,6 +175,28 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
   }
 }
 
+struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given) {
+  int i, j, nst, nsc;
+
+  nst = given->no_students;
+  nsc = given->no_schools;
+  
+  struct partial_alloc copy;
+
+  copy.no_students = nst;
+  copy.no_schools = nsc;
+
+  copy.allocations = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    copy.allocations[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
+      copy.allocations[i-1][j-1] = given->allocations[i-1][j-1];
+    }
+  }
+
+  return copy;
+}
+
 void print_partial_alloc(struct partial_alloc* my_partial_alloc) {
   int i,j;
   int nst = my_partial_alloc->no_students;

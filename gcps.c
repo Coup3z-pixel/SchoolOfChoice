@@ -1,4 +1,5 @@
 #include "gcpscode.h"
+#include "purifycode.h"
 #include "parser.h"
 
 int main(int argc, char const *argv[])
@@ -36,6 +37,15 @@ int main(int argc, char const *argv[])
     if (!allocation_is_efficient(&gcps_alloc, &input_process_scp)) {
       fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
       exit(0);
+    }
+    else {
+      struct partial_alloc gcps_copy = copy_of_partial_alloc(&gcps_alloc);
+      transform_to_random_floating_point_pure_allocation(&gcps_copy);
+      if (!allocation_is_efficient(&gcps_copy, &input_process_scp)) {
+	fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
+	exit(0);
+      }
+      destroy_partial_alloc(gcps_copy);
     }
   }
 

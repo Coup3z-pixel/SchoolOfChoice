@@ -21,8 +21,8 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 
 all: gcps lpgcps mcc emcc purify makex 
 
-gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o gcpscode.o
-	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o  gcpscode.o $(LDFLAGS)
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o purifycode.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o purifycode.o  gcpscode.o $(LDFLAGS)
 
 lpgcps: lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o
 	$(CC) -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o gcpscode.o lpgcpscode.o $(LDFLAGS)

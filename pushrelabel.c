@@ -46,7 +46,7 @@ void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_allo
     pivot_node = 1;
     found_active = 0;
     while (pivot_node < nst+nsc+1 && !found_active) {
-      if (excess[pivot_node] > 0.000001) {
+      if (excess[pivot_node] > 0.000000001) {
 	found_active = 1;
 	done = 0;
       }
@@ -104,7 +104,7 @@ int satisfies_the_GMC(struct process_scp* input) {
 
   destroy_partial_alloc(max_flow_alloc);
 
-  if (total_flow < nst * input->time_remaining - 0.000001) {
+  if (total_flow < nst * input->time_remaining - 0.000000001) {
     return 0;
   }
   else {
@@ -190,8 +190,8 @@ double* initialize_excess(struct process_scp* input, int nst, int nsc) {
 
 int push_is_valid(int arc_tail, int arc_head,
 		  double** capacities, double** preflows, double* excess, int* labels) {
-  if (excess[arc_tail] > 0.000001 &&
-      capacities[arc_tail][arc_head] - preflows[arc_tail][arc_head] > 0.000001 &&
+  if (excess[arc_tail] > 0.000000001 &&
+      capacities[arc_tail][arc_head] - preflows[arc_tail][arc_head] > 0.000000001 &&
       labels[arc_head] == labels[arc_tail] - 1) {
     return 1;
   }
@@ -221,7 +221,7 @@ int relabel_is_valid(int node, double** capacities, double** preflows,
 		     double* excess, int* labels, int nst, int nsc) {
   int k;
   
-  if (node == 0 || node == nst + nsc + 1 || excess[node] < 0.000001) {
+  if (node == 0 || node == nst + nsc + 1 || excess[node] < 0.000000001) {
 
     printf("relabel_is_valid failed at the beginning.\n");
     
@@ -229,7 +229,7 @@ int relabel_is_valid(int node, double** capacities, double** preflows,
   }
 
   for (k = 0; k <= nst+nsc+1; k++) {
-    if (capacities[node][k] - preflows[node][k] > 0.000001 && labels[node] > labels[k]) {
+    if (capacities[node][k] - preflows[node][k] > 0.000000001 && labels[node] > labels[k]) {
       return 0;
     }
   }
@@ -243,7 +243,7 @@ void relabel(int node, double** capacities, double** preflows, int* labels, int 
   hit = 0;
 
   for (k = 0; k <= nst+nsc+1; k++) {
-    if (capacities[node][k] - preflows[node][k] > 0.000001) {      
+    if (capacities[node][k] - preflows[node][k] > 0.000000001) {      
       if (hit == 0) {
 	min = labels[k];
       }

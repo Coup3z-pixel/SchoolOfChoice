@@ -40,6 +40,8 @@ struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feas
 void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
 			     struct index* stu_index,struct index* sch_index);
 
+struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given);
+
 void print_partial_alloc(struct partial_alloc* my_partial_alloc);
 
 void print_pure_alloc(struct pure_alloc my_pure_alloc);
