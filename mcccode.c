@@ -99,12 +99,11 @@ double demand_at_new_cutoff(struct process_scp* myscp, int j, struct partial_all
   total_demand = 0.0;
   for (i = 1; i <= nst; i++) {
     if (New_Cutoff < myscp->priorities[i-1][j-1]) {
-      total_demand += demands->allocations[i-1][j-1];
+      total_demand += get_entry(demands, i, j);
     }
     else {
       if (New_Cutoff == myscp->priorities[i-1][j-1]) {
-	total_demand += min(demands->allocations[i-1][j-1],
-			    1.0 - (new_cutoff - (double)(New_Cutoff)));
+	total_demand += min(get_entry(demands, i, j), 1.0 - (new_cutoff - (double)(New_Cutoff)));
       }
     }
   }
@@ -125,7 +124,7 @@ double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands)
   for (j = 1; j <= nsc; j++) {
     total_demand = 0.0;
     for (i = 1; i <= nst; i++) {
-      total_demand += demands->allocations[i-1][j-1];
+      total_demand += get_entry(demands, i, j);
     }
     answer[j-1] = total_demand - (double)myscp->quotas[j-1];
   }
@@ -162,13 +161,16 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
       if (unfilled_demand > 0.000001) {
 	j = myscp->preferences[i-1][k-1];
 	if (myscp->priorities[i-1][j-1] > coarse_cutoffs[j-1]) {
-	  answer.allocations[i-1][j-1] = unfilled_demand;
+	  set_entry(&answer, i, j, unfilled_demand);
+	  /* answer.allocations[i-1][j-1] = unfilled_demand; */
 	}
 	else if (myscp->priorities[i-1][j-1] == coarse_cutoffs[j-1]) {
-	  answer.allocations[i-1][j-1] = min(unfilled_demand,
-				       1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1]));  
+	  set_entry(&answer, i, j, min(unfilled_demand,
+				      1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])));
+	  /* answer.allocations[i-1][j-1] = min(unfilled_demand,
+	     1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])); */
 	}
-	unfilled_demand -= answer.allocations[i-1][j-1];
+	unfilled_demand -= get_entry(&answer, i, j);
       }
     }
   }

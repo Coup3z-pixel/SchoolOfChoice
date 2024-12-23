@@ -2,7 +2,7 @@
  
 void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc) {
   int i, j, nst, nsc, done, found_active, found_target, pivot_node, target_node;
-  
+
   nst = input->no_students;
   nsc = input->no_schools;
 
@@ -77,8 +77,10 @@ void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_allo
   /* Report the result */
   
   for (i = 1; i <= nst; i++) {
-      for (j = 1; j <= nsc; j++) {
-      max_flow_alloc->allocations[i-1][j-1] = preflows[i][nst+j]; 
+    for (j = 1; j <= nsc; j++) {
+      set_entry(max_flow_alloc, i, j, preflows[i][nst+j]);
+      /* max_flow_alloc->allocations[i-1][j-1] = preflows[i][nst+j];
+	 set_dbl_entry(&(max_flow_alloc->sparse), i, j, preflows[i][nst+j]); */
     }
   }
   
@@ -93,12 +95,14 @@ int satisfies_the_GMC(struct process_scp* input) {
   nsc = input->no_schools;
   
   struct partial_alloc max_flow_alloc = zero_alloc_for_process_scp(input);
+  
   push_relabel(input, &max_flow_alloc);
 
   total_flow = 0.0;
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
-      total_flow += max_flow_alloc.allocations[i-1][j-1];
+      total_flow += get_entry(&max_flow_alloc, i, j);
+      /* total_flow += max_flow_alloc.allocations[i-1][j-1]; */
     }
   }
 

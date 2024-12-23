@@ -49,7 +49,7 @@ int main(int argc, char const *argv[])
     }
   }
 
-  print_partial_alloc(&gcps_alloc); 
+  print_sparse_partial_alloc(&gcps_alloc); 
   
   destroy_input_sch_ch_prob(input_scp);
   destroy_process_scp(input_process_scp);

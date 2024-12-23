@@ -33,12 +33,14 @@ struct path_node {
   struct path_node* next;
 };
 
+int graph_has_a_leaf(struct nonintegral_graph* graph);
+
 
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
 
 void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my_alloc);
 
-struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc, double* sch_sums);
+struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc);
 
 int graph_is_nonempty(struct nonintegral_graph* my_graph);
 
@@ -61,13 +63,7 @@ void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
 		      struct nonintegral_graph* my_graph, int up,
 		      double adjustment, struct path_node* my_cycle);
 
-int* list_with_element_removed(int* old_list, int old_no_elements, int elt);
-
-/* At the end we need to pass from a partial_alloc whose values (which
-   are doubles) are all close to 0 and 1, to the corresponding pure
-   allocation, whose values are in {0,1}. */
-
-struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
+int* list_with_element_removed(int* old_list, int old_no_elements, int elt); 
 
 void destroy_nonintegral_graph(struct nonintegral_graph* my_graph);
 

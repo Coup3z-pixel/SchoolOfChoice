@@ -104,8 +104,10 @@ struct input_sch_ch_prob sch_ch_prob_from_file(const char filename[]) {
   return my_sch_ch_prob;
 }
 
-struct partial_alloc allocation_from_file(const char filename[]) {
-  struct partial_alloc allocation;
+struct partial_alloc allocation_from_file(const char filename[])  {
+  int i, k, nst, nsc;
+  
+  struct partial_alloc alloc;
 
   FILE *fp;
 
@@ -118,28 +120,71 @@ struct partial_alloc allocation_from_file(const char filename[]) {
 
   check_There(fp);
   check_are(fp,5);
-  allocation.no_students = get_number(fp);
+  nst = get_number(fp);
+  alloc.sparse.no_rows = nst;
+  alloc.no_students = nst;
   check_students(fp,4);
   check_and(fp);
-  allocation.no_schools = get_number(fp);
+  nsc = get_number(fp);
+  alloc.sparse.no_cols = nsc;
+  alloc.no_schools = nsc;
   check_schools(fp,1);
-  
-  int i, j;
-  for (j = 1; j <= allocation.no_schools; j++) {
-      check_student_tag(fp);
+
+  check_The(fp,6);
+  check_numbers(fp);
+  check_of(fp,5);
+  check_eligible(fp,1);
+  check_schools(fp,4);
+  check_are(fp,6);
+
+  alloc.sparse.nos_active_cols = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    alloc.sparse.nos_active_cols[i-1] = get_number(fp);
   }
-  allocation.allocations = malloc(allocation.no_students * sizeof(double*));
-  for (i = 1; i <= allocation.no_students; i++) {
+
+  check_The(fp,8);
+  check_lists(fp);
+  check_of(fp,6);
+  check_eligible(fp,2);
+  check_schools(fp,5);
+  check_are(fp,8);
+
+  alloc.sparse.index_of_active_cols = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    alloc.sparse.index_of_active_cols[i-1] = malloc(alloc.sparse.nos_active_cols[i-1] * sizeof(int*)); 
     check_student_tag(fp);
-    allocation.allocations[i-1] = malloc(allocation.no_schools * sizeof(double));
-    for (j = 1; j <= allocation.no_schools; j++) {
-      allocation.allocations[i-1][j-1] = get_double(fp);
+    for (k = 1; k <= alloc.sparse.nos_active_cols[i-1]; k++) {
+      alloc.sparse.index_of_active_cols[i-1][k-1] = get_number(fp);
     }
   }
+  
+  check_The(fp,7);
+  check_allocations(fp);
+  check_are(fp,7);
+
+  alloc.sparse.entries = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    alloc.sparse.entries[i-1] = malloc(alloc.sparse.nos_active_cols[i-1] * sizeof(double));
+    check_student_tag(fp);
+    for (k = 1; k <= alloc.sparse.nos_active_cols[i-1]; k++) {
+      check_student_tag(fp);
+      alloc.sparse.entries[i-1][k-1] = get_double(fp);
+    }
+  }
+
+  /*
+  alloc.allocations = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    alloc.allocations[i-1] = malloc(nsc * sizeof(double));
+    for (j = 1; j <= nsc; j++) {
+      alloc.allocations[i-1][j-1] = dbl_entry(&(alloc.sparse), i, j);
+    }
+  }
+  */
     
   fclose(fp);
 
-  return allocation;
+  return alloc;
 }
 
 void file_begins_with_comment(FILE* fp) {
@@ -208,6 +253,15 @@ void check_are(FILE *fp, int index) {
     case 5:
       fprintf(stderr, "ERROR: formatting for the numbers of students and schools is incorrect.\n");
       break;
+    case 6:
+      fprintf(stderr, "ERROR: the phrase \'The numbers of eligible schools are\' is incorrect.\n");
+      break;
+    case 7:
+      fprintf(stderr, "ERROR: the phrase \'The allocations are\' is incorrect.\n");
+      break;
+    case 8:
+      fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
+      break;
     }
     exit(0);
   }
@@ -260,6 +314,12 @@ void check_schools(FILE *fp, int index) {
       case 3:
 	fprintf(stderr, "ERROR: the phrase \'The priority thresholds of the schools are\' is incorrect.\n");
 	break;
+      case 4:
+	fprintf(stderr, "ERROR: the phrase \'The numbers of eligible schools are\' is incorrect.\n");
+	break;
+      case 5:
+	fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
+	break;
     }
     exit(0);
   }
@@ -284,6 +344,15 @@ void check_The(FILE *fp, int index) {
       break;
     case 5:
       fprintf(stderr, "ERROR: the phrase \'The priority thresholds of the schools are\' is incorrect.\n");
+      break;
+    case 6:
+      fprintf(stderr, "ERROR: the phrase \'The numbers of eligible schools are\' is incorrect.\n");
+      break;
+    case 7:
+      fprintf(stderr, "ERROR: the phrase \'The allocations are\' is incorrect.\n");
+      break;
+    case 8:
+      fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
       break;
     }
     exit(0);
@@ -316,6 +385,12 @@ void check_of(FILE *fp, int index) {
       break;
     case 4:
       fprintf(stderr, "ERROR: the phrase \'The priority thresholds of the schools are\' is incorrect.\n");
+      break;
+    case 5:
+      fprintf(stderr, "ERROR: the phrase \'The numbers of eligible schools are\' is incorrect.\n");
+      break;
+    case 6:
+      fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
       break;
     }
     exit(0);
@@ -429,6 +504,43 @@ void check_thresholds(FILE *fp) {
                      getc(fp) != 'h' || getc(fp) != 'o' || getc(fp) != 'l' || getc(fp) != 'd' ||
                      getc(fp) != 's') {
     fprintf(stderr, "ERROR: the phrase \'The priority thresholds of the schools are\' is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_lists(FILE *fp) {
+  char next = get_next_nonwhite(fp);
+  
+  if (next != 'l' || getc(fp) != 'i' || getc(fp) != 's' || getc(fp) != 't' || getc(fp) != 's') {
+    fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
+    exit(0);
+  }
+}
+
+void check_eligible(FILE *fp, int index) {
+  char next = get_next_nonwhite(fp);
+  
+  if (next != 'e' || getc(fp) != 'l' || getc(fp) != 'i' || getc(fp) != 'g' || getc(fp) != 'i' ||
+                     getc(fp) != 'b' || getc(fp) != 'l' || getc(fp) != 'e') {
+    switch (index) {
+    case 1:
+      fprintf(stderr, "ERROR: the phrase \'The numbers of eligible schools are\' is incorrect.\n");
+      break;
+    case 2:
+      fprintf(stderr, "ERROR: the phrase \'The lists of eligible schools are\' is incorrect.\n");
+      break;
+    }
+    exit(0);
+  }
+}
+
+void check_allocations(FILE *fp)  {
+  char next = get_next_nonwhite(fp);
+  
+  if (next != 'a' || getc(fp) != 'l' || getc(fp) != 'l' || getc(fp) != 'o' || getc(fp) != 'c' ||
+                     getc(fp) != 'a' || getc(fp) != 't' || getc(fp) != 'i' || getc(fp) != 'o' ||
+                     getc(fp) != 'n' || getc(fp) != 's') {
+    fprintf(stderr, "ERROR: the phrase \'The allocations are\' is incorrect.\n");
     exit(0);
   }
 }

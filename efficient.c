@@ -2,7 +2,7 @@
 
 int allocation_is_efficient(struct partial_alloc* myalloc, struct process_scp* myscp) {
   int i, j, nst, nsc, inefficient;
-
+  
   struct stu_sch_node*** chart;
   struct stu_sch_node*** envygr;
   struct stu_sch_node*** enviedgr;
@@ -116,7 +116,7 @@ int** get_pairs_that_can_envy(struct process_scp* myscp, struct partial_alloc* m
   for (i = 1; i <= nst; i++) {
     answer[i-1] = malloc(nsc * sizeof(int));
     for (j = 1; j <= nsc; j++) {
-      if (my_alloc->allocations[i-1][j-1] > 0.00001 && j != myscp->preferences[i-1][0]) {
+      if (get_entry(my_alloc, i, j) > 0.00001 && j != myscp->preferences[i-1][0]) {
 	answer[i-1][j-1] = 1;
       }
       else {
@@ -219,7 +219,7 @@ struct stu_sch_node*** get_simple_envy_graph(struct process_scp* myscp,
 	k = 1;
 	while (myscp->preferences[i-1][k-1] != j) {
 	  l = myscp->preferences[i-1][k-1];
-	  if (my_alloc->allocations[i-1][l-1] <
+	  if (get_entry(my_alloc, i, l) <
 	      myscp->eligible[i-1][l-1] * myscp->time_remaining - 0.000001) {
 	    for (h = 1; h <= nst; h++) {
 	      if (h != i && active[h-1][l-1] == 1) {

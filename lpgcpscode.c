@@ -154,7 +154,8 @@ void find_critical_pair(struct process_scp* working_scp,
   struct index* omega;
   int* fully_allocated;
   int* favorites;
-  int** theta;
+  /* int** theta; */
+  struct int_sparse_matrix* theta;
   int* theta_sums;
   struct partial_alloc my_feasible_guide;
   
@@ -178,8 +179,10 @@ void find_critical_pair(struct process_scp* working_scp,
   
   fully_allocated = compute_fully_allocated(working_scp,&my_feasible_guide);
   favorites = get_favorites(working_scp);
-  theta = initialize_theta(&my_feasible_guide, favorites);
-  theta_sums = initialize_theta_sums(theta,nst,nsc);	
+  /* theta = initialize_theta(&my_feasible_guide, favorites); */
+  theta = initialize_theta(working_scp, &my_feasible_guide, favorites);
+  /* theta_sums = initialize_theta_sums(theta,nst,nsc);	*/
+  theta_sums = initialize_theta_sums(theta,nst,nsc); 
 
   int* no_new_pivots = malloc(sizeof(int));
   int* h_sum = malloc(sizeof(int));
@@ -201,7 +204,9 @@ void find_critical_pair(struct process_scp* working_scp,
   destroy_alpha_or_omega(omega, active_school_index.no_elements); 
   destroy_index(active_school_index);  
   free(fully_allocated);  
-  destroy_theta(theta, nst);
+  /* destroy_theta(theta, nst); */
+  destroy_int_sp_mat(theta);
+  free(theta);
   free(theta_sums);
   destroy_alpha_or_omega(alpha, nst);
   free(favorites);

@@ -17,15 +17,6 @@ struct partial_alloc EMCC_allocation(struct process_scp* myscp) {
   coarse = malloc(nsc * sizeof(int));
   alloc_to_adjust = MCC_alloc_plus_coarse_cutoffs(myscp, coarse);
 
-  /*
-  if (allocation_is_efficient(&alloc_to_adjust, myscp)) {
-    fprintf(stderr, "The mcc allocation is absolutely efficient.\n");
-  }
-  else  {
-    fprintf(stderr, "The mcc allocation is not absolutely efficient.\n");
-  }
-  */
-
   envygr = get_envy_graph(myscp, &alloc_to_adjust, coarse);
   enviedgr = get_envied_graph(envygr, nst, nsc);
 
@@ -83,7 +74,7 @@ struct stu_sch_node*** get_envy_graph(struct process_scp* myscp,
 	k = 1;
 	while (myscp->preferences[i-1][k-1] != j) {
 	  l = myscp->preferences[i-1][k-1];
-	  if (alloc_to_adjust->allocations[i-1][l-1] <
+	  if (get_entry(alloc_to_adjust, i, l) <
 	      myscp->eligible[i-1][l-1] * myscp->time_remaining - 0.000001 &&
 	      coarse[l-1] <= myscp->priorities[i-1][l-1]) {
 	    for (h = 1; h <= nst; h++) {
@@ -233,17 +224,17 @@ void adjust_partial_alloc_along_cycle(struct partial_alloc* alloc, struct stu_sc
   struct stu_sch_node* base;
   struct stu_sch_node* new;
 
-  Delta = alloc->allocations[cycle->stuno-1][cycle->schno-1];
+  Delta = get_entry(alloc, cycle->stuno, cycle->schno);
 
   probe = cycle->next;
   while (probe != NULL) {
-    Delta = min(Delta, alloc->allocations[probe->stuno-1][probe->schno-1]);
+    Delta = min(Delta, get_entry(alloc, probe->stuno, probe->schno));
     probe = probe->next;
   }
 
   probe = cycle;
   while (probe != NULL) {
-    if (alloc->allocations[probe->stuno-1][probe->schno-1] < Delta + 0.000001) {
+    if (get_entry(alloc, probe->stuno, probe->schno) < Delta + 0.000001) {
       if (*list == NULL) {
 	base = create_stu_sch_node(probe->stuno,probe->schno);
 	*list = base;
@@ -259,16 +250,19 @@ void adjust_partial_alloc_along_cycle(struct partial_alloc* alloc, struct stu_sc
   
   probe = cycle;
   while (probe != NULL) {
-    alloc->allocations[probe->stuno-1][probe->schno-1] -= Delta;
+    increment_entry(alloc, probe->stuno, probe->schno, -Delta);
+    /*    alloc->allocations[probe->stuno-1][probe->schno-1] -= Delta; */
     probe = probe->next;
   }
 
   probe = cycle;
   while (probe->next != NULL) {
-    alloc->allocations[probe->stuno-1][probe->next->schno-1] += Delta;
+    increment_entry(alloc, probe->stuno, probe->next->schno, Delta);
+    /*    alloc->allocations[probe->stuno-1][probe->next->schno-1] += Delta; */
     probe = probe->next;
   }
-  alloc->allocations[probe->stuno-1][cycle->schno-1] += Delta;
+  increment_entry(alloc, probe->stuno, cycle->schno, Delta);
+  /* alloc->allocations[probe->stuno-1][cycle->schno-1] += Delta; */
 } 
 
 /*

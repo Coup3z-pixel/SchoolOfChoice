@@ -27,10 +27,6 @@ int pivot_list_has_zero_zeroth_school(struct pivot_list* my_list) {
 
   probe = my_list->first_node;
   while (probe != NULL) {
-    if (probe->the_pivot == NULL) {
-      printf("We have a pivot_list_node* with a NULL the_pivot.\n");
-      /* exit(0); */
-    }
     if (pivot_has_zero_zeroth_school(probe->the_pivot)) {
       return 1;
     }
@@ -125,13 +121,12 @@ void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addit
   }
 }
 
-void execute_pivot(struct pivot* my_pivot, int** theta, int* theta_sums) {
+void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums) {
   int g;
-
   theta_sums[my_pivot->schools[0]-1]--;
   for (g = 1; g <= my_pivot->h; g++) {
-    theta[my_pivot->students[g-1]-1][my_pivot->schools[g-1]-1]--;
-    theta[my_pivot->students[g-1]-1][my_pivot->schools[g]-1]++;
+    increment_int_entry(theta, my_pivot->students[g-1], my_pivot->schools[g-1], -1);
+    increment_int_entry(theta, my_pivot->students[g-1], my_pivot->schools[g], 1);
   }
   theta_sums[my_pivot->schools[my_pivot->h]-1]++;
 }

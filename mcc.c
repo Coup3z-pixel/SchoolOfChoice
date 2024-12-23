@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  print_partial_alloc(&mcc_alloc); 
+  print_sparse_partial_alloc(&mcc_alloc); 
 
   free(coarse);
   destroy_input_sch_ch_prob(input_scp);

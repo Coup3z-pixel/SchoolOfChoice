@@ -72,6 +72,7 @@ struct partial_alloc GCPS_allocation(struct process_scp* input, int* no_segments
   struct partial_alloc final_alloc;
   
   feasible_guide = zero_alloc_for_process_scp(input);
+  
   push_relabel(input, &feasible_guide);
   
   probe_list = void_pivot_list();
@@ -97,7 +98,7 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
 						struct pivot_list* probe_list,
 						int* no_segments, int* no_splits,
 						int* no_new_pivots,
-						int* no_old_pivots,int* h_sum) {
+						int* no_old_pivots,int* h_sum) {  
   int nst, nsc;
   
   struct process_scp working_scp;
@@ -116,7 +117,7 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   
   critical_pair_found = malloc(sizeof(int));
   *critical_pair_found = 0;
-  
+
   while (!*critical_pair_found) {
 
     compute_next_path_segment_or_find_critical_pair(input, &working_scp, feasible_guide,
@@ -128,7 +129,6 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
 
     if (working_scp.time_remaining < 0.000000001) {  
 
-      /* destroy_pivot_list(*probe_list); */
       destroy_subset(P_subset);
       destroy_subset(J_subset);
       destroy_process_scp(working_scp);
@@ -217,8 +217,7 @@ void descend_to_right_subproblem(struct process_scp* working_scp,
 
   right_increment = GCPS_allocation_with_guide(&right_scp,&right_feas_guide, &right_list,
 					       no_segments, no_splits, no_new_pivots,
-					       no_old_pivots, h_sum);
-    
+					       no_old_pivots, h_sum);    
   J_index = index_of_complement(J_subset);    
   P_index = index_of_complement(P_subset);
   
@@ -249,6 +248,8 @@ void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
 						     int* no_segments,
 						     int* no_new_pivots,
 						     int* no_old_pivots, int* h_sum) {
+
+  
   int nst, nsc;
 
   struct index* alpha;
@@ -257,7 +258,8 @@ void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
   struct index* omega;
   int* fully_allocated;
   int* favorites;
-  int** theta;
+  /*  int** theta; */
+  struct int_sparse_matrix* theta;
   int* theta_sums;
   struct pivot_list list_of_pivots;
 
@@ -279,8 +281,10 @@ void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
   
   fully_allocated = compute_fully_allocated(working_scp,feasible_guide);
   favorites = get_favorites(working_scp);
-  theta = initialize_theta(feasible_guide, favorites);
-  theta_sums = initialize_theta_sums(theta,nst,nsc);
+  /*  theta = initialize_theta(feasible_guide, favorites); */
+  theta = initialize_theta(working_scp, feasible_guide, favorites);
+  /* theta_sums = initialize_theta_sums(theta,nst,nsc); */
+  theta_sums = initialize_theta_sums(theta,nst,nsc); 
 
   list_of_pivots = void_pivot_list();
   
@@ -298,7 +302,8 @@ void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
   
   if (!*critical_pair_found) {
     (*no_segments)++;
-    move_to_endpoint_of_segment(theta, alpha, favorites, working_scp, feasible_guide, final_alloc);
+    move_to_endpoint_of_segment(theta, alpha, favorites, working_scp,
+				    feasible_guide, final_alloc);
   }
 
   concatenate_pivot_lists(probe_list, &list_of_pivots);
@@ -307,7 +312,8 @@ void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
   destroy_index(active_school_index);  
   free(fully_allocated);  
   destroy_pivot_list(list_of_pivots);
-  destroy_theta(theta, nst);
+  destroy_int_sp_mat(theta);
+  free(theta);
   free(theta_sums);
   destroy_alpha_or_omega(alpha, nst);
   free(favorites);

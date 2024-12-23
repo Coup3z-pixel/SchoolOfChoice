@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
   struct partial_alloc emcc_alloc = EMCC_allocation(&pr_scp);
   
-  print_partial_alloc(&emcc_alloc); 
+  print_sparse_partial_alloc(&emcc_alloc); 
 
   destroy_input_sch_ch_prob(input_scp);
   destroy_partial_alloc(emcc_alloc);

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "pushrelabel.h"
+#include "sprsmtrx.h"
 
 struct pivot {
   int h;
@@ -41,7 +42,7 @@ void add_pivot_to_list(struct pivot_list* my_list, struct pivot* new_pivot);
 
 void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addition);
 
-void execute_pivot(struct pivot* my_pivot, int** theta, int* theta_sums);
+void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums);
 
 struct pivot_list reduced_pivot_list(struct pivot_list* given_list,
 				     struct subset* J_subset, struct subset* P_subset);
