@@ -18,10 +18,17 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
 						struct pivot_list* probe_list,
 						int* no_segments, int* no_splits,
 						int* no_new_pivots,
-						int* no_old_pivots, int* h_sum); 
+						    int* no_old_pivots,int* h_sum);
 
-void compute_next_path_segment_or_find_critical_pair(struct process_scp* input,
-						     struct process_scp* working_scp,
+double compute_until_next_critical_pair(struct process_scp* working_scp,
+					struct partial_alloc* feasible_guide,
+					struct partial_alloc* final_alloc,
+					struct pivot_list* probe_list,
+					struct subset* P_subset, struct subset* J_subset,
+					int* no_segments, int* no_new_pivots, int* no_old_pivots,
+					int* h_sum);
+
+void compute_next_path_segment_or_find_critical_pair(struct process_scp* working_scp,
 						     struct partial_alloc* feasible_guide,
 						     struct partial_alloc* final_alloc,
 						     struct pivot_list* probe_list,

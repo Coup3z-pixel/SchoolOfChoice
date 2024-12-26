@@ -5,6 +5,8 @@
 int main(int argc, char const *argv[])
 {
   struct input_sch_ch_prob input_scp;
+  struct process_scp input_process_scp;
+  struct process_scp copy_input_process_scp;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -18,31 +20,32 @@ int main(int argc, char const *argv[])
     exit(0);
   }
   
-  struct process_scp input_process_scp;
   input_process_scp = process_scp_from_input(&input_scp);
 
   if (!satisfies_the_GMC(&input_process_scp)) {
     fprintf(stderr, "The input_scp does not satisfy the GMC.\n");
     exit(0);
   }
+
+  copy_process_scp(&input_process_scp, &copy_input_process_scp);
   
   struct partial_alloc gcps_alloc;
   gcps_alloc = simple_GCPS_alloc(&input_process_scp);
 
-  if (!is_a_feasible_allocation(&gcps_alloc, &input_process_scp)) {
+  if (!is_a_feasible_allocation(&gcps_alloc, &copy_input_process_scp)) {
     fprintf(stderr, "gcps has produced a nonallocation!!\n");
     exit(0);
   }
   else {
-    if (!allocation_is_efficient(&gcps_alloc, &input_process_scp)) {
+    if (!allocation_is_efficient(&gcps_alloc, &copy_input_process_scp)) {
       fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
       exit(0);
     }
     else {
       struct partial_alloc gcps_copy = copy_of_partial_alloc(&gcps_alloc);
       transform_to_random_floating_point_pure_allocation(&gcps_copy);
-      if (!allocation_is_efficient(&gcps_copy, &input_process_scp)) {
-	fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
+      if (!allocation_is_efficient(&gcps_copy, &copy_input_process_scp)) {
+	fprintf(stderr, "after gcps, purify has produced an inefficient allocation!!\n");
 	exit(0);
       }
       destroy_partial_alloc(gcps_copy);
@@ -52,7 +55,7 @@ int main(int argc, char const *argv[])
   print_sparse_partial_alloc(&gcps_alloc); 
   
   destroy_input_sch_ch_prob(input_scp);
-  destroy_process_scp(input_process_scp);
+  destroy_process_scp(copy_input_process_scp); 
   destroy_partial_alloc(gcps_alloc);
 
   return 0;
