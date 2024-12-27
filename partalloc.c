@@ -309,24 +309,51 @@ void print_partial_alloc(struct partial_alloc* my_alloc) {
   printf("\n");
 }
 
-void print_pure_alloc(struct pure_alloc my_pure_alloc) {
+int pure_alloc_is_valid(struct pure_alloc* my_pure_alloc) {
+  int i, k, count;
+
+  for (i = 1; i <= my_pure_alloc->no_students; i++) {
+    count = 0;
+    for (k = 1; k <= my_pure_alloc->sparse.nos_active_cols[i-1]; k++) {
+      if (my_pure_alloc->sparse.entries[i-1][k-1] == 1) {
+	count++;
+      }
+    }
+    if (count != 1) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+void print_pure_alloc(struct pure_alloc* my_pure_alloc) {
   int i, k, done, sch_no, tencount, hundredcount;
+
+  if (!pure_alloc_is_valid(my_pure_alloc)) {
+    printf("We have an invalid pure_alloc.\n");
+    exit(0);
+  }
+  
   printf("/* This is a sample introductory comment. */\n");
 
   tencount = 0;
   hundredcount = 0;
     
-  for (i = 1; i <= my_pure_alloc.no_students; i++) {
+  for (i = 1; i <= my_pure_alloc->no_students; i++) {
     done = 0;    
     k = 1;
     while (!done) {
-      if (my_pure_alloc.sparse.entries[i-1][k-1] == 1) {
-	sch_no = my_pure_alloc.sparse.index_of_active_cols[i-1][k-1];
+      if (my_pure_alloc->sparse.entries[i-1][k-1] == 1) {
+	sch_no = my_pure_alloc->sparse.index_of_active_cols[i-1][k-1];
 	done = 1;
       }
       else {
 	k++;
       }
+    }
+    if (i < 10000) {
+      printf(" ");
     }
     if (i < 1000) {
       printf(" ");

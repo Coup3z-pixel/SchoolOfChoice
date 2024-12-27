@@ -36,6 +36,8 @@ struct path_node {
 int graph_has_a_leaf(struct nonintegral_graph* graph);
 
 
+void repeatedly_remove_leaves_from_graph(struct nonintegral_graph* graph);
+
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc);
 
 void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my_alloc);

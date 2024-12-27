@@ -60,13 +60,15 @@ int get_pure_entry(struct pure_alloc* alloc, int i, int j);
 
 void set_pure_entry(struct pure_alloc* alloc, int i, int j, int val);
 
+int pure_alloc_is_valid(struct pure_alloc* my_pure_alloc);
+
 void increment_pure_entry(struct pure_alloc* alloc, int i, int j, int incr);
 
 void print_sparse_partial_alloc(struct partial_alloc* my_alloc);
 
 void print_partial_alloc(struct partial_alloc* my_alloc);
 
-void print_pure_alloc(struct pure_alloc my_pure_alloc);
+void print_pure_alloc(struct pure_alloc* my_pure_alloc);
 
 void destroy_partial_alloc(struct partial_alloc my_alloc);
 

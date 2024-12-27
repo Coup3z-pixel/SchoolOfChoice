@@ -36,8 +36,16 @@ double uniform() {
 }
 
 double normal() {
-  double pi = 3.1415926;
-  double u_one = uniform();
-  double u_two = uniform();
+  double pi, u_one, u_two;
+  
+  pi = 3.1415926;
+  u_one = 0.0;
+  u_two = 0.0;
+  
+  while (u_one < 0.000001) {
+    u_one = uniform();
+    u_two = uniform();
+  }
+
   return sqrt(-2 * log(u_one)) * cos(2 * pi * u_two); /* Box-Muller */
 }

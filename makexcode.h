@@ -83,5 +83,4 @@ void print_makex_output(int nsc, int no_students_per_school, int school_capacity
 			struct input_sch_ch_prob* my_scp);
 
 void clean_up_makex(int nst, double* location, double** distance, double* valence,
-		    double** utility, int** eligible, int* safe_school,
-		    int* no_ranked_schools, int* no_eligible_students);
+		    double** utility, int** eligible, int* safe_school, int* no_eligible_students);

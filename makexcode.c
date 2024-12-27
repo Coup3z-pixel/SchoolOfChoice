@@ -32,20 +32,18 @@ void make_example(int nsc, int no_students_per_school, int school_capacity,
   
   int** eligible = compute_eligible_pairs(nst, nsc, utility, safe_school);
 
-  int* no_ranked_schools = compute_numbers_of_ranked_schools(nst, nsc, eligible);
-
   answer.no_eligible_schools  = compute_numbers_of_ranked_schools(nst, nsc, eligible);
 
   int* no_eligible_students = compute_numbers_of_eligible_students(nst, nsc, eligible);
   
-  answer.preferences = compute_preferences(nst, nsc, safe_school, no_ranked_schools, utility);
+  answer.preferences = compute_preferences(nst, nsc, safe_school, answer.no_eligible_schools, utility);
 
   answer.priorities = compute_schools_priorities(nst, nsc, test_std_dev, no_nontop_priority_grades,
 						distance, safe_school, no_eligible_students,
 						eligible);
 
   if (!safe_schools_are_safe(&answer)) {
-    fprintf(stderr, "We are returning an unsafe scp.\n");
+    fprintf(stderr, "We were about to return an unsafe scp.\n");
     exit(0);
   }
 
@@ -56,7 +54,7 @@ void make_example(int nsc, int no_students_per_school, int school_capacity,
   destroy_input_sch_ch_prob(answer);
   
   clean_up_makex(nst, location, distance, valence, utility, eligible, safe_school,
-		 no_ranked_schools, no_eligible_students);
+		 no_eligible_students);
 }
   
 double* compute_locations(int nst, int no_students_per_school) {
@@ -131,6 +129,7 @@ double** compute_utilities(int nst, int nsc, double* valence,
       answer[i-1][j-1] = valence[j-1] + idiosyncratic_std_dev * normal() - distance[i-1][j-1];
     }
   }
+  
   return answer;
 }
 
@@ -362,8 +361,7 @@ void print_makex_output(int nsc, int no_students_per_school, int school_capacity
 
 
 void clean_up_makex(int nst, double* location, double** distance, double* valence,
-		    double** utility, int** eligible, int* safe_school,
-		    int* no_ranked_schools, int* no_eligible_students) {
+		    double** utility, int** eligible, int* safe_school, int* no_eligible_students) {
   int i;
   
   free(location);
@@ -381,6 +379,5 @@ void clean_up_makex(int nst, double* location, double** distance, double* valenc
   }
   free(eligible);
   free(safe_school);
-  free(no_ranked_schools);
   free(no_eligible_students);
 }

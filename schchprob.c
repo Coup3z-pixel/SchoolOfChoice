@@ -375,7 +375,8 @@ int safe_schools_are_safe(struct input_sch_ch_prob* my_scp) {
     k = my_scp->no_eligible_schools[i-1];
     l = my_scp->preferences[i-1][k-1];
     if (my_scp->priorities[i-1][l-1] != top_pr) {
-      fprintf(stderr, "Safe school priorities disagree.\n");
+      fprintf(stderr, "The priority of student %i at school %i should be %i but is actually %i.\n",
+	      i, l, top_pr, my_scp->priorities[i-1][l-1]);
       return 0;
     }
   }

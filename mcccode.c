@@ -59,7 +59,7 @@ double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* d
   max_priority++;
 
   target = (double)myscp->quotas[j-1];
-  if (demand_at_new_cutoff(myscp, j, demands, old_cutoff) <= target + 0.000000001) {
+  if (demand_at_new_cutoff(myscp, j, demands, old_cutoff) <= target + 0.000000000001) {
     return old_cutoff;
   }
 
@@ -69,7 +69,7 @@ double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* d
   upper_dmd = demand_at_new_cutoff(myscp, j, demands, upper_cand);
   
   new_dmd = -1.0;
-  while (fabs(new_dmd - target) > 0.000000001) {
+  while (fabs(new_dmd - target) > 0.000000000001) {
 
     new_cand = lower_cand +
                (upper_cand - lower_cand) * (lower_dmd - target)/(lower_dmd - upper_dmd);
@@ -148,27 +148,20 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
   for (i = 1; i <= nst; i++) {
     int l = myscp->no_eligible_schools[i-1];
     j = myscp->preferences[i-1][l-1];
-    if (coarse_cutoffs[j-1] >= myscp->priorities[i-1][j-1]) {
-      printf("We seem to have a safe school priority violation.\n");
-      exit(0);
-    }
   }
 
   answer = zero_alloc_for_process_scp(myscp);
   for (i = 1; i <= nst; i++) {
     unfilled_demand = 1.0;
     for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
-      if (unfilled_demand > 0.000001) {
+      if (unfilled_demand > 0.000000001) {
 	j = myscp->preferences[i-1][k-1];
 	if (myscp->priorities[i-1][j-1] > coarse_cutoffs[j-1]) {
 	  set_entry(&answer, i, j, unfilled_demand);
-	  /* answer.allocations[i-1][j-1] = unfilled_demand; */
 	}
 	else if (myscp->priorities[i-1][j-1] == coarse_cutoffs[j-1]) {
 	  set_entry(&answer, i, j, min(unfilled_demand,
 				      1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])));
-	  /* answer.allocations[i-1][j-1] = min(unfilled_demand,
-	     1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])); */
 	}
 	unfilled_demand -= get_entry(&answer, i, j);
       }
@@ -176,11 +169,6 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
   }
 
   free(coarse_cutoffs);
-
-  if (!students_are_fully_allocated(&answer)) {
-    printf("compute_demands was about to return not fully allocated demands.\n");
-    exit(0);
-  }
 
   return answer;
 }

@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
   purified = random_pure_allocation(&input_alloc);
   destroy_partial_alloc(input_alloc);
   
-  print_pure_alloc(purified);
+  print_pure_alloc(&purified); 
 
   destroy_pure_alloc(purified);
 

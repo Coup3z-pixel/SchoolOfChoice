@@ -16,6 +16,13 @@ int graph_has_a_leaf(struct nonintegral_graph* graph) {
     if (graph->sch_no_nbrs[j-1] == 1) {
 
       fprintf(stderr, "The graph has a school leaf.\n");
+
+      if (graph->sch_nbrs[j-1][1] == 0) {
+	printf("It looks like the only neighbor is the sink.\n");
+      }
+      else {
+	printf("It looks like the only neighbor is a student.\n");
+      }
       
       return 1;
     }
@@ -29,6 +36,40 @@ int graph_has_a_leaf(struct nonintegral_graph* graph) {
   }
 
   return 0;
+}
+
+void repeatedly_remove_leaves_from_graph(struct nonintegral_graph* graph) {
+  int i, j, done;
+
+  done = 0;
+  while (done != 1) {
+
+    done = 1; 
+
+    for (i = 1; i <= graph->no_students; i++) {
+      if (graph->stu_no_nbrs[i-1] == 1) {
+	done = 0;
+	student_edge_removal(graph, i, graph->stu_nbrs[i-1][1]);
+      }
+    }
+
+    for (j = 1; j <= graph->no_schools; j++) {
+      if (graph->sch_no_nbrs[j-1] == 1) {
+	done = 0;
+	if (graph->sch_nbrs[j-1][1] == 0) {
+	  sink_edge_removal(graph, j);
+	}
+	else {
+	  student_edge_removal(graph, graph->sch_nbrs[j-1][1], j);	
+	}
+      }
+    }
+
+    if (graph->sink_no_nbrs == 1) {
+      done = 0;
+      sink_edge_removal(graph, graph->sink_nbrs[1]);
+    }
+  }
 }
 
 struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
@@ -55,22 +96,26 @@ void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my
   sch_sums = school_sums(my_alloc);
   my_graph = graph_from_alloc(my_alloc);
 
-  while(graph_is_nonempty(&my_graph)) {
+  while (graph_is_nonempty(&my_graph)) {
+
+    repeatedly_remove_leaves_from_graph(&my_graph);
     
-    cycle = find_cyclic_path(&my_graph);
-
-    alpha = bound_of_cycle(my_alloc,sch_sums,up,cycle);
-    beta  = bound_of_cycle(my_alloc,sch_sums,down,cycle);
-    uniform_rv = uniform();
-
-    if (uniform_rv <= alpha/(alpha + beta)) {
-      cycle_adjustment(my_alloc, sch_sums, &my_graph, up, alpha, cycle);
-    }
-    else {
-      cycle_adjustment(my_alloc, sch_sums, &my_graph, down, beta, cycle);	
-    }
+    if (graph_is_nonempty(&my_graph)) {
+      cycle = find_cyclic_path(&my_graph);
       
-    destroy_cycle(cycle);       
+      alpha = bound_of_cycle(my_alloc,sch_sums,up,cycle);
+      beta  = bound_of_cycle(my_alloc,sch_sums,down,cycle);
+      uniform_rv = uniform();
+
+      if (uniform_rv > alpha/(alpha + beta)) {
+	cycle_adjustment(my_alloc, sch_sums, &my_graph, up, alpha, cycle);
+      }
+      else {
+	cycle_adjustment(my_alloc, sch_sums, &my_graph, down, beta, cycle);	
+      }
+      
+      destroy_cycle(cycle);
+    }
   }
 
   free(sch_sums);
@@ -303,51 +348,68 @@ struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph) {
 
 double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
 		      struct path_node* my_cycle) {
-  double max = 1.0;
-  struct path_node* probe = my_cycle;
+  int done, stu, sch;
+  double max, gap;
+  struct path_node* probe;
 
-  int done = 0;
+  max = 1.0;
+  probe = my_cycle;
+  done = 0;
   while (!done) {
-    double gap;
+    
+    if (probe->type == 1) {
+      stu = probe->index;
+      sch = (probe->next)->index;
+    }
+    if (probe->type == 2) {
+      sch = probe->index;
+      if ((probe->next)->type == 1) {
+	stu = (probe->next)->index;
+      }
+    }
+    if (probe->type == 3) {
+      sch = (probe->next)->index;
+    }
     
     if (probe->type == 1) {
       if (up) {
-	gap = 1.0 - get_entry(my_alloc, probe->index, (probe->next)->index);;
+	gap = 1.0 - get_entry(my_alloc, stu, sch);;
       }
       else {
-	gap = get_entry(my_alloc, probe->index, (probe->next)->index);
+	gap = get_entry(my_alloc, stu, sch);
       }
     }
     
     if (probe->type == 2) {
       if ((probe->next)->type == 1) {
 	if (up) {
-	  gap = get_entry(my_alloc, (probe->next)->index, probe->index);
+	  gap = get_entry(my_alloc, stu, sch);
 	}
 	else {
-	  gap = 1.0 - get_entry(my_alloc, (probe->next)->index, probe->index);
+	  gap = 1.0 - get_entry(my_alloc, stu, sch);
 	}
       }
       else {
 	if (up) {
-	  gap = ceil(sch_sums[probe->index-1]) - sch_sums[probe->index-1];
+	  gap = ceil(sch_sums[sch-1]) - sch_sums[sch-1];
 	}
 	else {
-	  gap = sch_sums[probe->index-1] - floor(sch_sums[probe->index-1]);
+	  gap = sch_sums[sch-1] - floor(sch_sums[sch-1]);
 	}
       }
     }
     
     if (probe->type == 3) {
       if (up) {
-	gap = ceil(sch_sums[(probe->next)->index-1]) - sch_sums[(probe->next)->index-1];
+	gap = sch_sums[sch-1] - floor(sch_sums[sch-1]);
       }
       else {
-	gap = sch_sums[(probe->next)->index-1] - floor(sch_sums[(probe->next)->index-1]);
+	gap = ceil(sch_sums[sch-1]) - sch_sums[sch-1];
       }
     }
     
     max = min(gap,max);
+
     if (probe->next == my_cycle) {
       done = 1;
     }
@@ -359,33 +421,62 @@ double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
 
 void cycle_adjustment_of_allocation(struct partial_alloc* my_alloc, double* sch_sums, int up,
 				    double adjustment, struct path_node* my_cycle) {
-  int done;
+  int done, stu, sch;
   struct path_node* probe;
-  
+
   probe = my_cycle;
   done = 0;
+
   while (!done) {
+    
+    if (probe->type ==1) {
+      stu = probe->index;
+      sch = (probe->next)->index;
+    }
+    if (probe->type == 2) {
+      sch = probe->index;
+      if ((probe->next)->type == 1) {
+	stu = (probe->next)->index;
+      }
+    }
+    if (probe->type == 3) {
+      sch = (probe->next)->index;
+    }
+    
     if (probe->type == 1) {
       if (up) {
-	increment_entry(my_alloc, probe->index, (probe->next)->index, adjustment);
-	sch_sums[(probe->next)->index-1] += adjustment;
+	increment_entry(my_alloc, stu, sch, adjustment);
       }
       else {
-	increment_entry(my_alloc, probe->index, (probe->next)->index, -adjustment);
-	sch_sums[(probe->next)->index-1] -= adjustment;
+	increment_entry(my_alloc, stu, sch, -adjustment);
       }
     }
     
     if (probe->type == 2) {
       if ((probe->next)->type == 1) {
 	if (up) {
-	  increment_entry(my_alloc, (probe->next)->index, probe->index, -adjustment);
-	  sch_sums[probe->index-1] -= adjustment;
+	  increment_entry(my_alloc, stu, sch, -adjustment);
 	}
 	else {
-	  increment_entry(my_alloc, (probe->next)->index, probe->index, adjustment);
-	  sch_sums[probe->index-1] += adjustment;
+	  increment_entry(my_alloc, stu, sch, adjustment);
 	}
+      }
+      else {
+	if (up) {
+	  sch_sums[sch-1] += adjustment;
+	}
+	else {
+	  sch_sums[sch-1] -= adjustment;
+	}
+      }
+    }
+
+    if (probe->type == 3) {
+      if (up) {
+	sch_sums[sch-1] -= adjustment;
+      }
+      else {
+	sch_sums[sch-1] += adjustment;
       }
     }
     
@@ -399,35 +490,67 @@ void cycle_adjustment_of_allocation(struct partial_alloc* my_alloc, double* sch_
 
 void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
 			       struct nonintegral_graph* my_graph, struct path_node* my_cycle) {  
-  int done;
+  int done, stu, sch, removed_something;
+
+  if (!graph_is_nonempty(my_graph)) {
+    printf("Somehow we got an empty graph.\n");
+    exit(0);
+  }
   
   struct path_node* probe;
-  
+
+  removed_something = 0;  
   probe = my_cycle;
   done = 0;
+
   while (!done) {
+    
+    if (probe->type ==1) {
+      stu = probe->index;
+      sch = (probe->next)->index;
+    }
+    if (probe->type == 2) {
+      sch = probe->index;
+      if ((probe->next)->type == 1) {
+	stu = (probe->next)->index;
+      }
+    }
+    if (probe->type == 3) {
+      sch = (probe->next)->index;
+    }
+
+    
     if (probe->type == 1) {
-      if (is_integer(get_entry(my_alloc, probe->index, (probe->next)->index))) {
-	student_edge_removal(my_graph, probe->index, (probe->next)->index);
+      if (is_integer(get_entry(my_alloc, stu, sch))) {
+	student_edge_removal(my_graph, stu, sch);
+
+	removed_something = 1;
       }
     }
     
     if (probe->type == 2) {
       if ((probe->next)->type == 1) {
-	if (is_integer(get_entry(my_alloc, (probe->next)->index, probe->index))) {
-	  student_edge_removal(my_graph, (probe->next)->index, probe->index); 
+	if (is_integer(get_entry(my_alloc, stu, sch))) {
+	  student_edge_removal(my_graph, stu, sch); 
+
+	removed_something = 1;
 	}
       }
       else {
-	if (is_integer(sch_sums[probe->index-1])) {
-	  sink_edge_removal(my_graph, probe->index);
+	
+	if (is_integer(sch_sums[sch-1])) {
+	  sink_edge_removal(my_graph, sch);
+
+	removed_something = 1;
 	}
       }
     }
     
     if (probe->type == 3) {
-      if (is_integer(sch_sums[(probe->next)->index-1])) {
+      if (is_integer(sch_sums[sch-1])) {
 	sink_edge_removal(my_graph, (probe->next)->index);
+
+	removed_something = 1;
       }
     }
     
@@ -436,6 +559,11 @@ void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
     }
     
     probe = probe->next;
+  }
+
+  if (removed_something == 0) {
+    printf("We didn't remove anything.\n");
+    exit(0);
   }
 }
 
