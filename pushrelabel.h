@@ -15,29 +15,41 @@ struct labelling {
   int sink;
 };
 
+struct network_flow {
+  double* flow_from_source;
+  struct partial_alloc flows;
+  double* flow_to_sink;
+};
+ 
 void push_relabel(struct process_scp* input, struct partial_alloc* max_flow_alloc);
 
 int satisfies_the_GMC(struct process_scp* input);
 
 int* initialize_labels(int nst, int nsc);
 
-double** set_capacities(struct process_scp* input, int nst, int nsc);
+struct network_flow set_capacities(struct process_scp* input);
 
-double** initialize_preflows(struct process_scp* input, int nst, int nsc);
+double capacity(struct network_flow* cap, int arc_tail, int arc_head);
+
+struct network_flow initialize_preflows(struct process_scp* input);
+
+double preflow(struct network_flow* pre, int arc_tail, int arc_head);
+
+void increment_preflow(struct network_flow* pre, int arc_tail, int arc_head, double incr);
 
 double* initialize_excess(struct process_scp* input, int nst, int nsc);
 
-int push_is_valid(int source, int target,
-		  double** capacities, double** preflows, double* excess, int* labels);
+int push_is_valid(int arc_tail, int arc_head, struct network_flow* cap,
+		      struct network_flow* pre, double* excess, int* labels);
 
-void push(int source, int target, double** capacities, double** preflows, double* excess);
+int relabel_is_valid(int node, struct network_flow* cap, struct network_flow* pre,
+			 int* labels);
 
-int relabel_is_valid(int node, double** capacities, double** preflows,
-		     double* excess, int* labels, int nst, int nsc);
+void push(int arc_tail, int arc_head, struct network_flow* cap, struct network_flow* pre,
+	      double* excess);
 
-void relabel(int node, double** capacities, double** preflows, int* labels, int nst, int nsc);
+void relabel(int node, struct network_flow* cap, struct network_flow* pre, int* labels);
 
-void destroy_pointers(int* labels, double** capacities, double** preflows, double* excess,
-		      int nst, int nsc);
+void destroy_network_flow(struct network_flow flow);
 
 #endif /* PUSHRELABEL_H */

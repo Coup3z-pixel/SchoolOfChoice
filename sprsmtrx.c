@@ -102,7 +102,7 @@ struct dbl_sparse_matrix new_dbl_sp_mat(struct process_scp* myscp) {
   
   answer.index_of_active_cols = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
-    answer.index_of_active_cols[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int*));
+    answer.index_of_active_cols[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int));
     for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
       answer.index_of_active_cols[i-1][k-1] = myscp->preferences[i-1][k-1];
     }

@@ -24,6 +24,10 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
       if (fabs(get_entry(first, i, j) - get_entry(second, i, j)) > 0.000001)  {
+
+	printf("The two allocs differ with first(%i,%i) = %1.2f and second (%i,%i) = %1.2f.\n",
+	       i, j, get_entry(first, i, j), i, j, get_entry(second, i, j));
+	
 	return 0;
       }
     }

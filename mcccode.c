@@ -1,23 +1,24 @@
 #include "mcccode.h"
 
 struct partial_alloc MCC_alloc_plus_coarse_cutoffs(struct process_scp* myscp, int* coarse) {
-  int j;
+  int j, nsc;
   double excess_sum;
-  
-  int nsc = myscp->no_schools;
+  double* fine_cutoffs;
+  double* excesses;
 
-  double* fine_cutoffs = malloc(nsc * sizeof(double));
+  nsc = myscp->no_schools;
+
+  fine_cutoffs = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
     fine_cutoffs[j-1] = 0.0;
   }
   
   excess_sum = 1.0;
-  while (excess_sum > 0.000001) {
-    
+  while (excess_sum > 0.000001) {    
     struct partial_alloc demands;
     demands = compute_demands(myscp, fine_cutoffs);
     
-    double* excesses = excess_demands(myscp, &demands);
+    excesses = excess_demands(myscp, &demands);
     
     excess_sum = 0.0;
     for (j = 1; j <= nsc; j++) {
@@ -69,10 +70,11 @@ double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* d
   upper_dmd = demand_at_new_cutoff(myscp, j, demands, upper_cand);
   
   new_dmd = -1.0;
-  while (fabs(new_dmd - target) > 0.000000000001) {
+  while (fabs(new_dmd - target) > 0.00000000001) {
 
     new_cand = lower_cand +
                (upper_cand - lower_cand) * (lower_dmd - target)/(lower_dmd - upper_dmd);
+    
     new_dmd = demand_at_new_cutoff(myscp, j, demands, new_cand);
     if (new_dmd > target) {
       lower_cand = new_cand;
