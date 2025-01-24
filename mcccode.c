@@ -1,5 +1,36 @@
 #include "mcccode.h"
 
+struct partial_alloc MCC_alloc(struct process_scp* myscp) {
+  int nsc;
+  int* coarse;
+  struct partial_alloc answer;
+
+  nsc = myscp->no_schools;
+  coarse = malloc(nsc * sizeof(int));
+  answer = MCC_alloc_plus_coarse_cutoffs(myscp, coarse);
+
+  /* Testing the new efficiency functions, hence temporary. */
+
+  struct process_scp reduced;
+
+  reduced = reduced_scp(myscp, coarse);
+
+  /*
+  if (allocation_is_efficient(&answer, &reduced)) {
+    fprintf(stderr, "The mcc allocation is efficient.\n");
+  }
+  else  {
+    fprintf(stderr, "The mcc allocation is inefficient.\n");
+  }
+  */
+
+  destroy_process_scp(reduced);
+
+  free(coarse);
+
+  return answer;
+}
+
 struct partial_alloc MCC_alloc_plus_coarse_cutoffs(struct process_scp* myscp, int* coarse) {
   int j, nsc;
   double excess_sum;
@@ -55,7 +86,7 @@ double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* d
 
   int max_priority = 0;
   for (i = 1; i <= nst; i++) {
-    max_priority = max(max_priority, myscp->priorities[i-1][j-1]) ;
+    max_priority = max(max_priority, get_priority(myscp, i, j)) ;
   }
   max_priority++;
 
@@ -100,11 +131,11 @@ double demand_at_new_cutoff(struct process_scp* myscp, int j, struct partial_all
 
   total_demand = 0.0;
   for (i = 1; i <= nst; i++) {
-    if (New_Cutoff < myscp->priorities[i-1][j-1]) {
+    if (New_Cutoff < get_priority(myscp, i, j)) {
       total_demand += get_entry(demands, i, j);
     }
     else {
-      if (New_Cutoff == myscp->priorities[i-1][j-1]) {
+      if (New_Cutoff == get_priority(myscp, i, j)) {
 	total_demand += min(get_entry(demands, i, j), 1.0 - (new_cutoff - (double)(New_Cutoff)));
       }
     }
@@ -158,10 +189,10 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
     for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
       if (unfilled_demand > 0.000000001) {
 	j = myscp->preferences[i-1][k-1];
-	if (myscp->priorities[i-1][j-1] > coarse_cutoffs[j-1]) {
+	if (get_priority(myscp, i, j) > coarse_cutoffs[j-1]) {
 	  set_entry(&answer, i, j, unfilled_demand);
 	}
-	else if (myscp->priorities[i-1][j-1] == coarse_cutoffs[j-1]) {
+	else if (get_priority(myscp, i, j) == coarse_cutoffs[j-1]) {
 	  set_entry(&answer, i, j, min(unfilled_demand,
 				      1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])));
 	}

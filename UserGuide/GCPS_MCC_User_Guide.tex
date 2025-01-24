@@ -1463,7 +1463,7 @@ treat this Appendix as a reference, skipping it on a first reading and
 returning to it only when the reader wishes to understand the
 particular things these modules do.
 
-\subsection{\texttt{normal.c}}
+\subsection{\texttt{normal.h} and \texttt{normal.c}}
 
 The functions \texttt{min} and \texttt{max} compute the minimum and
 maximum of two doubles.
@@ -1482,9 +1482,9 @@ instead of 0.99999999.
 The functions \texttt{uniform} and \texttt{normal} provide
 pseudorandom numbers that are uniformly distributed (in $[0,1]$) and
 normally distributed (for mean 0 and standard deviation 1)
-respectively.  .
+respectively.  
 
-\subsection{\texttt{subset.c}}
+\subsection{\texttt{subset.h}  and \texttt{subset.c}}
 
 One may represent a subset of $\{1, \ldots,
 \mathtt{large\_set\_size}\}$ as an $n$-tuple of 0's and 1's, or as a
@@ -1505,7 +1505,7 @@ the other direction.  (Since an \texttt{index} does not know the size
 of the set it is a subset of, that piece of data is a required
 argument.) There is no index representation of the empty set, and if
 \texttt{subset\_of\_index} receives the empty set as an argument, it
-will complain and halt the program.
+will complain and halt execution..
 
 An \texttt{index\_list} is a linked list of subsets in \texttt{index}
 form.  
@@ -1515,6 +1515,46 @@ titles, with code that is not hard to understand.  There may now be
 some functions that are not used elsewhere, as we have not made an
 effort to eliminate such functions when they may prove useful later,
 and are illustrative of what is possible.
+
+\subsection{\texttt{sprsmtrx.h} and \texttt{sprsmtrx.c}}
+
+As larger and larger examples were considered during the development
+of this software, it turned out that the amount of memory allocated by
+the compiler to the program could be exhausted unless some steps were
+taken to avoid this.  For example, an allocation is an assignment to
+each student-school pair of a probability that the student is enrolled
+in the school.  Each student has a relatively small number of schools
+that she is eligible for, so if we represent an allocation simply as a
+matrix, it would have many entries that are known a priori to be zero.
+
+In the \texttt{struct}s \texttt{int\_sparse\_matrix} and
+\texttt{int\_sparse\_matrix}, for $i = 1, \ldots, \mathtt{no\_rows}$,
+\texttt{nos\_active\_cols[i-1]} is the number of entries in row
+\texttt{i} that are potentially nonzero and
+\texttt{index\_of\_active\_cols[i-1]} is an array of
+\texttt{nos\_active\_cols[i-1]} integers specifying which columns
+contain potentially nonzero entries.  If $k \le
+\texttt{index\_of\_active\_cols[i-1]}$, then
+\texttt{entries[i-1][k-1]} is the entry in column
+\texttt{index\_of\_active\_cols[i-1][k-1]}.
+
+The three things you can do with a matrix are ask what the value of an
+entry is, set an entry, and add something to an entry.  These six
+functions take values of \texttt{row\_no} between $1$ and
+\texttt{no\_rows} and values of \texttt{col\_no} between $1$ and
+\texttt{no\_cols}.  (Thus we are \emph{not} following the \texttt{C}
+style letting the \texttt{(i,j)} entry of \texttt{mat} be
+\texttt{mat[i-1][j-1]}.)  These functions make the inner workings of
+\texttt{int\_sparse\_matrix} and \texttt{dbl\_sparse\_matrix}
+invisible to the user, who can imagine that these are just normal
+matrices.  (If you try to assign or increment a nonzero value of an
+entry that must be zero, there will be an error message, and execution
+will halt.)
+
+\section{Basics of School Choice}
+
+We now explain how school choice problems are represented, how partial
+allocations are represented, and a bit about how files are read.
 
 \subsection{\texttt{schchprob.c}}
 

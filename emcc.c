@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
   }
   
   struct process_scp pr_scp = process_scp_from_input(&input_scp);
+  destroy_input_sch_ch_prob(input_scp);
 
   if (!satisfies_the_GMC(&pr_scp)) {
     fprintf(stderr, "The input_scp does not satisfy the GMC.\n");
@@ -31,7 +32,6 @@ int main(int argc, char *argv[]) {
   
   print_sparse_partial_alloc(&emcc_alloc); 
 
-  destroy_input_sch_ch_prob(input_scp);
   destroy_partial_alloc(emcc_alloc);
   destroy_process_scp(pr_scp);
 
