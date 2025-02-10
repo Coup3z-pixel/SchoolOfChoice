@@ -1,5 +1,0 @@
-	This directory contains the code at the point at which the new
-implementation in terms of hunting a target is basically working, but
-before the old code based on lists has been cleaned out.  We are
-saving in preparation for cleaning out code related to the list
-implementation.

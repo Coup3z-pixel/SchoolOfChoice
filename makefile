@@ -19,13 +19,10 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: gcps lpgcps mcc emcc purify makex 
+all: makex gcps mcc emcc purify 
 
-gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o purifycode.o sprsmtrx.o gcpscode.o
-	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o critpair.o efficient.o purifycode.o sprsmtrx.o  gcpscode.o $(LDFLAGS)
-
-lpgcps: lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o sprsmtrx.o gcpscode.o lpgcpscode.o
-	$(CC) -o lpgcps lpgcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o linprog.o critpair.o sprsmtrx.o gcpscode.o lpgcpscode.o $(LDFLAGS)
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o  gcpscode.o $(LDFLAGS)
 
 mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o
 	$(CC) -o mcc mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o  $(LDFLAGS)
@@ -63,14 +60,11 @@ pivot.o: pivot.h pivot.c
 endpoint.o: endpoint.h endpoint.c
 	$(CC) $(CFLAGS) -c endpoint.c
 
-critpair.o: critpair.h critpair.c
-	$(CC) $(CFLAGS) -c critpair.c
+segment.o: segment.h segment.c
+	$(CC) $(CFLAGS) -c segment.c
 
 gcpscode.o: gcpscode.h gcpscode.c
 	$(CC) $(CFLAGS) -c gcpscode.c
-
-lpgcpscode.o: lpgcpscode.h lpgcpscode.c
-	$(CC) $(CFLAGS) -c lpgcpscode.c
 
 partalloc.o: partalloc.h partalloc.c
 	$(CC) $(CFLAGS) -c partalloc.c

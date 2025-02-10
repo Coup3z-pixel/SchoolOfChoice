@@ -1,6 +1,0 @@
-	This directory contains examples with numbers of schools
-between 10 and 100, in increments of 10.  Each school has capacity 10,
-and there are 9 students per school.  The most notable result is that
-there are large minimal critical sets.  In particular, schools10.scp6
-has a minimal critical set with 7 elements, and other examples have
-minimal critical sets with 3, 4, 5, and 6 elements.

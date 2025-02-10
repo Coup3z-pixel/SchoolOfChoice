@@ -31,15 +31,15 @@ void set_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no, int 
 void increment_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no, int incr);
 
 
-void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double val);
-
 double dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no);
+
+void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double val);
 
 void increment_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double incr);
 
-struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given);
+struct int_sparse_matrix copy_of_int_sp_matrix(struct int_sparse_matrix* given);
 
-struct int_sparse_matrix copy_int_sparse_matrix(struct int_sparse_matrix* given);
+struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given);
 
  
 int* new_nos_active_cols(struct dbl_sparse_matrix* mydsp,

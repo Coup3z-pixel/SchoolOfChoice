@@ -48,28 +48,6 @@ void increment_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no
   mymat->entries[row_no-1][probe-1] += incr;
 }
 
-
-void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double val) {
-  int probe;
-  
-  probe = 1;
-  while (probe <= mymat->nos_active_cols[row_no-1] &&
-	 mymat->index_of_active_cols[row_no-1][probe-1] != col_no) {
-    probe++;
-  }
-
-  if (probe <= mymat->nos_active_cols[row_no-1]) {
-
-    /*
-    if (row_no == 1 && col_no == 2) {
-      printf("In set_dbl_entry we are setting the (1,2) entry to %1.3f.\n", val);
-    }
-    */
-  
-    mymat->entries[row_no-1][probe-1] = val;
-  }
-}
-
 double dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no) {
   int probe;
 
@@ -83,14 +61,22 @@ double dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no) {
     return 0.0;
   }
   else {
-    /*
-  if (row_no == 1 && col_no == 2) {
-    printf("In dbl_entry we are returning the (1,2) entry %1.3f.\n",
-	   mymat->entries[row_no-1][probe-1]);
-  }
-    */
-
     return mymat->entries[row_no-1][probe-1];
+  }
+}
+
+
+void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double val) {
+  int probe;
+  
+  probe = 1;
+  while (probe <= mymat->nos_active_cols[row_no-1] &&
+	 mymat->index_of_active_cols[row_no-1][probe-1] != col_no) {
+    probe++;
+  }
+
+  if (probe <= mymat->nos_active_cols[row_no-1]) {
+    mymat->entries[row_no-1][probe-1] = val;
   }
 }
 
@@ -106,6 +92,40 @@ void increment_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no
   if (probe <= mymat->nos_active_cols[row_no-1]) {
     mymat->entries[row_no-1][probe-1] += incr;
   }
+}
+
+struct int_sparse_matrix copy_of_int_sp_matrix(struct int_sparse_matrix* given) {
+  int i, k, no_rows;
+
+  struct int_sparse_matrix answer;
+
+  answer.no_rows = given->no_rows;
+  answer.no_cols = given->no_cols;
+
+  no_rows = answer.no_rows;
+
+  answer.nos_active_cols = malloc(no_rows * sizeof(int));
+  for (i = 1; i <= no_rows; i++) {
+    answer.nos_active_cols[i-1] = given->nos_active_cols[i-1];
+  }
+
+  answer.index_of_active_cols = malloc(no_rows * sizeof(int*));
+  for (i = 1; i <= no_rows; i++) {
+    answer.index_of_active_cols[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(int));
+    for (k = 1; k <= answer.nos_active_cols[i-1]; k++) {
+      answer.index_of_active_cols[i-1][k-1] = given->index_of_active_cols[i-1][k-1];
+    }
+  }
+
+  answer.entries = malloc(no_rows * sizeof(int*));
+  for (i = 1; i <= no_rows; i++) {
+    answer.entries[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(int));
+    for (k = 1; k <= answer.nos_active_cols[i-1]; k++) {
+      answer.entries[i-1][k-1] = 0;
+    }
+  }
+
+  return answer;
 }
 
 struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given) {
@@ -140,40 +160,6 @@ struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given) {
   }
 
   return copy;
-}
-
-struct int_sparse_matrix copy_int_sparse_matrix(struct int_sparse_matrix* given) {
-  int i, k, no_rows;
-
-  struct int_sparse_matrix answer;
-
-  answer.no_rows = given->no_rows;
-  answer.no_cols = given->no_cols;
-
-  no_rows = answer.no_rows;
-
-  answer.nos_active_cols = malloc(no_rows * sizeof(int));
-  for (i = 1; i <= no_rows; i++) {
-    answer.nos_active_cols[i-1] = given->nos_active_cols[i-1];
-  }
-
-  answer.index_of_active_cols = malloc(no_rows * sizeof(int*));
-  for (i = 1; i <= no_rows; i++) {
-    answer.index_of_active_cols[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(int));
-    for (k = 1; k <= answer.nos_active_cols[i-1]; k++) {
-      answer.index_of_active_cols[i-1][k-1] = given->index_of_active_cols[i-1][k-1];
-    }
-  }
-
-  answer.entries = malloc(no_rows * sizeof(int*));
-  for (i = 1; i <= no_rows; i++) {
-    answer.entries[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(int));
-    for (k = 1; k <= answer.nos_active_cols[i-1]; k++) {
-      answer.entries[i-1][k-1] = 0;
-    }
-  }
-
-  return answer;
 }
 
 

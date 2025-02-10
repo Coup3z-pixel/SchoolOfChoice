@@ -1,18 +1,5 @@
 #include "endpoint.h"
 
-double time_until_some_max_exhaustion(int* favorites, struct process_scp* working_scp) {
-  int i;
-  
-  int nst = working_scp->no_students;
-  
-  double mnm = working_scp->time_remaining;;
-  for (i = 1; i <= nst; i++) {
-    mnm = min(mnm, is_eligible(working_scp, i, favorites[i-1]) * working_scp->time_remaining);
-  }
-
-  return mnm;
-}
-
 double time_until_some_school_exhaustion(int* favorites, struct process_scp* working_scp) {
   int i, j;
 
@@ -131,26 +118,18 @@ double time_until_feasible_guide_not_feasible(struct int_sparse_matrix* theta,
 double time_until_trajectory_change(struct int_sparse_matrix* theta, struct index* alpha,
 					int* favorites, struct process_scp* working_scp,
 					struct partial_alloc* feasible_guide) {
-  double final_min, time_til_some_max_exhaustion, time_til_some_school_exhaustion,
-    time_til_feasible_guide_not_above, time_til_feasible_guide_not_feasible;
+  double final_min, time_til_some_school_exhaustion, time_til_feasible_guide_not_above,
+    time_til_feasible_guide_not_feasible;
 
-  /*
-  if (working_scp->time_remaining > 0.000001) {
-    printf("We should be OK at beginning of time_until.\n");
-  }
-  */  
   final_min = working_scp->time_remaining;
-  
-  time_til_some_max_exhaustion = time_until_some_max_exhaustion(favorites, working_scp);
-  final_min = min(final_min,time_til_some_max_exhaustion);
 
   time_til_some_school_exhaustion = time_until_some_school_exhaustion(favorites, working_scp);
   final_min = min(final_min,time_til_some_school_exhaustion);
 
   time_til_feasible_guide_not_above = time_until_feasible_guide_not_above_alloc(theta, alpha,
-										    favorites,
-										    working_scp,
-										    feasible_guide);
+										favorites,
+										working_scp,
+										feasible_guide);
   final_min = min(final_min,time_til_feasible_guide_not_above);
 
   time_til_feasible_guide_not_feasible = time_until_feasible_guide_not_feasible(theta, alpha,

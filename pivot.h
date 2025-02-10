@@ -26,7 +26,10 @@ struct pivot_list {
 
 struct pivot initialized_pivot(int h);
 
-int pivot_has_zero_zeroth_school(struct pivot* my_pivot);
+struct pivot* copy_of_pivot(struct pivot* my_pivot);
+
+void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums);
+
 
 int pivot_list_node_has_NULL_the_pivot(struct pivot_list_node* my_node);
 
@@ -34,23 +37,17 @@ int pivot_list_has_NULL_the_pivot(struct pivot_list* my_list);
 
 struct pivot_list void_pivot_list();
 
-struct pivot* copy_of_pivot(struct pivot* my_pivot);
-
 int pivot_list_is_void(struct pivot_list* my_list);
 
 void add_pivot_to_list(struct pivot_list* my_list, struct pivot* new_pivot);
 
 void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addition);
 
-void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums);
-
 struct pivot_list reduced_pivot_list(struct pivot_list* given_list,
 				     struct subset* J_subset, struct subset* P_subset);
 
 struct pivot_list left_reduced_pivot_list(struct pivot_list* given_list,
 					  struct subset* J_subset, struct subset* P_subset);
-
-int pivot_list_has_zero_zeroth_school(struct pivot_list* my_list);
 
 struct pivot_list right_reduced_pivot_list(struct pivot_list* given_list,
 					   struct subset* J_subset, struct subset* P_subset);
@@ -59,7 +56,6 @@ struct pivot_list right_reduced_pivot_list(struct pivot_list* given_list,
 void print_pivot(struct pivot* my_pivot);
 
 void print_pivot_list(struct pivot_list* my_list);
-
 
 void destroy_pivot(struct pivot my_pivot);
 

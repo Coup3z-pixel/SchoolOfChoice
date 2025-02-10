@@ -10,31 +10,24 @@ struct pivot initialized_pivot(int h) {
   return my_pivot;
 }
 
-int pivot_has_zero_zeroth_school(struct pivot* my_pivot) {
-  if (my_pivot == NULL) {
-    printf("Somehow we sent a NULL to the test.\n");
-    /* exit(0); */
-  }
+struct pivot* copy_of_pivot(struct pivot* my_pivot) {
+  int g, h;
   
-  if (my_pivot->schools[0] == 0) {
-    return 1;
+  struct pivot* new_pivot = malloc(sizeof(struct pivot));
+  h = my_pivot->h;
+  new_pivot->h = h;
+  new_pivot->schools = malloc((h+1) * sizeof(int));
+
+  new_pivot->students = malloc(h * sizeof(int));
+  for (g = 1; g <= h; g++) {
+    new_pivot->schools[g-1] = my_pivot->schools[g-1];
+    new_pivot->students[g-1] = my_pivot->students[g-1];
   }
-  return 0;
+  new_pivot->schools[h] = my_pivot->schools[h];
+
+  return new_pivot;
 }
 
-int pivot_list_has_zero_zeroth_school(struct pivot_list* my_list) {
-  struct pivot_list_node* probe;
-
-  probe = my_list->first_node;
-  while (probe != NULL) {
-    if (pivot_has_zero_zeroth_school(probe->the_pivot)) {
-      return 1;
-    }
-    probe = probe->next;
-  }
-
-  return 0;
-}
 
 int pivot_list_node_has_NULL_the_pivot(struct pivot_list_node* my_node) {
   if (my_node->the_pivot == NULL) {
@@ -66,24 +59,6 @@ struct pivot_list void_pivot_list() {
   my_list.last_node = my_list.first_node;
 
   return my_list;
-}
-
-struct pivot* copy_of_pivot(struct pivot* my_pivot) {
-  int g, h;
-  
-  struct pivot* new_pivot = malloc(sizeof(struct pivot));
-  h = my_pivot->h;
-  new_pivot->h = h;
-  new_pivot->schools = malloc((h+1) * sizeof(int));
-
-  new_pivot->students = malloc(h * sizeof(int));
-  for (g = 1; g <= h; g++) {
-    new_pivot->schools[g-1] = my_pivot->schools[g-1];
-    new_pivot->students[g-1] = my_pivot->students[g-1];
-  }
-  new_pivot->schools[h] = my_pivot->schools[h];
-
-  return new_pivot;
 }
 
 int pivot_list_is_void(struct pivot_list* my_list) {

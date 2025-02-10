@@ -6,6 +6,10 @@ int allocation_is_efficient(struct partial_alloc* myalloc, struct process_scp* m
   struct stu_list_node* probe;
   
   struct lists_of_students accepting_students;
+
+  if (!allocation_is_nonwasteful(myalloc, myscp)) {
+    return 0;
+  }
   
   nsc = myscp->no_schools;
 
@@ -27,6 +31,37 @@ int allocation_is_efficient(struct partial_alloc* myalloc, struct process_scp* m
   destroy_lists_of_students(&accepting_students);
 
   return 1 - inefficient;
+}
+
+int allocation_is_nonwasteful(struct partial_alloc* myalloc, struct process_scp* myscp) {
+  int i, j, k, r, s, nst, nsc;
+
+  double school_sum;
+  
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+
+  for (j = 1; j <= nsc; j++) {
+    school_sum = 0.0;
+    for (i = 1; i <= nst; i++) {
+      school_sum += get_entry(myalloc, i, j);
+    }
+    if (school_sum < (double)myscp->quotas[j-1] - 0.000001) {
+      for (i = 1; i <= nst; i++) {
+	if (is_eligible(myscp, i, j)) {
+	  r = student_ranking_of_school(myscp, i, j);
+	  for (k = r+1; k <= myscp->no_eligible_schools[i-1]; k++) {
+	    s = myscp->preferences[i-1][k-1];
+	    if (get_entry(myalloc, i, s) > 0.000001) {
+	      return 0;
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  return 1;
 }
 
 struct lists_of_students get_accepting_students(struct partial_alloc* myalloc,
@@ -106,8 +141,8 @@ int process_initial_pair(struct partial_alloc* myalloc, struct process_scp* mysc
   last_layer = all_nodes_reached;
   
   while (!(*found_cycle) && *something_new) {
-    new_layer = NEW_get_new_layer(myalloc, myscp, accepting_students, all_nodes_reached, 
-				  last_layer, found_cycle, something_new, i, j);
+    new_layer = get_new_layer(myalloc, myscp, accepting_students, all_nodes_reached, 
+			      last_layer, found_cycle, something_new, i, j);
     if (*something_new) {
       all_nodes_reached_tip->next = new_layer;
       while (all_nodes_reached_tip->next != NULL) {
@@ -126,12 +161,12 @@ int process_initial_pair(struct partial_alloc* myalloc, struct process_scp* mysc
   return cycle_found;
 }
 
-struct stu_sch_node* NEW_get_new_layer(struct partial_alloc* myalloc, struct process_scp* myscp,
-				       struct lists_of_students* accepting_students,
-				       struct stu_sch_node* all_so_far, 
-				       struct stu_sch_node* last_layer,
-				       int* found_cycle, int* something_new,
-				       int i, int j)  {
+struct stu_sch_node* get_new_layer(struct partial_alloc* myalloc, struct process_scp* myscp,
+				   struct lists_of_students* accepting_students,
+				   struct stu_sch_node* all_so_far, 
+				   struct stu_sch_node* last_layer,
+				   int* found_cycle, int* something_new,
+				   int i, int j)  {
   struct stu_sch_node* answer;
   struct stu_sch_node* probe;
 
@@ -155,6 +190,7 @@ struct stu_sch_node* NEW_get_new_layer(struct partial_alloc* myalloc, struct pro
 
   return answer;
 }
+
 struct stu_sch_node* possible_recipients(struct partial_alloc* myalloc, struct process_scp* myscp,
 					 struct lists_of_students* accepting_students,
 					 int k, int l) {
