@@ -19,7 +19,7 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: makex gcps mcc emcc purify 
+all: gcps mcc emcc purify makex 
 
 gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o gcpscode.o
 	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o  gcpscode.o $(LDFLAGS)
@@ -33,8 +33,8 @@ emcc: emcc.c emcccode.o mcccode.o efficient.o partalloc.o subset.o normal.o pars
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o $(LDFLAGS)
 
-makex: makex.c normal.o linprog.o subset.o sprsmtrx.o schchprob.o  makexcode.o
-	$(CC) -o makex makex.c normal.o linprog.o subset.o sprsmtrx.o schchprob.o makexcode.o $(LDFLAGS)
+makex: makex.c normal.o subset.o sprsmtrx.o schchprob.o  makexcode.o
+	$(CC) -o makex makex.c normal.o subset.o sprsmtrx.o schchprob.o makexcode.o $(LDFLAGS)
 
 normal.o: normal.h normal.c
 	$(CC) $(CFLAGS) -c normal.c 
@@ -74,9 +74,6 @@ efficient.o: efficient.h efficient.c
 
 schchprob.o: schchprob.h schchprob.c
 	$(CC) $(CFLAGS) -c schchprob.c
-
-linprog.o: linprog.h linprog.c
-	$(CC) $(CFLAGS) -c linprog.c 
 
 mcccode.o: mcccode.h mcccode.c
 	$(CC) $(CFLAGS) -c mcccode.c

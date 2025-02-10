@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "linprog.h"
 #include "makexcode.h"
 
 int main(int argc, char *argv[]) {
