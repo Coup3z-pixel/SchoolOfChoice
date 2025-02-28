@@ -43,7 +43,9 @@ int safe_schools_are_safe(struct input_sch_ch_prob* my_scp);
 
 struct int_sparse_matrix new_int_sp_mat(struct process_scp* myscp);
 
-struct dbl_sparse_matrix new_dbl_sp_mat(struct process_scp* myscp);
+struct dbl_sparse_matrix new_dbl_sp_mat_for_process(struct process_scp* myscp);
+
+struct dbl_sparse_matrix new_dbl_sp_mat_for_input(struct input_sch_ch_prob* myscp);
 
 struct int_sparse_matrix sparse_priorities(struct input_sch_ch_prob* my_scp);
 

@@ -65,11 +65,11 @@ int stu_sch_list_contains_pair_noninitially(struct stu_sch_node* stu_sch, int i,
 
 void append_node_to_stu_sch_list(struct stu_sch_node** stu_sch, int i, int j);
 
-struct stu_sch_node* copy_of_list(struct stu_sch_node* given);
+struct stu_sch_node* copy_of_stu_sch_list(struct stu_sch_node* node);
+
+void append_copy_of_listB_to_listA(struct stu_sch_node* listA, struct stu_sch_node* listB);
 
 void remove_pair_from_list(struct stu_sch_node** list, int k, int l);
-
-struct stu_sch_node* copy_of_stu_sch_list(struct stu_sch_node* node);
 
 void print_stu_sch_list(struct stu_sch_node* node);
 

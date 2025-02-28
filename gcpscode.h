@@ -7,10 +7,11 @@
 
 #include "segment.h"
 #include "efficient.h"
+#include "defaccep.h"
 
 struct partial_alloc simple_GCPS_alloc(struct process_scp* input); 
 
-/* The next function uses push_relabel to compute a feasible
+/* The next function uses deferred_acceptance to compute a feasible
 allocation, then invokes GCPS_allocation_with_guide to compute the
 allocation.  probe_list is a list of pivots.  The idea is that
 computing pivots directly is onerous, and the pivots are likely to be

@@ -121,7 +121,59 @@ struct int_sparse_matrix new_int_sp_mat(struct process_scp* myscp) {
   return answer;
 } 
 
-struct dbl_sparse_matrix new_dbl_sp_mat(struct process_scp* myscp) {
+struct dbl_sparse_matrix new_dbl_sp_mat_for_process(struct process_scp* myscp) {
+  int i, k, swap, nst, nsc;
+
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+
+  struct dbl_sparse_matrix answer;
+
+  answer.no_rows = nst;
+  answer.no_cols = nsc;
+  
+  answer.nos_active_cols = malloc(nst * sizeof(int));
+  for (i = 1; i <= nst; i++) {
+    answer.nos_active_cols[i-1] = myscp->no_eligible_schools[i-1];
+  }
+  
+  answer.index_of_active_cols = malloc(nst * sizeof(int*));
+  for (i = 1; i <= nst; i++) {
+    answer.index_of_active_cols[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int));
+    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+      answer.index_of_active_cols[i-1][k-1] = myscp->preferences[i-1][k-1];
+    }
+    k = 1;
+    while (k < answer.nos_active_cols[i-1]) {
+      if (answer.index_of_active_cols[i-1][k-1] > answer.index_of_active_cols[i-1][k]) {
+	swap = answer.index_of_active_cols[i-1][k-1];
+	answer.index_of_active_cols[i-1][k-1] = answer.index_of_active_cols[i-1][k];
+	answer.index_of_active_cols[i-1][k] = swap;
+	if (k == 1) {
+	  k++;
+	}
+	else {
+	  k--;
+	}
+      }
+      else {
+	k++;
+      }
+    }
+  }
+  
+  answer.entries = malloc(nst * sizeof(double*));
+  for (i = 1; i <= nst; i++) {
+    answer.entries[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(double));
+    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+      answer.entries[i-1][k-1] = 0.0;
+    }
+  }
+
+  return answer;
+}
+
+struct dbl_sparse_matrix new_dbl_sp_mat_for_input(struct input_sch_ch_prob* myscp) {
   int i, k, swap, nst, nsc;
 
   nst = myscp->no_students;

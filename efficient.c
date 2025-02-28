@@ -8,6 +8,9 @@ int allocation_is_efficient(struct partial_alloc* myalloc, struct process_scp* m
   struct lists_of_students accepting_students;
 
   if (!allocation_is_nonwasteful(myalloc, myscp)) {
+
+    fprintf(stderr, "The allocation is wasteful!!\n");
+    
     return 0;
   }
   
@@ -294,28 +297,39 @@ void append_node_to_stu_sch_list(struct stu_sch_node** stu_sch, int i, int j) {
   }
 }
 
-struct stu_sch_node* copy_of_list(struct stu_sch_node* given) {
+struct stu_sch_node* copy_of_stu_sch_list(struct stu_sch_node* node) {
+  struct stu_sch_node* probe;
   struct stu_sch_node* answer;
-  struct stu_sch_node* reader;
-  struct stu_sch_node* constructor;
-  struct stu_sch_node* new_node;
+  struct stu_sch_node* answer_tip;
 
-  if (given == NULL) {
+  probe = node;
+  if (probe == NULL) {
     answer = NULL;
   }
   else {
-    answer = create_stu_sch_node(given->stuno,given->schno);
-    reader = given;
-    constructor = answer;
-    while (reader->next != NULL) {
-      reader = reader->next;
-      new_node = create_stu_sch_node(reader->stuno,reader->schno);
-      constructor->next = new_node;
-      constructor = constructor->next;
+    answer = create_stu_sch_node(probe->stuno, probe->schno);
+    answer_tip = answer;
+    while (probe->next != NULL) {
+      probe = probe->next;
+      answer_tip->next = create_stu_sch_node(probe->stuno, probe->schno);
+      answer_tip = answer_tip->next;
     }
   }
 
   return answer;
+}
+
+void append_copy_of_listB_to_listA(struct stu_sch_node* listA, struct stu_sch_node* listB) {
+  struct stu_sch_node* copy_of_listB;
+  struct stu_sch_node* probe;
+
+  copy_of_listB = copy_of_stu_sch_list(listB);
+
+  probe = listA;
+  while (probe->next != NULL) {
+    probe = probe->next;
+  }
+  probe->next = copy_of_listB;
 }
 
 void remove_pair_from_list(struct stu_sch_node** list, int k, int l) {
@@ -348,23 +362,15 @@ void remove_pair_from_list(struct stu_sch_node** list, int k, int l) {
   free(probe);
 }
 
-struct stu_sch_node* copy_of_stu_sch_list(struct stu_sch_node* node) {
+int length_of_stu_sch_list(struct stu_sch_node* list_head) {
+  int answer;
   struct stu_sch_node* probe;
-  struct stu_sch_node* answer;
-  struct stu_sch_node* answer_tip;
 
-  probe = node;
-  if (probe == NULL) {
-    answer = NULL;
-  }
-  else {
-    answer = create_stu_sch_node(probe->stuno, probe->schno);
-    answer_tip = answer;
-    while (probe->next != NULL) {
-      probe = probe->next;
-      answer_tip->next = create_stu_sch_node(probe->stuno, probe->schno);
-      answer_tip = answer_tip->next;
-    }
+  answer = 0;
+  probe = list_head;
+  while (probe != NULL) {
+    answer++;
+    probe = probe->next;
   }
 
   return answer;
@@ -517,6 +523,7 @@ struct stu_sch_node* simple_new_layer(struct partial_alloc* myalloc, struct proc
       p = subprobe->stuno;
       q = subprobe->schno;
       if (!stu_sch_list_contains_pair_noninitially(all_so_far, p, q) &&
+	  !stu_sch_list_contains_pair(last_layer, p, q) &&
 	  !stu_sch_list_contains_pair(answer, p, q)) {
 	if (answer == NULL) {
 	  answer = create_stu_sch_node(p, q);

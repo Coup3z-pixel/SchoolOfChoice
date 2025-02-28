@@ -19,16 +19,19 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: gcps mcc emcc purify makex 
+all: gcps mcc emcc barter purify makex 
 
-gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o gcpscode.o
-	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pushrelabel.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o  gcpscode.o $(LDFLAGS)
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o $(LDFLAGS)
 
-mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o
-	$(CC) -o mcc mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o  $(LDFLAGS)
+mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o mcc mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o  $(LDFLAGS)
 
-emcc: emcc.c emcccode.o mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o
-	$(CC) -o emcc emcc.c emcccode.o mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o pushrelabel.o sprsmtrx.o $(LDFLAGS)
+emcc: emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o emcc emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
+
+barter: barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o
+	$(CC) -o barter barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o $(LDFLAGS)
@@ -51,8 +54,8 @@ subset.o: subset.h subset.c
 sprsmtrx.o: sprsmtrx.h sprsmtrx.c
 	$(CC) $(CFLAGS) -c sprsmtrx.c
 
-pushrelabel.o: pushrelabel.h pushrelabel.c
-	$(CC) $(CFLAGS) -c pushrelabel.c
+defaccep.o: defaccep.h defaccep.c
+	$(CC) $(CFLAGS) -c defaccep.c
 
 pivot.o: pivot.h pivot.c
 	$(CC) $(CFLAGS) -c pivot.c 
@@ -81,10 +84,16 @@ mcccode.o: mcccode.h mcccode.c
 emcccode.o: emcccode.h emcccode.c
 	$(CC) $(CFLAGS) -c emcccode.c
 
+bartercode.o: bartercode.h bartercode.c
+	$(CC) $(CFLAGS) -c bartercode.c
+
+trade.o: trade.h trade.c
+	$(CC) $(CFLAGS) -c trade.c
+
 purifycode.o: purifycode.h purifycode.c
 	$(CC) $(CFLAGS) -c purifycode.c
 
 
 clean:
-	rm *.o *~ gcps lpgcps mcc emcc purify makex 
+	rm *.o *~ gcps mcc emcc barter purify makex 
 

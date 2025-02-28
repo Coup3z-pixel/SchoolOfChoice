@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pushrelabel.h"
 #include "sprsmtrx.h"
 
 struct pivot {

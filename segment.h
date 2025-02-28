@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pushrelabel.h"
 #include "pivot.h"
 #include "endpoint.h"
 #include "parser.h"

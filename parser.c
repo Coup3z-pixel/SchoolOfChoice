@@ -171,16 +171,6 @@ struct partial_alloc allocation_from_file(const char filename[])  {
       alloc.sparse.entries[i-1][k-1] = get_double(fp);
     }
   }
-
-  /*
-  alloc.allocations = malloc(nst * sizeof(double*));
-  for (i = 1; i <= nst; i++) {
-    alloc.allocations[i-1] = malloc(nsc * sizeof(double));
-    for (j = 1; j <= nsc; j++) {
-      alloc.allocations[i-1][j-1] = dbl_entry(&(alloc.sparse), i, j);
-    }
-  }
-  */
     
   fclose(fp);
 

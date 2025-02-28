@@ -37,6 +37,8 @@ int partial_alloc_is_consistent(struct partial_alloc* my_alloc);
 
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp);
 
+struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* my_scp);
+
 double* school_sums(struct partial_alloc* my_alloc);
 
 struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,

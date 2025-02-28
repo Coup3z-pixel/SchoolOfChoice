@@ -85,7 +85,22 @@ struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp) {
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_dbl_sp_mat(my_scp);
+  answer.sparse = new_dbl_sp_mat_for_process(my_scp);
+  
+  return answer;
+}
+
+struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* my_scp) {
+  int nst, nsc;
+  
+  nst = my_scp->no_students;
+  nsc = my_scp->no_schools;
+  
+  struct partial_alloc answer;
+  answer.no_students = nst;
+  answer.no_schools = nsc;
+
+  answer.sparse = new_dbl_sp_mat_for_input(my_scp);
   
   return answer;
 }
@@ -238,7 +253,7 @@ void increment_pure_entry(struct pure_alloc* alloc, int i, int j, int incr) {
 
 
 void print_sparse_partial_alloc(struct partial_alloc* my_alloc) {
-  int i, k, l, nst, nsc, sch_no;
+  int i, k, l, nst, nsc, sch_no, old_sch_no;
   
   nst = my_alloc->no_students;
   nsc = my_alloc->no_schools;
@@ -271,12 +286,17 @@ void print_sparse_partial_alloc(struct partial_alloc* my_alloc) {
     if (i < 10) {
       printf(" ");
     }
+    old_sch_no = 0;
     for (k = 1; k <= my_alloc->sparse.nos_active_cols[i-1]; k++) {
       sch_no = my_alloc->sparse.index_of_active_cols[i-1][k-1];
+      for (l = 1; l <= sch_no - old_sch_no - 1; l++) {
+	printf("               ");
+      }
       if (sch_no < 10) {
 	printf(" ");
       }
       printf(" %i: %2.8f", sch_no, fabs(get_entry(my_alloc, i, sch_no)));
+      old_sch_no = sch_no;
     }
   }
   printf("\n");

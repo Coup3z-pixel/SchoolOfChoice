@@ -58,9 +58,7 @@ struct partial_alloc GCPS_allocation(struct process_scp* input, int* no_segments
   struct partial_alloc feasible_guide;
   struct pivot_list probe_list;
   
-  feasible_guide = zero_alloc_for_process_scp(input);
-  
-  push_relabel(input, &feasible_guide);
+  feasible_guide = deferred_acceptance(input);
   
   probe_list = void_pivot_list();
 

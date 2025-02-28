@@ -2,10 +2,12 @@
 
 #include "parser.h"
 #include "schchprob.h"
-#include "emcccode.h"
+#include "bartercode.h"
+#include "defaccep.h"
 
 int main(int argc, char *argv[]) {
   struct input_sch_ch_prob input_scp;
+  struct process_scp pr_scp;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -18,15 +20,17 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "emcc invoked with too many (> 2) command line arguments.\n");
     exit(0);
   }
+
+  pr_scp = process_scp_from_input(&input_scp);
   
-  struct process_scp pr_scp = process_scp_from_input(&input_scp);
+
+  struct partial_alloc barter_alloc = BARTER_allocation(&pr_scp);
+  
   destroy_input_sch_ch_prob(input_scp);
-
-  struct partial_alloc emcc_alloc = EMCC_allocation(&pr_scp);
   
-  print_sparse_partial_alloc(&emcc_alloc); 
+  print_sparse_partial_alloc(&barter_alloc); 
 
-  destroy_partial_alloc(emcc_alloc);
+  destroy_partial_alloc(barter_alloc);
   destroy_process_scp(pr_scp);
 
   return 0;
