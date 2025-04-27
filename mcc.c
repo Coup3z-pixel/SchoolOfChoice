@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   struct process_scp pr_scp = process_scp_from_input(&input_scp);  
   destroy_input_sch_ch_prob(input_scp);
 
-  struct partial_alloc mcc_alloc = MCC_alloc(&pr_scp);
+  struct partial_alloc mcc_alloc = mcca_alloc(&pr_scp);
 
   if (!students_are_fully_allocated(&mcc_alloc)) {
     printf("mcc was about to return a nonallocation.\n");

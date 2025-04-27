@@ -8,6 +8,24 @@ int get_priority(struct process_scp* my_scp, int i, int j) {
   return int_entry(&(my_scp->priorities), i, j);
 }
 
+int max_priority(struct process_scp* my_scp) {
+  int i, j, nst, nsc;
+
+  nst = my_scp->no_students;
+  nsc = my_scp->no_schools;
+  
+  int answer;
+
+  answer = 0;
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      answer = int_max(answer, get_priority(my_scp, i, j));
+    }
+  }
+
+  return answer;
+}
+
 int* get_favorites(struct process_scp* working_scp) {
   int i;
   int* favorites;

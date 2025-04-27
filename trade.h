@@ -10,8 +10,8 @@ void trade_until_efficient(struct process_scp* myscp, struct partial_alloc* allo
 void claim_until_nonwasteful(struct process_scp* myscp, struct partial_alloc* alloc_to_adjust);
 
 void process_cycles_at_pair(struct partial_alloc* myalloc, struct process_scp* myscp,
-				struct lists_of_students* accepting_students, int i, int j,
-			    int max_depth);
+			    struct lists_of_students* accepting_students, int i, int j,
+			    int max_depth, int* count);
 
 struct stu_sch_node* find_cycle_or_not(struct partial_alloc* myalloc,
 					   struct process_scp* myscp,

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "normal.h"
 #include "sprsmtrx.h" 
 
 struct input_sch_ch_prob {
@@ -29,6 +30,8 @@ struct process_scp {
 int get_input_priority(struct input_sch_ch_prob* my_scp, int i, int j); 
 
 int get_priority(struct process_scp* my_scp, int i, int j);
+
+int max_priority(struct process_scp* my_scp);
 
 /* favorites[i-1] is i's favorite among schools i is eligible for */
 

@@ -14,6 +14,10 @@ void trade_until_efficient(struct process_scp* myscp, struct partial_alloc* allo
   
   nsc = myscp->no_schools;
 
+  int* count;
+  count = malloc(sizeof(int));
+  *count = 0;
+
   max_depth = 1;
 
   while (!allocation_is_efficient(alloc_to_adjust, myscp)) {
@@ -29,7 +33,7 @@ void trade_until_efficient(struct process_scp* myscp, struct partial_alloc* allo
       while (probe != NULL) {
 	i = probe->stu_no;
 	process_cycles_at_pair(alloc_to_adjust, myscp, &accepting_students,i, j,
-			       max_depth/*, could_be_inefficient*/);
+			       max_depth, count);
 	if (accepting_students.lists[j-1] == NULL) {
 	  probe = NULL;
 	}
@@ -48,6 +52,9 @@ void trade_until_efficient(struct process_scp* myscp, struct partial_alloc* allo
 
     destroy_lists_of_students(&accepting_students);
   }
+
+  fprintf(stderr, "There were %i cycles.\n", *count);
+  free(count);
 }
 
 void claim_until_nonwasteful(struct process_scp* myscp, struct partial_alloc* alloc_to_adjust) {
@@ -107,8 +114,8 @@ void claim_until_nonwasteful(struct process_scp* myscp, struct partial_alloc* al
 }
 
 void process_cycles_at_pair(struct partial_alloc* myalloc, struct process_scp* myscp,
-				struct lists_of_students* accepting_students, int i, int j,
-				int max_depth) {
+			    struct lists_of_students* accepting_students, int i, int j,
+			    int max_depth, int* count) {
   int found;
   struct stu_sch_node* cycle;
   struct stu_sch_node* probe;
@@ -123,6 +130,8 @@ void process_cycles_at_pair(struct partial_alloc* myalloc, struct process_scp* m
     }
     else {
       adjust_partial_alloc_along_cycle(myalloc, cycle);
+
+      (*count)++;
 
       probe = cycle;
       while (probe != NULL) {

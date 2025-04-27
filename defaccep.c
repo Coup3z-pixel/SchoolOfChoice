@@ -7,9 +7,9 @@ struct partial_alloc deferred_acceptance(struct process_scp* input) {
 
   struct index* eligible_students;
 
-  struct subset* proposer_list;
-
   int* proposal_rank;
+
+  struct subset* proposer_list;
 
   nst = input->no_students;
   nsc = input->no_schools;

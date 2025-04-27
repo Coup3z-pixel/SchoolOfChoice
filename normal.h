@@ -9,6 +9,8 @@ double min(double a, double b);
 
 double max(double a, double b);
 
+int int_max(int a, int b);
+
 int is_integer(double nmbr);
 
 double uniform();

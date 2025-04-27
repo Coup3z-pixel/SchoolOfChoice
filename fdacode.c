@@ -1,4 +1,4 @@
-#include "mcccode.h"
+#include "fdacode.h"
 
 struct partial_alloc mcca_alloc(struct process_scp* myscp) {
   int nsc;
@@ -9,20 +9,9 @@ struct partial_alloc mcca_alloc(struct process_scp* myscp) {
   coarse = malloc(nsc * sizeof(int));
   answer = mcca_alloc_plus_coarse_cutoffs(myscp, coarse);
 
-  /* Testing the new efficiency functions, hence temporary. */
-
   struct process_scp reduced;
 
   reduced = reduced_scp(myscp, coarse);
-
-  /*
-  if (allocation_is_efficient(&answer, &reduced)) {
-    fprintf(stderr, "The mcc allocation is efficient.\n");
-  }
-  else  {
-    fprintf(stderr, "The mcc allocation is inefficient.\n");
-  }
-  */
 
   destroy_process_scp(reduced);
 
@@ -58,7 +47,7 @@ struct partial_alloc mcca_alloc_plus_coarse_cutoffs(struct process_scp* myscp, i
       
     for (j = 1; j <= nsc; j++) {
       if (excesses[j-1] > 0.000000001) {
-	fine_cutoffs[j-1] = naive_eq_cutoff(myscp, j, &demands, fine_cutoffs[j-1]);
+	fine_cutoffs[j-1] = minimum_eq_cutoff(myscp, j, &demands, fine_cutoffs[j-1]);
       }
     }
 
@@ -77,7 +66,7 @@ struct partial_alloc mcca_alloc_plus_coarse_cutoffs(struct process_scp* myscp, i
   return answer;
 }
 
-double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* demands,
+double minimum_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* demands,
 		       double old_cutoff) {
   int i;
   double lower_cand, upper_cand, new_cand, lower_dmd, upper_dmd, new_dmd, target;
@@ -122,21 +111,22 @@ double naive_eq_cutoff(struct process_scp* myscp, int j, struct partial_alloc* d
 
 double demand_at_new_cutoff(struct process_scp* myscp, int j, struct partial_alloc* demands,
 			    double new_cutoff) {
-  int i;
+  int i, nst, new_coarse_cutoff;
   double total_demand;
   
-  int nst = myscp->no_students;
+  nst = myscp->no_students;
 
-  int New_Cutoff = floor(new_cutoff);
+  new_coarse_cutoff = floor(new_cutoff);
 
   total_demand = 0.0;
   for (i = 1; i <= nst; i++) {
-    if (New_Cutoff < get_priority(myscp, i, j)) {
+    if (new_coarse_cutoff < get_priority(myscp, i, j)) {
       total_demand += get_entry(demands, i, j);
     }
     else {
-      if (New_Cutoff == get_priority(myscp, i, j)) {
-	total_demand += min(get_entry(demands, i, j), 1.0 - (new_cutoff - (double)(New_Cutoff)));
+      if (new_coarse_cutoff == get_priority(myscp, i, j)) {
+	total_demand += min(get_entry(demands, i, j),
+			    1.0 - (new_cutoff - (double)(new_coarse_cutoff)));
       }
     }
   }
@@ -178,26 +168,19 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* fine_cut
     coarse_cutoffs[j-1] = floor(fine_cutoffs[j-1]);
   }
 
-  for (i = 1; i <= nst; i++) {
-    int l = myscp->no_eligible_schools[i-1];
-    j = myscp->preferences[i-1][l-1];
-  }
-
   answer = zero_alloc_for_process_scp(myscp);
   for (i = 1; i <= nst; i++) {
     unfilled_demand = 1.0;
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
-      if (unfilled_demand > 0.000000001) {
-	j = myscp->preferences[i-1][k-1];
-	if (get_priority(myscp, i, j) > coarse_cutoffs[j-1]) {
-	  set_entry(&answer, i, j, unfilled_demand);
-	}
-	else if (get_priority(myscp, i, j) == coarse_cutoffs[j-1]) {
-	  set_entry(&answer, i, j, min(unfilled_demand,
-				      1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])));
-	}
-	unfilled_demand -= get_entry(&answer, i, j);
+    for (k = 1; k <= myscp->no_eligible_schools[i-1] && unfilled_demand > 0.000000001; k++) {
+      j = myscp->preferences[i-1][k-1];
+      if (get_priority(myscp, i, j) > coarse_cutoffs[j-1]) {
+	set_entry(&answer, i, j, unfilled_demand);
       }
+      else if (get_priority(myscp, i, j) == coarse_cutoffs[j-1]) {
+	set_entry(&answer, i, j, min(unfilled_demand,
+				     1.0 - (fine_cutoffs[j-1] - (double)coarse_cutoffs[j-1])));
+      }
+      unfilled_demand -= get_entry(&answer, i, j);
     }
   }
 

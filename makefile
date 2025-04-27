@@ -30,6 +30,9 @@ mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchpro
 emcc: emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
 	$(CC) -o emcc emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
 
+gcpsa: gcpsa.c gcpsacode.o mcccode.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o gcpsa gcps.c gcpsacode.o mcccode.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
+
 barter: barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o
 	$(CC) -o barter barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o $(LDFLAGS)
 
@@ -53,6 +56,9 @@ subset.o: subset.h subset.c
 
 sprsmtrx.o: sprsmtrx.h sprsmtrx.c
 	$(CC) $(CFLAGS) -c sprsmtrx.c
+
+vecmatrx.o: vecmatrx.h vecmatrx.c
+	$(CC) $(CFLAGS) -c vecmatrx.c
 
 defaccep.o: defaccep.h defaccep.c
 	$(CC) $(CFLAGS) -c defaccep.c
@@ -81,8 +87,14 @@ schchprob.o: schchprob.h schchprob.c
 mcccode.o: mcccode.h mcccode.c
 	$(CC) $(CFLAGS) -c mcccode.c
 
+fdacode.o: fdacode.h fdacode.c
+	$(CC) $(CFLAGS) -c fdacode.c
+
 emcccode.o: emcccode.h emcccode.c
-	$(CC) $(CFLAGS) -c emcccode.c
+	$(CC) $(CFLAGS) -c emcccode.c 
+
+gcpsacode.o: gcpsacode.h gcpsacode.c
+	$(CC) $(CFLAGS) -c gcpsacode.c
 
 bartercode.o: bartercode.h bartercode.c
 	$(CC) $(CFLAGS) -c bartercode.c
