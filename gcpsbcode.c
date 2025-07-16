@@ -1,11 +1,11 @@
-#include "emcccode.h"
+#include "gcpsbcode.h"
 
-struct partial_alloc EMCC_allocation(struct process_scp* myscp) {
+struct partial_alloc gcpsb_allocation(struct process_scp* myscp) {
   int j, nsc;
 
   int* coarse;
   
-  struct partial_alloc alloc_to_adjust;
+  struct partial_alloc gcpsb_alloc;
 
   struct process_scp red_scp;
 
@@ -16,14 +16,14 @@ struct partial_alloc EMCC_allocation(struct process_scp* myscp) {
     coarse[j-1] = 0;
   }
 
-  alloc_to_adjust = mcca_alloc_plus_coarse_cutoffs(myscp, coarse);
+  gcpsb_alloc = mccb_alloc_plus_coarse_cutoffs(myscp, coarse);
 
   red_scp = reduced_scp(myscp, coarse);
 
-  trade_until_efficient(&red_scp, &alloc_to_adjust);
+  gcpsb_alloc = simple_GCPS_alloc(&red_scp);
 
   free(coarse);
   destroy_process_scp(red_scp);
 
-  return alloc_to_adjust;
+  return gcpsb_alloc;
 }

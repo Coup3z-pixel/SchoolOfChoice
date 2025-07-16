@@ -5,7 +5,7 @@ struct partial_alloc gcpsa_allocation(struct process_scp* myscp) {
 
   int* coarse;
   
-  struct partial_alloc alloc_to_adjust;
+  struct partial_alloc gcpsa_alloc;
 
   struct process_scp red_scp;
 
@@ -16,14 +16,14 @@ struct partial_alloc gcpsa_allocation(struct process_scp* myscp) {
     coarse[j-1] = 0;
   }
 
-  alloc_to_adjust = mcca_alloc_plus_coarse_cutoffs(myscp, coarse);
+  gcpsa_alloc = mcca_alloc_plus_coarse_cutoffs(myscp, coarse);
 
   red_scp = reduced_scp(myscp, coarse);
 
-  alloc_to_adjust = simple_GCPS_alloc(&red_scp);
+  gcpsa_alloc = simple_GCPS_alloc(&red_scp);
 
   free(coarse);
   destroy_process_scp(red_scp);
 
-  return alloc_to_adjust;
+  return gcpsa_alloc;
 }

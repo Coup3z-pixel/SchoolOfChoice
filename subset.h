@@ -28,15 +28,21 @@ int is_nullset(struct subset* my_set);
 
 int is_fullset(struct subset* my_set);
 
-void remove_all_elements(struct subset* my_set);
+int is_element(struct subset* my_set, int i);
 
 void add_element(struct subset* my_set, int new_elt);
+
+void remove_element(struct subset* my_set, int old_elt);
+
+void remove_all_elements(struct subset* my_set);
 
 int subsets_are_same(struct subset* first, struct subset* second);
 
 int subsets_are_disjoint(struct subset* first, struct subset* second);
 
 void copy_subset(struct subset* given_subset, struct subset* copy_subset);
+
+struct subset copy_of_subset(struct subset* given_subset);
 
 struct subset complement_of_subset(struct subset* given_subset);
 
@@ -49,6 +55,8 @@ void becomes_nullset(struct subset* my_set);
 void becomes_singleton(struct subset* my_set, int elmnt);
 
 int* subset_element_numbers(struct subset* my_subset);
+
+struct index singleton_index(int i);
 
 struct index index_of_subset(struct subset* my_subset);
 
@@ -64,6 +72,12 @@ int indices_are_same(struct index* first, struct index* second);
 int index_has_element(struct index* my_ind, int elt);
 
 int* indices_of_elements(struct subset* my_subset);
+
+void add_element_to_index(struct index* index_ptr, int elt);
+
+void remove_element_from_index(struct index* index_ptr, int elt);
+
+void add_element_to_index_ptr(struct index** index_ptr, int elt);
 
 struct index* copy_of_index(struct index* given_index);
 

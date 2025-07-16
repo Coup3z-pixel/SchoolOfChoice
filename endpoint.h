@@ -15,7 +15,7 @@
    go on before some condition is violated, then we adjust the
    final_alloc, the feasible_guide, and the working_scp. */
 
-double time_until_some_school_exhaustion(int* favorites, struct process_scp* working_scp);
+double time_until_some_school_exhausted(int* favorites, struct process_scp* working_scp);
 
 double time_until_feasible_guide_not_above_alloc(struct int_sparse_matrix* theta,
 						     struct index* alpha, int* favorites,

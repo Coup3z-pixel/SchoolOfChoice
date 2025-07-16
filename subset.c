@@ -37,6 +37,16 @@ struct subset singleton_subset(int elmt, int large_size) {
   return singleton;
 }
 
+struct index singleton_index(int i) {
+  struct index answer;
+  
+  answer.no_elements = 1;
+  answer.indices = malloc(sizeof(int));
+  answer.indices[0] = i;
+
+  return answer;
+}
+
 void becomes_nullset(struct subset* my_set) {
   my_set->subset_size = 0;
   for (int i = 1; i <= my_set->large_set_size; i++) {
@@ -53,14 +63,28 @@ void becomes_singleton(struct subset* my_set, int elmnt) {
 
 void copy_subset(struct subset* given_subset, struct subset* copy_subset) {
   int i;
-  if (given_subset->large_set_size != copy_subset->large_set_size) {
-    fprintf(stderr, "ERROR: attempt to copy subsets of different size sets.\n");
-    exit(0);
-  }
+  
   copy_subset->subset_size = given_subset->subset_size;
   for (i = 1; i <= given_subset->large_set_size; i++) {
     copy_subset->indicator[i-1] = given_subset->indicator[i-1];
   }
+}
+
+struct subset copy_of_subset(struct subset* given_subset) {
+  int i;
+
+  struct subset answer;
+
+  answer.large_set_size = given_subset->large_set_size;
+  
+  answer.subset_size = given_subset->subset_size;
+  
+  answer.indicator = malloc(given_subset->large_set_size * sizeof(int));
+  for (i = 1; i <= given_subset->large_set_size; i++) {
+    answer.indicator[i-1] = given_subset->indicator[i-1];
+  }
+
+  return answer;
 }
 
 struct subset complement_of_subset(struct subset* given_subset)  {
@@ -94,10 +118,12 @@ int is_fullset(struct subset* my_set)  {
   }
 }
 
-void remove_all_elements(struct subset* my_set) {
-  my_set->subset_size = 0;
-  for (int i = 1; i <= my_set->large_set_size; i++) {
-    my_set->indicator[i-1] = 0;
+int is_element(struct subset* my_set, int i) {
+  if (1 <= i && i <= my_set->large_set_size && my_set->indicator[i-1] == 1) {
+    return 1;
+  }
+  else {
+    return 0;
   }
 }
 
@@ -112,6 +138,26 @@ void add_element(struct subset* my_set, int new_elt) {
   }
   my_set->subset_size++;
   my_set->indicator[new_elt-1] = 1;
+}
+
+void remove_element(struct subset* my_set, int old_elt) {
+  if (old_elt < 0 || old_elt > my_set->large_set_size) {
+    fprintf(stderr, "Attempt to remove out-of-range element from set.");
+    exit(0);
+  }
+  if (my_set->indicator[old_elt-1] == 0) {
+    fprintf(stderr, "Attempt to remove nonelement from set.\n");
+    exit(0);
+  }
+  my_set->subset_size--;
+  my_set->indicator[old_elt-1] = 0;
+}
+
+void remove_all_elements(struct subset* my_set) {
+  my_set->subset_size = 0;
+  for (int i = 1; i <= my_set->large_set_size; i++) {
+    my_set->indicator[i-1] = 0;
+  }
 }
 
 int subsets_are_same(struct subset* first, struct subset* second) {
@@ -308,12 +354,83 @@ struct index index_of_fullset(int large_set_size) {
   return full_index;
 }
 
+/*
 struct index singleton_index(int j) {
   struct index singleton;
   singleton.no_elements = 1;
   singleton.indices = malloc(sizeof(int));
   singleton.indices[0] = j;
   return singleton;
+}
+*/
+
+void add_element_to_index(struct index* index_ptr, int elt) {
+  int m, n, hit;
+  int* new_indices;
+  
+  n = index_ptr->no_elements;
+
+  new_indices = malloc((n+1) * sizeof(int));
+  hit = 0;
+  for (m = 1; m <= n; m++) {
+    if (!hit && index_ptr->indices[m-1] > elt) {
+      new_indices[m-1] = elt;
+      hit = 1;
+    }
+    if (!hit) {
+      new_indices[m-1] = index_ptr->indices[m-1];
+    }
+    else {
+      new_indices[m] = index_ptr->indices[m-1];
+    }
+  }
+  if (!hit) {
+    new_indices[n] = elt;
+  }
+
+  free(index_ptr->indices);
+
+  index_ptr->no_elements = n+1;
+  index_ptr->indices = new_indices;  
+}
+
+void remove_element_from_index(struct index* index_ptr, int elt) {
+  int m, n, hit;
+  int* new_indices;
+  
+  n = index_ptr->no_elements;
+
+  new_indices = malloc((n-1) * sizeof(int));
+  
+  hit = 0;
+  for (m = 1; m <= n; m++) {
+    if (!hit && index_ptr->indices[m-1] != elt) {
+      new_indices[m-1] = index_ptr->indices[m-1];
+    }
+    if (!hit && index_ptr->indices[m-1] == elt) {
+      hit = 1;
+    }
+    if (hit && index_ptr->indices[m-1] != elt) {
+      new_indices[m-2] = index_ptr->indices[m-1];
+    }
+  }
+
+  free(index_ptr->indices);
+
+  index_ptr->no_elements = n-1;
+  index_ptr->indices = new_indices;  
+}
+
+void add_element_to_index_ptr(struct index** index_ptr, int elt) {
+  if (*index_ptr == NULL) {
+    *index_ptr = malloc(sizeof(struct index));
+    (*index_ptr)->no_elements = 1;
+    (*index_ptr)->indices = malloc(sizeof(int));
+    (*index_ptr)->indices[0] = elt;
+  }
+  else {
+    add_element_to_index(*index_ptr, elt);
+  }
 }
 
 struct index index_with_element_added(struct index* my_index, int j) {
@@ -450,36 +567,36 @@ struct subset union_of_indices(struct index* my_list, int large_set_size, int li
 
 
 void print_vector_of_ints(int* vector, int dim) {
-  printf("(");
+  fprintf(stderr, "(");
   for (int i = 1; i <= dim-1; i++) {
-    printf("%d,",vector[i-1]);
+    fprintf(stderr, "%d,",vector[i-1]);
   }
-  printf("%d)",vector[dim-1]);
+  fprintf(stderr, "%d)",vector[dim-1]);
 }
 
 void print_subset(struct subset* my_subset) {
   int i;
-  printf("(");
+  fprintf(stderr, "(");
   for (i = 1; i < my_subset->large_set_size; i++) {
-    printf("%d,",my_subset->indicator[i-1]);
+    fprintf(stderr, "%d,",my_subset->indicator[i-1]);
   }
-  printf("%d)",my_subset->indicator[my_subset->large_set_size-1]);
+  fprintf(stderr, "%d)",my_subset->indicator[my_subset->large_set_size-1]);
 }
 
 void print_index(struct index* my_index) {
   int i;
   
-  printf("(");
+  fprintf(stderr, "(");
   
   for (i = 1; i < my_index->no_elements; i++) {
-    printf("%d,",my_index->indices[i-1]);
+    fprintf(stderr, "%d,",my_index->indices[i-1]);
   }
-  printf("%d)",my_index->indices[my_index->no_elements-1]);
+  fprintf(stderr, "%d)",my_index->indices[my_index->no_elements-1]);
 }
 
 void print_index_list(struct index_list* my_list) {
   if (index_list_is_empty(my_list)) {
-    printf("null_list");
+    fprintf(stderr, "null_list");
   }
   else {
     struct index_list* probe = my_list;

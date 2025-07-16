@@ -6,6 +6,9 @@
 
 int main(int argc, char *argv[]) {
   struct input_sch_ch_prob input_scp;
+  struct process_scp pr_scp;
+  struct partial_alloc mccb_all_OLD; 
+  struct partial_alloc mccb_all; 
   
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -24,20 +27,23 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  struct process_scp pr_scp = process_scp_from_input(&input_scp);  
+  pr_scp = process_scp_from_input(&input_scp);  
   destroy_input_sch_ch_prob(input_scp);
 
-  struct partial_alloc mcc_alloc = mcca_alloc(&pr_scp);
+  mccb_all = mccb_alloc(&pr_scp); 
 
-  if (!students_are_fully_allocated(&mcc_alloc)) {
-    printf("mcc was about to return a nonallocation.\n");
+  mccb_all_OLD = mccb_alloc_OLD(&pr_scp); 
+
+  if (!partial_allocs_are_same(&mccb_all, &mccb_all_OLD)) {
+    fprintf(stderr, "The two algorithms produce different results.\n");
     exit(0);
   }
   
-  print_sparse_partial_alloc(&mcc_alloc); 
+  print_sparse_partial_alloc(&mccb_all_OLD); 
 
   destroy_process_scp(pr_scp);
-  destroy_partial_alloc(mcc_alloc);
+  destroy_partial_alloc(mccb_all); 
+  destroy_partial_alloc(mccb_all_OLD); 
 
   return 0;
 }

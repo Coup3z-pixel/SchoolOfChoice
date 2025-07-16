@@ -23,6 +23,10 @@ struct pure_alloc {
 
 double get_entry(struct partial_alloc* alloc, int i, int j);
 
+double get_total_demand_for_student(struct process_scp* myscp, struct partial_alloc* alloc, int i);
+
+double get_total_demand_for_school(struct partial_alloc* alloc, int j);
+
 void set_entry(struct partial_alloc* alloc, int i, int j, double val);
 
 void increment_entry(struct partial_alloc* alloc, int i, int j, double incr);

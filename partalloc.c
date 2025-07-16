@@ -8,6 +8,34 @@ double get_entry(struct partial_alloc* alloc, int i, int j) {
   return val;
 }
 
+double get_total_demand_for_student(struct process_scp* myscp,
+				    struct partial_alloc* alloc, int i) {
+  int j, k;
+  double answer;
+
+  answer = 0.0;
+  for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+    j = myscp->preferences[i-1][k-1];
+    answer += get_entry(alloc, i, j);
+  }
+
+  return answer;
+}
+
+double get_total_demand_for_school(struct partial_alloc* alloc, int j) {
+  int i, nst;
+  double answer;
+
+  nst = alloc->no_students;
+  
+  answer = 0.0;
+  for (i = 1; i <= nst; i++) {
+    answer += get_entry(alloc, i, j);
+  }
+
+  return answer;
+}
+
 void set_entry(struct partial_alloc* alloc, int i, int j, double val) {
   set_dbl_entry(&(alloc->sparse), i, j, val);
 }

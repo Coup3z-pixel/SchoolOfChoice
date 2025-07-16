@@ -19,93 +19,29 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: gcps mcc emcc barter purify makex 
-
-gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o
-	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o $(LDFLAGS)
-
-mcc: mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
-	$(CC) -o mcc mcc.c mcccode.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o  $(LDFLAGS)
-
-emcc: emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
-	$(CC) -o emcc emcc.c emcccode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
-
-gcpsa: gcpsa.c gcpsacode.o mcccode.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
-	$(CC) -o gcpsa gcps.c gcpsacode.o mcccode.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
-
-barter: barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o
-	$(CC) -o barter barter.c bartercode.o mcccode.o trade.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o defaccep.o sprsmtrx.o $(LDFLAGS)
-
-purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o
-	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o $(LDFLAGS)
+all: makex gcps mcca mccb gcpsa gcpsb purify 
 
 makex: makex.c normal.o subset.o sprsmtrx.o schchprob.o  makexcode.o
 	$(CC) -o makex makex.c normal.o subset.o sprsmtrx.o schchprob.o makexcode.o $(LDFLAGS)
 
-normal.o: normal.h normal.c
-	$(CC) $(CFLAGS) -c normal.c 
+gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o
+	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o $(LDFLAGS)
 
-makexcode.o: makexcode.h makexcode.c
-	$(CC) $(CFLAGS) -c makexcode.c
+mcca: mcca.c mcccode.o oldmcc.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o vecmatrx.o
+	$(CC) -o mcca mcca.c mcccode.o oldmcc.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o vecmatrx.o  $(LDFLAGS)
 
-parser.o: parser.h parser.c
-	$(CC) $(CFLAGS) -c parser.c
+mccb: mccb.c mcccode.o oldmcc.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o vecmatrx.o
+	$(CC) -o mccb mccb.c mcccode.o oldmcc.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o vecmatrx.o  $(LDFLAGS)
 
-subset.o: subset.h subset.c
-	$(CC) $(CFLAGS) -c subset.c
+gcpsa: gcpsa.c gcpsacode.o mcccode.o oldmcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o gcpsa gcps.c gcpsacode.o mcccode.o oldmcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
 
-sprsmtrx.o: sprsmtrx.h sprsmtrx.c
-	$(CC) $(CFLAGS) -c sprsmtrx.c
+gcpsb: gcpsb.c gcpsbcode.o mcccode.o oldmcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o gcpsb gcps.c gcpsbcode.o mcccode.o oldmcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
 
-vecmatrx.o: vecmatrx.h vecmatrx.c
-	$(CC) $(CFLAGS) -c vecmatrx.c
-
-defaccep.o: defaccep.h defaccep.c
-	$(CC) $(CFLAGS) -c defaccep.c
-
-pivot.o: pivot.h pivot.c
-	$(CC) $(CFLAGS) -c pivot.c 
-
-endpoint.o: endpoint.h endpoint.c
-	$(CC) $(CFLAGS) -c endpoint.c
-
-segment.o: segment.h segment.c
-	$(CC) $(CFLAGS) -c segment.c
-
-gcpscode.o: gcpscode.h gcpscode.c
-	$(CC) $(CFLAGS) -c gcpscode.c
-
-partalloc.o: partalloc.h partalloc.c
-	$(CC) $(CFLAGS) -c partalloc.c
-
-efficient.o: efficient.h efficient.c
-	$(CC) $(CFLAGS) -c efficient.c
-
-schchprob.o: schchprob.h schchprob.c
-	$(CC) $(CFLAGS) -c schchprob.c
-
-mcccode.o: mcccode.h mcccode.c
-	$(CC) $(CFLAGS) -c mcccode.c
-
-fdacode.o: fdacode.h fdacode.c
-	$(CC) $(CFLAGS) -c fdacode.c
-
-emcccode.o: emcccode.h emcccode.c
-	$(CC) $(CFLAGS) -c emcccode.c 
-
-gcpsacode.o: gcpsacode.h gcpsacode.c
-	$(CC) $(CFLAGS) -c gcpsacode.c
-
-bartercode.o: bartercode.h bartercode.c
-	$(CC) $(CFLAGS) -c bartercode.c
-
-trade.o: trade.h trade.c
-	$(CC) $(CFLAGS) -c trade.c
-
-purifycode.o: purifycode.h purifycode.c
-	$(CC) $(CFLAGS) -c purifycode.c
-
+purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o
+	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o $(LDFLAGS)
 
 clean:
-	rm *.o *~ gcps mcc emcc barter purify makex 
+	rm *.o *~ makex gcps mcca mccb gcpsa gcpsb purify 
 

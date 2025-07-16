@@ -1,6 +1,6 @@
 #include "endpoint.h"
 
-double time_until_some_school_exhaustion(int* favorites, struct process_scp* working_scp) {
+double time_until_some_school_exhausted(int* favorites, struct process_scp* working_scp) {
   int i, j;
 
   double little_min, minimum;
@@ -123,7 +123,7 @@ double time_until_trajectory_change(struct int_sparse_matrix* theta, struct inde
 
   final_min = working_scp->time_remaining;
 
-  time_til_some_school_exhaustion = time_until_some_school_exhaustion(favorites, working_scp);
+  time_til_some_school_exhaustion = time_until_some_school_exhausted(favorites, working_scp);
   final_min = min(final_min,time_til_some_school_exhaustion);
 
   time_til_feasible_guide_not_above = time_until_feasible_guide_not_above_alloc(theta, alpha,

@@ -6,6 +6,8 @@
 
 int main(int argc, char *argv[]) {
   struct input_sch_ch_prob input_scp;
+  struct process_scp pr_scp;
+  struct partial_alloc gcpsa_alloc;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -19,10 +21,10 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  struct process_scp pr_scp = process_scp_from_input(&input_scp);
+  pr_scp = process_scp_from_input(&input_scp);
   destroy_input_sch_ch_prob(input_scp);
 
-  struct partial_alloc gcpsa_alloc = gcpsa_allocation(&pr_scp);
+  gcpsa_alloc = gcpsa_allocation(&pr_scp);
   
   print_sparse_partial_alloc(&gcpsa_alloc); 
 

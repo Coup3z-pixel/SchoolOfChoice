@@ -8,7 +8,7 @@ int get_priority(struct process_scp* my_scp, int i, int j) {
   return int_entry(&(my_scp->priorities), i, j);
 }
 
-int max_priority(struct process_scp* my_scp) {
+int maximum_priority(struct process_scp* my_scp) {
   int i, j, nst, nsc;
 
   nst = my_scp->no_students;
