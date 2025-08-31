@@ -27,6 +27,8 @@ struct vector zero_vector(int dimension);
 
 void set_vector_entry(struct vector* vec, int index, double entry);
 
+void negate_vector(struct vector* vec);
+
 struct square_matrix zero_matrix(int dimension);
 
 struct square_int_matrix zero_int_matrix(int dimension);

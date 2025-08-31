@@ -354,16 +354,6 @@ struct index index_of_fullset(int large_set_size) {
   return full_index;
 }
 
-/*
-struct index singleton_index(int j) {
-  struct index singleton;
-  singleton.no_elements = 1;
-  singleton.indices = malloc(sizeof(int));
-  singleton.indices[0] = j;
-  return singleton;
-}
-*/
-
 void add_element_to_index(struct index* index_ptr, int elt) {
   int m, n, hit;
   int* new_indices;
@@ -394,11 +384,34 @@ void add_element_to_index(struct index* index_ptr, int elt) {
   index_ptr->indices = new_indices;  
 }
 
+void add_element_to_possibly_NULL_index(struct index** index_ptr, int elt) {
+    if (*index_ptr == NULL) {
+      *index_ptr = malloc(sizeof(struct index));
+      (*index_ptr)->no_elements = 1;
+      (*index_ptr)->indices = malloc(sizeof(int));
+      (*index_ptr)->indices[0] = elt;
+    }
+    else {
+      add_element_to_index(*index_ptr,elt);
+    }
+}
+
 void remove_element_from_index(struct index* index_ptr, int elt) {
-  int m, n, hit;
+  int m, n, hit, present;
   int* new_indices;
   
   n = index_ptr->no_elements;
+
+  present = 0;
+  for (m = 1; m <= n; m++) {
+    if (index_ptr->indices[m-1] == elt) {
+      present = 1;
+    }
+  }
+  if (!present) {
+    fprintf(stderr, "We are trying to delete an element that is not present.\n");
+    exit(0);
+  }
 
   new_indices = malloc((n-1) * sizeof(int));
   

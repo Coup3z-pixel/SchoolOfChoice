@@ -18,6 +18,14 @@ void set_vector_entry(struct vector* vec, int index, double entry) {
   vec->entries[index - 1] = entry;
 }
 
+void negate_vector(struct vector* vec) {
+  int i;
+
+  for (i = 1; i <= vec->dimension; i++) {
+    vec->entries[i-1] = - vec->entries[i-1];
+  }
+}
+
 struct square_int_matrix zero_int_matrix(int dimension) {
   int i, j;
 

@@ -585,7 +585,7 @@ void check_student_tag(FILE *fp) {
   char next = get_next_nonwhite(fp);
   
   if (!isdigit(next)) {
-    fprintf(stderr, "ERROR: what should be a student number begins with a nondigit.\n");
+    fprintf(stderr, "ERROR: what should be a student tag number begins with a nondigit.\n");
     exit(0);
   }
   int answer = next - '0';

@@ -75,6 +75,8 @@ int* indices_of_elements(struct subset* my_subset);
 
 void add_element_to_index(struct index* index_ptr, int elt);
 
+void add_element_to_possibly_NULL_index(struct index** index_ptr, int elt);
+
 void remove_element_from_index(struct index* index_ptr, int elt);
 
 void add_element_to_index_ptr(struct index** index_ptr, int elt);

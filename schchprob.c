@@ -51,6 +51,10 @@ int is_eligible(struct process_scp* myscp, int i, int j) {
   return 0;
 }
 
+int safe_school(struct process_scp* myscp, int i) {
+  return myscp->preferences[i-1][myscp->no_eligible_schools[i-1]-1];
+}
+
 int student_ranking_of_school(struct process_scp* myscp, int i, int j) {
   int k;
 
@@ -69,13 +73,13 @@ int safe_schools_are_safe(struct input_sch_ch_prob* my_scp) {
   nst = my_scp->no_students;
   nsc = my_scp->no_schools;
   
-  k = my_scp->no_eligible_schools[0];
+  k = my_scp->no_eligible_schools[0]; 
   l = my_scp->preferences[0][k-1];
 
   top_pr = get_input_priority(my_scp, 1, l);
 
   for (i = 2; i <= nst; i++) {
-    k = my_scp->no_eligible_schools[i-1];
+    k = my_scp->no_eligible_schools[i-1]; 
     l = my_scp->preferences[i-1][k-1];
     if (get_input_priority(my_scp, i, l) != top_pr) {
       fprintf(stderr, "The priority of student %i at school %i should be %i but is actually %i.\n",

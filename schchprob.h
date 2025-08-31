@@ -39,6 +39,8 @@ int* get_favorites(struct process_scp* working_scp);
 
 int is_eligible(struct process_scp* myscp, int i, int j);
 
+int safe_school(struct process_scp* myscp, int i);
+
 int student_ranking_of_school(struct process_scp* myscp, int i, int j);
 
 int safe_schools_are_safe(struct input_sch_ch_prob* my_scp);

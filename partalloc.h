@@ -23,13 +23,25 @@ struct pure_alloc {
 
 double get_entry(struct partial_alloc* alloc, int i, int j);
 
+void set_entry(struct partial_alloc* alloc, int i, int j, double val);
+
+void increment_entry(struct partial_alloc* alloc, int i, int j, double incr);
+
+struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs);
+
 double get_total_demand_for_student(struct process_scp* myscp, struct partial_alloc* alloc, int i);
 
 double get_total_demand_for_school(struct partial_alloc* alloc, int j);
 
-void set_entry(struct partial_alloc* alloc, int i, int j, double val);
+double* school_sums(struct partial_alloc* my_alloc);
 
-void increment_entry(struct partial_alloc* alloc, int i, int j, double incr);
+double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands);
+
+double sum_of_excesses(struct process_scp* myscp, double* cutoffs);
+
+double* demand_deficits(struct process_scp* myscp, struct partial_alloc* demands);
+
+double sum_of_deficits(struct process_scp* myscp, double* cutoffs);
 
 int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second);
 
@@ -42,8 +54,6 @@ int partial_alloc_is_consistent(struct partial_alloc* my_alloc);
 struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp);
 
 struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* my_scp);
-
-double* school_sums(struct partial_alloc* my_alloc);
 
 struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					    struct subset* J_subset, struct subset* P_subset);
