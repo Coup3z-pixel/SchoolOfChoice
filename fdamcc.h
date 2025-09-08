@@ -24,6 +24,9 @@ struct partial_alloc mccb_alloc_FDA(struct process_scp* myscp);
 
 /************************** general functions and utilities **************************/
 
+double student_demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands,
+				    int i, int j, double new_cutoff);
+
 double demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands, int j, 
 				double new_cutoff);
 

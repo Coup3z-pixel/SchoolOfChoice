@@ -147,34 +147,46 @@ struct partial_alloc mccb_alloc_FDA(struct process_scp* myscp) {
 
 /************************** general functions and utilties ***************************/
 
+double student_demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands,
+				    int i, int j, double new_cutoff) {
+  int k, l,hit, New_Cutoff;
+  double answer, total_preferred;
+  
+  New_Cutoff = (int)floor(new_cutoff);
+
+  hit = 0;
+  total_preferred = 0.0;
+  for (k = 1; k <= myscp->no_eligible_schools[i-1] && !hit; k++) {
+    l = myscp->preferences[i-1][k-1];
+    if (l == j) {
+      hit = 1;
+    }
+    if (hit == 0) {
+      total_preferred += get_entry(demands, i, l);
+    }
+  }
+
+  answer = 0.0;
+  if (hit == 1 && New_Cutoff < get_priority(myscp, i, j)) {
+    answer = 1.0 - total_preferred;
+  }
+  if (hit == 1 && New_Cutoff == get_priority(myscp, i, j)) {
+    answer = min(1.0 - total_preferred, 1.0 - (new_cutoff - (double)(New_Cutoff)));
+  }
+
+  return answer;
+}
+
 double demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands, int j,
 				double new_cutoff) {
-  int i, k, l, nst, hit, New_Cutoff;
-  double answer, total_preferred;
+  int i, nst;
+  double answer;
   
   nst = myscp->no_students;
 
-  New_Cutoff = (int)floor(new_cutoff);
-
   answer = 0.0;
   for (i = 1; i <= nst; i++) {
-    hit = 0;
-    total_preferred = 0;
-    for (k = 1; k <= myscp->no_eligible_schools[i-1] && !hit; k++) {
-      l = myscp->preferences[i-1][k-1];
-      if (l == j) {
-	hit = 1;
-      }
-      if (hit == 0) {
-	total_preferred += get_entry(demands, i, l);
-      }
-    }
-    if (New_Cutoff < get_priority(myscp, i, j)) {
-      answer += 1.0 - total_preferred;
-    }
-    if (New_Cutoff == get_priority(myscp, i, j)) {
-	answer += min(1.0 - total_preferred, 1.0 - (new_cutoff - (double)(New_Cutoff)));
-    }
+    answer += student_demand_at_new_cutoff(myscp, demands, i, j, new_cutoff);
   }
 
   return answer;
@@ -198,14 +210,14 @@ double naive_eq_cutoff(struct process_scp* myscp, struct partial_alloc* demands,
   upper_dmd = demand_at_new_cutoff(myscp, demands, j, upper_cand);
 
   new_dmd = -1.0;
-  while (fabs(new_dmd - quota) > 0.00000000001) {
+  while (fabs(new_dmd - quota) > 0.00000001) {
 
     slope = (upper_dmd - lower_dmd)/(upper_cand - lower_cand);
 
     new_cand = lower_cand + (quota - lower_dmd)/slope;
     new_dmd = demand_at_new_cutoff(myscp, demands, j, new_cand);
 
-    if (fabs(new_dmd - quota) > 0.00000000001) {
+    if (fabs(new_dmd - quota) > 0.00000001) {
       midpoint = (upper_cand + lower_cand)/2;
       midpoint_dmd = demand_at_new_cutoff(myscp, demands, j, midpoint);
       if (midpoint_dmd < quota) {
