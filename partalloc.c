@@ -12,6 +12,18 @@ void set_entry(struct partial_alloc* alloc, int i, int j, double val) {
   set_dbl_entry(&(alloc->sparse), i, j, val);
 }
 
+double get_integer_entry(struct pure_alloc* alloc, int i, int j) {
+  double val;
+  
+  val = int_entry(&(alloc->sparse), i, j);
+
+  return val;
+}
+
+void set_integer_entry(struct pure_alloc* alloc, int i, int j, int val) {
+  set_int_entry(&(alloc->sparse), i, j, val);
+}
+
 void increment_entry(struct partial_alloc* alloc, int i, int j, double incr) {
   increment_dbl_entry(&(alloc->sparse), i, j, incr);
 }
@@ -260,7 +272,7 @@ int students_are_fully_allocated(struct partial_alloc* my_alloc) {
   return 1;
 }
 
-int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* my_scp) {
+int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* myscp) {
   int i, j;
   double sum;
   
@@ -268,12 +280,12 @@ int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp*
     return 0;
   }
 
-  for (j = 1; j <= my_scp->no_schools; j++) {
+  for (j = 1; j <= myscp->no_schools; j++) {
     sum = 0.0;
-    for (i = 1; i <= my_scp->no_students; i++) {
+    for (i = 1; i <= myscp->no_students; i++) {
       sum += get_entry(my_alloc, i, j);
     }
-    if (sum > my_scp->quotas[j-1] + 0.000001) {
+    if (sum > myscp->quotas[j-1] + 0.000001) {
       return 0;
     }
   }
@@ -281,32 +293,77 @@ int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp*
   return 1;
 }
 
-struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp) {
+int is_a_feasible_pure_alloc(struct pure_alloc* my_alloc, struct input_sch_ch_prob* myiscp) {
+  int i, j, nst, nsc, sum;
+
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    sum = 0;
+    for (j = 1; j <= nsc; j++) {
+      sum += get_integer_entry(my_alloc, i, j);
+    }
+    if (sum != 1) {
+      return 0;
+    }
+  }
+
+  for (j = 1; j <= nsc; j++) {
+    sum = 0;
+    for (i = 1; i <= nst; i++) {
+      sum += get_integer_entry(my_alloc, i, j);
+    }
+    if (sum > myiscp->quotas[j-1]) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+struct partial_alloc zero_alloc_for_process_scp(struct process_scp* myscp) {
   int nst, nsc;
   
-  nst = my_scp->no_students;
-  nsc = my_scp->no_schools;
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
   
   struct partial_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_dbl_sp_mat_for_process(my_scp);
+  answer.sparse = new_dbl_sp_mat_for_process(myscp);
   
   return answer;
 }
 
-struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* my_scp) {
+struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* myscp) {
   int nst, nsc;
   
-  nst = my_scp->no_students;
-  nsc = my_scp->no_schools;
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
   
   struct partial_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_dbl_sp_mat_for_input(my_scp);
+  answer.sparse = new_dbl_sp_mat_for_input(myscp);
+  
+  return answer;
+}
+
+struct pure_alloc zero_pure_alloc_for_input_scp(struct input_sch_ch_prob* myscp) {
+
+  int nst, nsc;
+  
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+  
+  struct pure_alloc answer;
+  answer.no_students = nst;
+  answer.no_schools = nsc;
+
+  answer.sparse = new_int_sp_mat_for_input(myscp);
   
   return answer;
 }
@@ -430,6 +487,26 @@ struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
   }
   
   return my_pure;
+}
+
+struct partial_alloc partial_allocation_from_pure(struct pure_alloc* my_alloc) {
+  int i, j;
+  int nst = my_alloc->no_students;
+  int nsc = my_alloc->no_schools;
+  
+  struct partial_alloc my_partial;
+  my_partial.no_students = nst;
+  my_partial.no_schools = nsc;
+
+  my_partial.sparse = zero_dbl_sp_mat_from_int_sp_mat(&(my_alloc->sparse));
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      set_dbl_entry(&(my_partial.sparse), i, j, (double)get_integer_entry(my_alloc, i, j));
+    }
+  }
+  
+  return my_partial;
 }
 
 int get_pure_entry(struct pure_alloc* alloc, int i, int j)  {

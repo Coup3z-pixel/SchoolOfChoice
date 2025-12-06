@@ -353,10 +353,10 @@ void print_makex_header(int nsc, int no_students_per_school, int school_capacity
 void print_makex_output(int nsc, int no_students_per_school, int school_capacity,
 			double school_valence_std_dev, double idiosyncratic_std_dev,
 			double test_std_dev, int no_nontop_priority_grades,
-			struct input_sch_ch_prob* my_scp) {
+			struct input_sch_ch_prob* myscp) {
   print_makex_header(nsc, no_students_per_school, school_capacity, school_valence_std_dev,
 		     idiosyncratic_std_dev, test_std_dev, no_nontop_priority_grades);
-  print_input_scp_body(my_scp);
+  print_input_scp_body(myscp);
 }
 
 

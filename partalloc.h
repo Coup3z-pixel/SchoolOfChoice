@@ -25,6 +25,10 @@ double get_entry(struct partial_alloc* alloc, int i, int j);
 
 void set_entry(struct partial_alloc* alloc, int i, int j, double val);
 
+double get_integer_entry(struct pure_alloc* alloc, int i, int j);
+
+void set_integer_entry(struct pure_alloc* alloc, int i, int j, int val);
+
 void increment_entry(struct partial_alloc* alloc, int i, int j, double incr);
 
 struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs);
@@ -47,13 +51,17 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
 
 int students_are_fully_allocated(struct partial_alloc* my_alloc);
 
-int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* my_scp);
-
 int partial_alloc_is_consistent(struct partial_alloc* my_alloc);
 
-struct partial_alloc zero_alloc_for_process_scp(struct process_scp* my_scp);
+int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* myscp);
 
-struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* my_scp);
+int is_a_feasible_pure_alloc(struct pure_alloc* my_alloc, struct input_sch_ch_prob* myiscp);
+
+struct partial_alloc zero_alloc_for_process_scp(struct process_scp* myscp);
+
+struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* myscp);
+
+struct pure_alloc zero_pure_alloc_for_input_scp(struct input_sch_ch_prob* myscp);
 
 struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
 					    struct subset* J_subset, struct subset* P_subset);
@@ -71,6 +79,8 @@ struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given);
    allocation, whose values are in {0,1}. */
 
 struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
+
+struct partial_alloc partial_allocation_from_pure(struct pure_alloc* my_alloc);
 
 int get_pure_entry(struct pure_alloc* alloc, int i, int j);
 

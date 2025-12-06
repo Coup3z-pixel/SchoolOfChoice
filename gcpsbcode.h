@@ -4,6 +4,6 @@
 #include "mcccode.h"
 #include "gcpscode.h"
 
-struct partial_alloc gcpsb_allocation(struct process_scp* myscp);
+struct partial_alloc gcpsb_allocation(struct input_sch_ch_prob* myiscp);
 
 #endif /* GCPSB_H */

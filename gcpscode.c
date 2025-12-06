@@ -1,11 +1,13 @@
 #include "gcpscode.h" 
 
-struct partial_alloc simple_GCPS_alloc(struct process_scp* input) {
+struct partial_alloc simple_GCPS_alloc(struct input_sch_ch_prob* input) {
   int* no_segments;
   int* no_splits;
   int* no_new_pivots;
   int* no_old_pivots;
   int* h_sum;
+
+  /*  struct process_scp input_pr_scp; */
 
   struct partial_alloc answer;
 
@@ -21,7 +23,9 @@ struct partial_alloc simple_GCPS_alloc(struct process_scp* input) {
   *no_old_pivots = 0;
   *h_sum = 0;
 
-  answer = GCPS_allocation(input, no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum); 
+
+  answer = GCPS_allocation(input,
+			   no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum); 
   
   /*
   printf("There were %d segments, %d splits, %d new pivots, %d old pivots, and h_sum was %d.\n",
@@ -52,17 +56,29 @@ struct partial_alloc simple_GCPS_alloc(struct process_scp* input) {
   return answer;
 }
 
-struct partial_alloc GCPS_allocation(struct process_scp* input, int* no_segments,
+struct partial_alloc GCPS_allocation(struct input_sch_ch_prob* input, int* no_segments,
 				     int* no_splits, int* no_new_pivots,
 				     int* no_old_pivots, int* h_sum) {
   struct partial_alloc feasible_guide;
   struct pivot_list probe_list;
+  struct input_sch_ch_prob stu_no_pr_scp;
+  struct process_scp input_pr_scp;
+  struct pure_alloc pure_da;
   
-  feasible_guide = deferred_acceptance(input);
+  stu_no_pr_scp = stu_no_priority_scp(input);
+  pure_da = deferred_acceptance(&stu_no_pr_scp); 
+  feasible_guide = partial_allocation_from_pure(&pure_da);
+  
+  destroy_input_sch_ch_prob(stu_no_pr_scp);
+  destroy_pure_alloc(pure_da);
+  
+  input_pr_scp = process_scp_from_input(input);
+  
+  destroy_input_sch_ch_prob(*input);
   
   probe_list = void_pivot_list();
 
-  return GCPS_allocation_with_guide(input, &feasible_guide, &probe_list,
+  return GCPS_allocation_with_guide(&input_pr_scp, &feasible_guide, &probe_list,
 				    no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum);
 }
 

@@ -6,7 +6,6 @@
 
 int main(int argc, char *argv[]) {
   struct input_sch_ch_prob input_scp;
-  struct process_scp pr_scp;
   struct partial_alloc gcpsa_alloc;
 
   if (argc == 1) {
@@ -20,16 +19,12 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "emcc invoked with too many (> 2) command line arguments.\n");
     exit(0);
   }
-  
-  pr_scp = process_scp_from_input(&input_scp);
-  destroy_input_sch_ch_prob(input_scp);
 
-  gcpsa_alloc = gcpsa_allocation(&pr_scp);
+  gcpsa_alloc = gcpsa_allocation(&input_scp);
   
   print_sparse_partial_alloc(&gcpsa_alloc); 
 
   destroy_partial_alloc(gcpsa_alloc);
-  destroy_process_scp(pr_scp);
 
   return 0;
 }

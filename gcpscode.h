@@ -9,7 +9,7 @@
 #include "efficient.h"
 #include "defaccep.h"
 
-struct partial_alloc simple_GCPS_alloc(struct process_scp* input); 
+struct partial_alloc simple_GCPS_alloc(struct input_sch_ch_prob* input); 
 
 /* The next function uses deferred_acceptance to compute a feasible
 allocation, then invokes GCPS_allocation_with_guide to compute the
@@ -18,8 +18,9 @@ computing pivots directly is onerous, and the pivots are likely to be
 the same when we pass from one segment to the next, so we apply all
 the valid old pivots before computing new ones.  */
 
-struct partial_alloc GCPS_allocation(struct process_scp* input, int* no_segments, int* no_splits,
-				     int* no_new_pivots, int* no_old_pivots, int* h_sum); 
+struct partial_alloc GCPS_allocation(struct input_sch_ch_prob* input, int* no_segments,
+				     int* no_splits, int* no_new_pivots, int* no_old_pivots,
+				     int* h_sum); 
 
 double compute_until_next_critical_pair(struct process_scp* working_scp,
 					struct partial_alloc* feasible_guide,

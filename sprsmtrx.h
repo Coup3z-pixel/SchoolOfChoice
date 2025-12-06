@@ -54,6 +54,8 @@ struct dbl_sparse_matrix zero_dbl_sp_mat_for_subsets(struct dbl_sparse_matrix* m
 
 struct int_sparse_matrix zero_int_sp_mat_from_dbl_sp_mat(struct dbl_sparse_matrix* mydsp);
 
+struct dbl_sparse_matrix zero_dbl_sp_mat_from_int_sp_mat(struct int_sparse_matrix* mydsp);
+
 void destroy_int_sp_mat(struct int_sparse_matrix* mymat);
 
 void destroy_dbl_sp_mat(struct dbl_sparse_matrix* mymat);

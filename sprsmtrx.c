@@ -287,6 +287,40 @@ struct int_sparse_matrix zero_int_sp_mat_from_dbl_sp_mat(struct dbl_sparse_matri
   return answer;
 }
 
+struct dbl_sparse_matrix zero_dbl_sp_mat_from_int_sp_mat(struct int_sparse_matrix* given) {
+  int i, j, no_rows;
+
+  struct dbl_sparse_matrix answer;
+
+  answer.no_rows = given->no_rows;
+  answer.no_cols = given->no_cols;
+
+  no_rows = answer.no_rows;
+
+  answer.nos_active_cols = malloc(no_rows * sizeof(int));
+  for (i = 1; i <= no_rows; i++) {
+    answer.nos_active_cols[i-1] = given->nos_active_cols[i-1];
+  }
+
+  answer.index_of_active_cols = malloc(no_rows * sizeof(int*));
+  for (i = 1; i <= no_rows; i++) {
+    answer.index_of_active_cols[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(int));
+    for (j = 1; j <= answer.nos_active_cols[i-1]; j++) {
+      answer.index_of_active_cols[i-1][j-1] = given->index_of_active_cols[i-1][j-1];
+    }
+  }
+
+  answer.entries = malloc(no_rows * sizeof(double*));
+  for (i = 1; i <= no_rows; i++) {
+    answer.entries[i-1] = malloc(answer.nos_active_cols[i-1] * sizeof(double));
+    for (j = 1; j <= answer.nos_active_cols[i-1]; j++) {
+      answer.entries[i-1][j-1] = 0.0;
+    }
+  }
+
+  return answer;
+}
+
 
 void destroy_int_sp_mat(struct int_sparse_matrix* mymat) {
   int i, nst;

@@ -1,7 +1,7 @@
 CC=gcc
 
-CFLAGS=-I. -Wall -Wextra 
-LDFLAGS=-lm
+# CFLAGS=-I. -Wall -Wextra 
+# LDFLAGS=-lm
 
 # AddressSanitizer is very useful for debugging, but it slows down
 # execution.  So, when you are doing code development, comment out the
@@ -11,18 +11,21 @@ LDFLAGS=-lm
 
 # For Mac OS we use
 
-# CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
-# LDFLAGS= -fsanitize=address -static-libsan -lm
+CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
+LDFLAGS= -fsanitize=address -static-libsan -lm
 
 # For Linux (where we also get memory leak checking) we use
 
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: makex gcps gcpsa gcpsb purify 
+all: makex da gcps gcpsa gcpsb purify 
 
 makex: makex.c normal.o subset.o sprsmtrx.o schchprob.o  makexcode.o
 	$(CC) -o makex makex.c normal.o subset.o sprsmtrx.o schchprob.o makexcode.o $(LDFLAGS)
+
+da: da.c normal.o parser.o subset.o schchprob.o partalloc.o sprsmtrx.o defaccep.o 
+	$(CC) -o da da.c normal.o parser.o subset.o schchprob.o partalloc.o sprsmtrx.o defaccep.o $(LDFLAGS)
 
 gcps: gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o
 	$(CC) -o gcps gcps.c normal.o parser.o subset.o schchprob.o partalloc.o pivot.o endpoint.o segment.o efficient.o purifycode.o sprsmtrx.o defaccep.o gcpscode.o $(LDFLAGS)
@@ -38,5 +41,5 @@ purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o 
 
 
 clean:
-	rm *.o *~ makex gcps gcpsa gcpsb purify 
+	rm *.o *~ makex da gcps gcpsa gcpsb purify 
 
