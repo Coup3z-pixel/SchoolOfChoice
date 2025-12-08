@@ -1,43 +1,5 @@
 #include "defaccep.h"
 
-/*
-
-struct partial_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp) {
-  int j, nst, nsc, rejectee, done;
-  
-  struct index** applicant_lists;
-
-  struct partial_alloc answer;
-
-  nst = myiscp->no_students;
-  nsc = myiscp->no_schools;
-
-  applicant_lists = malloc(nsc * sizeof(struct index*));
-  each_student_applies_to_favorite_school(myiscp, applicant_lists, nst, nsc);  
-
-  done = 0;
-  while (!done) {
-    done = 1;
-    for (j = 1; j <= nsc; j++) {
-      if (applicant_lists[j-1] != NULL) {
-	if (applicant_lists[j-1]->no_elements > myiscp->quotas[j-1]) {
-	  done = 0;
-	  rejectee = lowest_priority_student(myiscp, applicant_lists[j-1], j);;
-	  reject_student(myiscp, applicant_lists, rejectee, j);
-	}
-      }
-    }
-  }
-
-  answer = partial_alloc_from_applicant_lists(myiscp, applicant_lists);
-
-  destroy_applicant_lists(applicant_lists, nsc);
-
-  return answer;  
-}
-
-*/
-
 struct pure_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp) {
   int j, nst, nsc, rejectee, done;
   
@@ -101,15 +63,17 @@ void remove_i_from_applicant_list_j(struct index** applicant_lists, int i, int j
     destroy_index(*(applicant_lists[j-1]));
     free(applicant_lists[j-1]);
     applicant_lists[j-1] = NULL;
-  }
+  } 
 }
 
 void i_applies_to_next_school(struct input_sch_ch_prob* myiscp, struct index** applicant_lists,
 			      int i, int j) {
-  int k, hit, new_school;
+  int k, hit, new_school, no_elig;
+
+  no_elig = myiscp->no_eligible_schools[i-1];
 
   hit = 0;
-  for (k = 1; k < myiscp->no_eligible_schools[i-1] && !hit; k++) {
+  for (k = 1; k < no_elig && !hit; k++) {
     if (myiscp->preferences[i-1][k-1] == j) {
       hit = 1;
       new_school = myiscp->preferences[i-1][k];

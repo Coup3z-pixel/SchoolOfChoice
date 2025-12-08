@@ -385,15 +385,15 @@ void add_element_to_index(struct index* index_ptr, int elt) {
 }
 
 void add_element_to_possibly_NULL_index(struct index** index_ptr, int elt) {
-    if (*index_ptr == NULL) {
-      *index_ptr = malloc(sizeof(struct index));
-      (*index_ptr)->no_elements = 1;
-      (*index_ptr)->indices = malloc(sizeof(int));
-      (*index_ptr)->indices[0] = elt;
-    }
-    else {
-      add_element_to_index(*index_ptr,elt);
-    }
+  if (*index_ptr == NULL) {
+    *index_ptr = malloc(sizeof(struct index));
+    (*index_ptr)->no_elements = 1;
+    (*index_ptr)->indices = malloc(sizeof(int));
+    (*index_ptr)->indices[0] = elt;    
+  }
+  else {
+    add_element_to_index(*index_ptr,elt);
+  }
 }
 
 void remove_element_from_index(struct index* index_ptr, int elt) {

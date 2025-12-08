@@ -36,7 +36,8 @@ void make_example(int nsc, int no_students_per_school, int school_capacity,
 
   int* no_eligible_students = compute_numbers_of_eligible_students(nst, nsc, eligible);
   
-  answer.preferences = compute_preferences(nst, nsc, safe_school, answer.no_eligible_schools, utility);
+  answer.preferences = compute_preferences(nst, nsc, safe_school, answer.no_eligible_schools,
+					   utility);
 
   answer.priorities = compute_schools_priorities(nst, nsc, test_std_dev, no_nontop_priority_grades,
 						distance, safe_school, no_eligible_students,

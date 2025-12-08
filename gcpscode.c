@@ -82,30 +82,47 @@ struct partial_alloc GCPS_allocation(struct input_sch_ch_prob* input, int* no_se
 				    no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum);
 }
 
-double compute_until_next_critical_pair(struct process_scp* working_scp,
-					struct partial_alloc* feasible_guide,
-					struct partial_alloc* final_alloc,
-					struct pivot_list* probe_list,
-					struct subset* P_subset, struct subset* J_subset,
-					int* no_segments, int* no_new_pivots, int* no_old_pivots,
-					int* h_sum) {
-  int* critical_pair_found;
-  critical_pair_found = malloc(sizeof(int));
-  *critical_pair_found = 0;
-
-  while (!*critical_pair_found && working_scp->time_remaining > 0.000000001) {
-
-    compute_next_path_segment_or_find_critical_pair(working_scp, feasible_guide,
-						    final_alloc, probe_list,
-						    P_subset, J_subset,
-						    critical_pair_found,
-						    no_segments, no_new_pivots,
-						    no_old_pivots, h_sum);
-  }
-    
-  free(critical_pair_found);
+struct partial_alloc simple_GCPS_alloc_with_guide(struct input_sch_ch_prob* input, 
+						  struct partial_alloc* feasible_guide) {
+  int* no_segments;
+  int* no_splits;
+  int* no_new_pivots;
+  int* no_old_pivots;
+  int* h_sum;
   
-  return working_scp->time_remaining;
+  struct pivot_list probe_list;
+
+  struct process_scp input_pr_scp;
+
+  struct partial_alloc answer;
+
+  no_segments = malloc(sizeof(int));
+  no_splits = malloc(sizeof(int));
+  no_new_pivots = malloc(sizeof(int));
+  no_old_pivots = malloc(sizeof(int));
+  h_sum = malloc(sizeof(int));
+
+  *no_segments = 0;
+  *no_splits = 0;
+  *no_new_pivots = 0;
+  *no_old_pivots = 0;
+  *h_sum = 0;
+
+  probe_list = void_pivot_list();
+
+  input_pr_scp = process_scp_from_input(input);
+
+  answer = GCPS_allocation_with_guide(&input_pr_scp, feasible_guide, &probe_list,
+				      no_segments, no_splits, no_new_pivots, no_old_pivots,
+				      h_sum); 
+  
+  free(no_segments);
+  free(no_splits);
+  free(no_new_pivots);
+  free(no_old_pivots);
+  free(h_sum);
+
+  return answer;
 }
 
 struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
@@ -158,6 +175,32 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   destroy_subset(J_subset);
 
   return final_alloc;
+}
+
+double compute_until_next_critical_pair(struct process_scp* working_scp,
+					struct partial_alloc* feasible_guide,
+					struct partial_alloc* final_alloc,
+					struct pivot_list* probe_list,
+					struct subset* P_subset, struct subset* J_subset,
+					int* no_segments, int* no_new_pivots, int* no_old_pivots,
+					int* h_sum) {
+  int* critical_pair_found;
+  critical_pair_found = malloc(sizeof(int));
+  *critical_pair_found = 0;
+
+  while (!*critical_pair_found && working_scp->time_remaining > 0.000000001) {
+
+    compute_next_path_segment_or_find_critical_pair(working_scp, feasible_guide,
+						    final_alloc, probe_list,
+						    P_subset, J_subset,
+						    critical_pair_found,
+						    no_segments, no_new_pivots,
+						    no_old_pivots, h_sum);
+  }
+    
+  free(critical_pair_found);
+  
+  return working_scp->time_remaining;
 }
 
 void descend_to_left_subproblem(struct process_scp* working_scp, struct partial_alloc* final_alloc,

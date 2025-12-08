@@ -72,41 +72,29 @@ int student_ranking_of_school(struct process_scp* myscp, int i, int j) {
 }
 
 int safe_schools_are_safe(struct input_sch_ch_prob* myiscp) {
-  int i, j, k, l, nst, nsc, top_pr, top_count;
+  int i, j, nst, nsc, top_pr, no_safe_st;
 
   nst = myiscp->no_students;
   nsc = myiscp->no_schools;
-  
-  k = myiscp->no_eligible_schools[0]; 
-  l = myiscp->preferences[0][k-1];
 
-  top_pr = get_input_priority(myiscp, 1, l);
+  for (j = 1; j <= nsc; j++) {
+    top_pr = get_input_priority(myiscp, 1, j);
+    for (i = 2; i <= nst; i++) {
+      top_pr = max(top_pr, get_input_priority(myiscp, i, j));
+    }
 
-  for (i = 2; i <= nst; i++) {
-    k = myiscp->no_eligible_schools[i-1]; 
-    l = myiscp->preferences[i-1][k-1];
-    if (get_input_priority(myiscp, i, l) != top_pr) {
-      fprintf(stderr, "The priority of student %i at school %i should be %i but is actually %i.\n",
-	      i, l, top_pr, get_input_priority(myiscp, i, l));
+    no_safe_st = 0;
+    for (i = 1; i <= nst; i++) {
+      if (get_input_priority(myiscp, i, j) == top_pr) {
+	no_safe_st++;
+      }
+    }
+
+    if (no_safe_st > myiscp->quotas[j-1]) {
+      fprintf(stderr, "At school %i the quota is %i and no_safe_st is %i.\n",
+	      j, myiscp->quotas[j-1], no_safe_st);
       return 0;
     }
-  }
-
-  top_count = 0;
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      if (get_input_priority(myiscp, i, j) > top_pr) {
-	fprintf(stderr, "Priority above safe school priority.\n");
-	return 0;
-      }
-      if (get_input_priority(myiscp, i, j) == top_pr) {
-	top_count++;
-      }
-    }
-  }
-  if (top_count != nst) {
-    fprintf(stderr, "Too many top priorities.\n");
-    return 0;
   }
 
   return 1;
@@ -628,11 +616,14 @@ struct input_sch_ch_prob reduced_input_scp(struct input_sch_ch_prob* myiscp, int
 
   answer.priorities = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++ ) {
-    answer.priorities[i-1] = malloc(answer.no_eligible_schools[i-1] * sizeof(int));
+    answer.priorities[i-1] = malloc(nsc * sizeof(int));
+    for (j = 1; j <= nsc; j++) {
+      answer.priorities[i-1][j-1] = 0;
+    }
     for (k = 1; k <= answer.no_eligible_schools[i-1]; k++) {
-      l = answer.preferences[i-1][k-1];
-      p = get_input_priority(myiscp, i, l);
-      answer.priorities[i-1][k-1] = p;
+      j = answer.preferences[i-1][k-1];
+      p = get_input_priority(myiscp, i, j);
+      answer.priorities[i-1][j-1] = p;
     }
   }
 
@@ -640,12 +631,12 @@ struct input_sch_ch_prob reduced_input_scp(struct input_sch_ch_prob* myiscp, int
 }
 
 struct input_sch_ch_prob copy_of_input_scp(struct input_sch_ch_prob* myiscp) {
-  int i, j, k;
+  int i, j, k, nst, nsc;
 
   struct input_sch_ch_prob answer;
 
-  int nst = myiscp->no_students;
-  int nsc = myiscp->no_schools;
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
 
   answer.no_students = nst;
   answer.no_schools = nsc;
@@ -657,14 +648,14 @@ struct input_sch_ch_prob copy_of_input_scp(struct input_sch_ch_prob* myiscp) {
   
   answer.no_eligible_schools = malloc(nst * sizeof(int));
   for (i = 1; i <= nst; i++) {
-    (answer.no_eligible_schools)[i-1] = (myiscp->no_eligible_schools)[i-1];
+    (answer.no_eligible_schools)[i-1] = myiscp->no_eligible_schools[i-1];
   }
 
   answer.preferences = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
     (answer.preferences)[i-1] = malloc((answer.no_eligible_schools)[i-1] * sizeof(int));
     for (k = 1; k <= (myiscp->no_eligible_schools)[i-1]; k++) {
-      (answer.preferences)[i-1][k-1] = (myiscp->preferences)[i-1][k-1];
+      (answer.preferences)[i-1][k-1] = myiscp->preferences[i-1][k-1];
     }
   }
 

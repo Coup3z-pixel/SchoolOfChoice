@@ -21,13 +21,14 @@ struct partial_alloc gcpsa_allocation(struct input_sch_ch_prob* myiscp) {
 
   mcca_alloc = mcca_alloc_plus_coarse_cutoffs(&pr_scp, coarse);
 
-  destroy_partial_alloc(mcca_alloc);
+  destroy_process_scp(pr_scp);
 
   red_scp = reduced_input_scp(myiscp, coarse);
 
-  gcpsa_alloc = simple_GCPS_alloc(&red_scp);
+  gcpsa_alloc = simple_GCPS_alloc_with_guide(&red_scp,&mcca_alloc);
   
   destroy_input_sch_ch_prob(*myiscp);
+  destroy_input_sch_ch_prob(red_scp);
 
   free(coarse);
 

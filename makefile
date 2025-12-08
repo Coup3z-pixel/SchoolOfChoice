@@ -1,7 +1,7 @@
 CC=gcc
 
-# CFLAGS=-I. -Wall -Wextra 
-# LDFLAGS=-lm
+CFLAGS=-I. -Wall -Wextra 
+LDFLAGS=-lm
 
 # AddressSanitizer is very useful for debugging, but it slows down
 # execution.  So, when you are doing code development, comment out the
@@ -11,8 +11,8 @@ CC=gcc
 
 # For Mac OS we use
 
-CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
-LDFLAGS= -fsanitize=address -static-libsan -lm
+# CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
+# LDFLAGS= -fsanitize=address -static-libsan -lm
 
 # For Linux (where we also get memory leak checking) we use
 

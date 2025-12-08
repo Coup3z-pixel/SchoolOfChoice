@@ -8,12 +8,6 @@
 #include "normal.h"
 #include "partalloc.h"
 
-/*
-
-struct partial_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp);
-
-*/
-
 struct pure_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp);
 
 void each_student_applies_to_favorite_school(struct input_sch_ch_prob* myiscp,
