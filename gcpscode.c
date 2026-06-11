@@ -1,158 +1,100 @@
 #include "gcpscode.h" 
 
-struct partial_alloc simple_GCPS_alloc(struct input_sch_ch_prob* input) {
-  int* no_segments;
-  int* no_splits;
-  int* no_new_pivots;
-  int* no_old_pivots;
-  int* h_sum;
+partial_alloc simple_GCPS_alloc(input_sch_ch_prob* input) {
+  run_data* data;
 
-  /*  struct process_scp input_pr_scp; */
+  partial_alloc answer;
 
-  struct partial_alloc answer;
+  data = malloc(sizeof(run_data));
+  data->no_segments = 0;
+  data->no_splits = 0;
+  data->no_new_pivots = 0;
+  data->no_old_pivots = 0;
+  data->h_sum = 0;
 
-  no_segments = malloc(sizeof(int));
-  no_splits = malloc(sizeof(int));
-  no_new_pivots = malloc(sizeof(int));
-  no_old_pivots = malloc(sizeof(int));
-  h_sum = malloc(sizeof(int));
-
-  *no_segments = 0;
-  *no_splits = 0;
-  *no_new_pivots = 0;
-  *no_old_pivots = 0;
-  *h_sum = 0;
-
-
-  answer = GCPS_allocation(input,
-			   no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum); 
+  answer = GCPS_allocation(input, data); 
   
   /*
-  printf("There were %d segments, %d splits, %d new pivots, %d old pivots, and h_sum was %d.\n",
-   *no_segments, *no_splits, *no_new_pivots, *no_old_pivots, *h_sum); 
+  printf("There were %d segments, %d splits, %d new pivots, %d old
+   pivots, and h_sum was %d.\n", data->no_segments, data->no_splits,
+   data->no_new_pivots, data->no_old_pivots, data->h_sum);
    */
 
-  /* The following routine can be used during code reorganization to check correctness. */
-
-  /*
-  char filename[20] = "allocate.mat";
-  struct partial_alloc input_alloc = allocation_from_file(filename);
-
-  if (!partial_allocs_are_same(&answer, &input_alloc)) {
-    printf("We seem to have screwed things up.\n");
-  }
-  else {
-    printf("It seems that everything is OK.\n");
-  }
-  destroy_partial_alloc(input_alloc);
-  */
-  
-  free(no_segments);
-  free(no_splits);
-  free(no_new_pivots);
-  free(no_old_pivots);
-  free(h_sum);
+  free(data);
 
   return answer;
 }
 
-struct partial_alloc GCPS_allocation(struct input_sch_ch_prob* input, int* no_segments,
-				     int* no_splits, int* no_new_pivots,
-				     int* no_old_pivots, int* h_sum) {
-  struct partial_alloc feasible_guide;
-  struct pivot_list probe_list;
-  struct input_sch_ch_prob stu_no_pr_scp;
-  struct process_scp input_pr_scp;
-  struct pure_alloc pure_da;
+partial_alloc GCPS_allocation(input_sch_ch_prob* input, run_data* data) {
+  partial_alloc feasible_guide;
+  pivot_list probe_list;
+  input_sch_ch_prob stu_no_pr_scp;
+  process_scp input_pr_scp;
+  pure_alloc pure_da;
   
   stu_no_pr_scp = stu_no_priority_scp(input);
+  input_pr_scp = process_scp_from_input(input);
   pure_da = deferred_acceptance(&stu_no_pr_scp); 
   feasible_guide = partial_allocation_from_pure(&pure_da);
   
   destroy_input_sch_ch_prob(stu_no_pr_scp);
-  destroy_pure_alloc(pure_da);
-  
-  input_pr_scp = process_scp_from_input(input);
-  
+  destroy_pure_alloc(pure_da);  
   destroy_input_sch_ch_prob(*input);
   
   probe_list = void_pivot_list();
 
-  return GCPS_allocation_with_guide(&input_pr_scp, &feasible_guide, &probe_list,
-				    no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum);
+  return GCPS_allocation_with_guide(&input_pr_scp, &feasible_guide, &probe_list, data);
 }
 
-struct partial_alloc simple_GCPS_alloc_with_guide(struct input_sch_ch_prob* input, 
-						  struct partial_alloc* feasible_guide) {
-  int* no_segments;
-  int* no_splits;
-  int* no_new_pivots;
-  int* no_old_pivots;
-  int* h_sum;
-  
-  struct pivot_list probe_list;
+partial_alloc simple_GCPS_alloc_with_guide(input_sch_ch_prob* input,
+					   partial_alloc* feasible_guide) {
+  pivot_list probe_list;
 
-  struct process_scp input_pr_scp;
+  process_scp input_pr_scp;
 
-  struct partial_alloc answer;
+  partial_alloc answer;
 
-  no_segments = malloc(sizeof(int));
-  no_splits = malloc(sizeof(int));
-  no_new_pivots = malloc(sizeof(int));
-  no_old_pivots = malloc(sizeof(int));
-  h_sum = malloc(sizeof(int));
-
-  *no_segments = 0;
-  *no_splits = 0;
-  *no_new_pivots = 0;
-  *no_old_pivots = 0;
-  *h_sum = 0;
+  run_data* data;
+  data = malloc(sizeof(run_data));
+  data->no_segments = 0;
+  data->no_splits = 0;
+  data->no_new_pivots = 0;
+  data->no_old_pivots = 0;
+  data->h_sum = 0;
 
   probe_list = void_pivot_list();
 
   input_pr_scp = process_scp_from_input(input);
 
-  answer = GCPS_allocation_with_guide(&input_pr_scp, feasible_guide, &probe_list,
-				      no_segments, no_splits, no_new_pivots, no_old_pivots,
-				      h_sum); 
-  
-  free(no_segments);
-  free(no_splits);
-  free(no_new_pivots);
-  free(no_old_pivots);
-  free(h_sum);
+  answer = GCPS_allocation_with_guide(&input_pr_scp, feasible_guide, &probe_list, data);
+
+  free(data);
 
   return answer;
 }
 
-struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
-						struct partial_alloc* feasible_guide,
-						struct pivot_list* probe_list,
-						int* no_segments, int* no_splits,
-						int* no_new_pivots,
-						int* no_old_pivots,int* h_sum) {  
+partial_alloc GCPS_allocation_with_guide(process_scp* input, partial_alloc* feasible_guide,
+					 pivot_list* probe_list, run_data* data) {  
   int nst, nsc;
 
-  double time_remaining; 
+  double time_left; 
   
-  struct partial_alloc final_alloc;
-  struct subset P_subset, J_subset;
+  partial_alloc final_alloc;
+  subset P_subset, J_subset;
   
   final_alloc = zero_alloc_for_process_scp(input);
   
   nst = input->no_students;
+  J_subset = nullset(nst);
   nsc = input->no_schools;
   P_subset = nullset(nsc);
-  J_subset = nullset(nst);
 
-  time_remaining = compute_until_next_critical_pair(input, feasible_guide, &final_alloc,
-						    probe_list, &P_subset, &J_subset,
-						    no_segments, no_new_pivots, no_old_pivots,
-						    h_sum);
+  time_left = compute_until_next_critical_pair(input, feasible_guide, &final_alloc, probe_list,
+					       &P_subset, &J_subset, data);
 
-  if (time_remaining < 0.000000001) {  
-
+  if (time_left < 0.0000001) {  
     destroy_subset(P_subset);
+  
     destroy_subset(J_subset);
     destroy_process_scp(*input); 
     destroy_partial_alloc(*feasible_guide);
@@ -161,15 +103,13 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
     return final_alloc;
   }
   
-  (*no_splits)++;
+  data->no_splits++;
 
   descend_to_left_subproblem(input, &final_alloc, feasible_guide, probe_list,
-			     &P_subset, &J_subset,
-			     no_segments, no_splits, no_new_pivots,no_old_pivots, h_sum);
+			     &P_subset, &J_subset, data);
   
   descend_to_right_subproblem(input, &final_alloc, feasible_guide, probe_list,
-			      &P_subset, &J_subset,
-			      no_segments, no_splits, no_new_pivots, no_old_pivots, h_sum);
+			      &P_subset, &J_subset, data);
   
   destroy_subset(P_subset);
   destroy_subset(J_subset);
@@ -177,74 +117,68 @@ struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
   return final_alloc;
 }
 
-double compute_until_next_critical_pair(struct process_scp* working_scp,
-					struct partial_alloc* feasible_guide,
-					struct partial_alloc* final_alloc,
-					struct pivot_list* probe_list,
-					struct subset* P_subset, struct subset* J_subset,
-					int* no_segments, int* no_new_pivots, int* no_old_pivots,
-					int* h_sum) {
-  int* critical_pair_found;
-  critical_pair_found = malloc(sizeof(int));
-  *critical_pair_found = 0;
+double compute_until_next_critical_pair(process_scp* working_scp,
+					partial_alloc* feasible_guide,
+					partial_alloc* final_alloc,
+					pivot_list* probe_list,
+					subset* P_subset, subset* J_subset,
+					run_data* data) {
+  int critical_pair_found;
 
-  while (!*critical_pair_found && working_scp->time_remaining > 0.000000001) {
+  critical_pair_found = 0;
 
-    compute_next_path_segment_or_find_critical_pair(working_scp, feasible_guide,
-						    final_alloc, probe_list,
-						    P_subset, J_subset,
-						    critical_pair_found,
-						    no_segments, no_new_pivots,
-						    no_old_pivots, h_sum);
+  while (!critical_pair_found && working_scp->time_remaining > 0.0000001) {
+
+    critical_pair_found = compute_next_path_segment_or_find_critical_pair(working_scp,
+									  feasible_guide,
+									  final_alloc,
+									  probe_list,
+									  P_subset, J_subset,
+									  data);
   }
-    
-  free(critical_pair_found);
   
   return working_scp->time_remaining;
 }
 
-void descend_to_left_subproblem(struct process_scp* working_scp, struct partial_alloc* final_alloc,
-				struct partial_alloc* feasible_guide, 
-				struct pivot_list* probe_list,
-				struct subset* P_subset, struct subset* J_subset,
-				int* no_segments, int* no_splits, int* no_new_pivots,
-				int* no_old_pivots, int* h_sum) {  
-  struct process_scp left_scp;
-  struct partial_alloc left_feas_guide;
-  struct partial_alloc left_increment;
-  struct pivot_list left_list;
-  struct index J_index, P_index;
+void descend_to_left_subproblem(process_scp* working_scp, partial_alloc* final_alloc,
+				partial_alloc* feasible_guide, 
+				pivot_list* probe_list,
+				subset* P_subset, subset* J_subset,
+				run_data* data) {  
+  process_scp left_scp;
+  partial_alloc left_feas_guide;
+  partial_alloc left_increment;
+  pivot_list left_list;
+  element_list J_index, P_index;
   
   left_scp = left_sub_process_scp(working_scp, J_subset, P_subset);    
   left_feas_guide = left_sub_process_feasible_guide(feasible_guide, J_subset, P_subset);  
+    
   left_list = left_reduced_pivot_list(probe_list, J_subset, P_subset);
+  
+  left_increment = GCPS_allocation_with_guide(&left_scp, &left_feas_guide, &left_list, data);
     
-  left_increment = GCPS_allocation_with_guide(&left_scp, &left_feas_guide, &left_list,
-						no_segments, no_splits, no_new_pivots,
-						no_old_pivots, h_sum);
-    
-  J_index = index_of_subset(J_subset);
-  P_index = index_of_subset(P_subset);
+  J_index = element_list_of_subset(J_subset);
+  P_index = element_list_of_subset(P_subset);
   
   increment_partial_alloc(final_alloc, &left_increment, &J_index, &P_index);
 
   destroy_partial_alloc(left_increment);
-  destroy_index(J_index);
-  destroy_index(P_index);
+  destroy_element_list(J_index);
+  destroy_element_list(P_index);
 }
 
-void descend_to_right_subproblem(struct process_scp* working_scp,
-				 struct partial_alloc* final_alloc,
-				 struct partial_alloc* feasible_guide, 
-				 struct pivot_list* probe_list,
-				 struct subset* P_subset, struct subset* J_subset,
-				 int* no_segments, int* no_splits, int* no_new_pivots,
-				 int* no_old_pivots, int* h_sum) {
-  struct process_scp right_scp;
-  struct partial_alloc right_feas_guide;
-  struct partial_alloc right_increment;
-  struct pivot_list right_list;
-  struct index J_index, P_index;
+void descend_to_right_subproblem(process_scp* working_scp,
+				 partial_alloc* final_alloc,
+				 partial_alloc* feasible_guide, 
+				 pivot_list* probe_list,
+				 subset* P_subset, subset* J_subset,
+				 run_data* data) {
+  process_scp right_scp;
+  partial_alloc right_feas_guide;
+  partial_alloc right_increment;
+  pivot_list right_list;
+  element_list J_index, P_index;
 
   right_scp = right_sub_process_scp(working_scp, J_subset, P_subset);
   destroy_process_scp(*working_scp); 
@@ -254,17 +188,15 @@ void descend_to_right_subproblem(struct process_scp* working_scp,
   
   right_list = right_reduced_pivot_list(probe_list, J_subset, P_subset);
   destroy_pivot_list(*probe_list);
-  
 
-  right_increment = GCPS_allocation_with_guide(&right_scp, &right_feas_guide, &right_list,
-					       no_segments, no_splits, no_new_pivots,
-					       no_old_pivots, h_sum);    
-  J_index = index_of_complement(J_subset);    
-  P_index = index_of_complement(P_subset);
+  right_increment = GCPS_allocation_with_guide(&right_scp, &right_feas_guide, &right_list, data);
+  
+  J_index = element_list_of_complement(J_subset);    
+  P_index = element_list_of_complement(P_subset);
   
   increment_partial_alloc(final_alloc, &right_increment, &J_index, &P_index);
 
   destroy_partial_alloc(right_increment);
-  destroy_index(J_index);
-  destroy_index(P_index);
+  destroy_element_list(J_index);
+  destroy_element_list(P_index);
 }

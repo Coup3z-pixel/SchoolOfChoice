@@ -9,7 +9,7 @@
 #include "efficient.h"
 #include "defaccep.h"
 
-struct partial_alloc simple_GCPS_alloc(struct input_sch_ch_prob* input); 
+partial_alloc simple_GCPS_alloc(input_sch_ch_prob* input); 
 
 /* The next function uses deferred_acceptance to compute a feasible
 allocation, then invokes GCPS_allocation_with_guide to compute the
@@ -18,9 +18,7 @@ computing pivots directly is onerous, and the pivots are likely to be
 the same when we pass from one segment to the next, so we apply all
 the valid old pivots before computing new ones.  */
 
-struct partial_alloc GCPS_allocation(struct input_sch_ch_prob* input, int* no_segments,
-				     int* no_splits, int* no_new_pivots, int* no_old_pivots,
-				     int* h_sum); 
+partial_alloc GCPS_allocation(input_sch_ch_prob* input, run_data* data); 
 
 /* GCPS_allocation_with_guide allocates each student's favorite school for as long as it
 is possible to find a path above the allocation in the set of feasible allocations.  
@@ -28,39 +26,34 @@ This can end because time runs out, in which case the computation is complete, o
 because the search for a direction in the set of feasible allocations reveals a critical
 pair, in which case we descend recursively to the computation of the two subproblems. */
 
-struct partial_alloc simple_GCPS_alloc_with_guide(struct input_sch_ch_prob* input, 
-						  struct partial_alloc* feasible_guide);
+partial_alloc simple_GCPS_alloc_with_guide(input_sch_ch_prob* input,
+					   partial_alloc* feasible_guide);
 
-struct partial_alloc GCPS_allocation_with_guide(struct process_scp* input,
-						struct partial_alloc* feasible_guide,
-						struct pivot_list* probe_list,
-						int* no_segments, int* no_splits,
-						int* no_new_pivots,
-						int* no_old_pivots,int* h_sum);
+partial_alloc GCPS_allocation_with_guide(process_scp* input,
+					 partial_alloc* feasible_guide,
+					 pivot_list* probe_list,
+					 run_data* data);
 
-double compute_until_next_critical_pair(struct process_scp* working_scp,
-					struct partial_alloc* feasible_guide,
-					struct partial_alloc* final_alloc,
-					struct pivot_list* probe_list,
-					struct subset* P_subset, struct subset* J_subset,
-					int* no_segments, int* no_new_pivots, int* no_old_pivots,
-					int* h_sum);
+double compute_until_next_critical_pair(process_scp* working_scp,
+					partial_alloc* feasible_guide,
+					partial_alloc* final_alloc,
+					pivot_list* probe_list,
+					subset* P_subset, subset* J_subset,
+					run_data* data);
 
-void descend_to_left_subproblem(struct process_scp* working_scp,
-				struct partial_alloc* final_alloc,
-				struct partial_alloc* feasible_guide, 
-				struct pivot_list* probe_list,
-				struct subset* P_subset, struct subset* J_subset,
-				int* no_segments, int* no_splits, int* no_new_pivots,
-				int* no_old_pivots, int* h_sum);
+void descend_to_left_subproblem(process_scp* working_scp,
+				partial_alloc* final_alloc,
+				partial_alloc* feasible_guide, 
+				pivot_list* probe_list,
+				subset* P_subset, subset* J_subset,
+				run_data* data);
 
-void descend_to_right_subproblem(struct process_scp* working_scp,
-				 struct partial_alloc* final_alloc,
-				 struct partial_alloc* feasible_guide, 
-				 struct pivot_list* probe_list,
-				 struct subset* P_subset, struct subset* J_subset,
-				 int* no_segments, int* no_splits, int* no_new_pivots,
-				 int* no_old_pivots, int* h_sum);
+void descend_to_right_subproblem(process_scp* working_scp,
+				 partial_alloc* final_alloc,
+				 partial_alloc* feasible_guide, 
+				 pivot_list* probe_list,
+				 subset* P_subset, subset* J_subset,
+				 run_data* data);
 
 #endif /* GCPSCODE_H */
 

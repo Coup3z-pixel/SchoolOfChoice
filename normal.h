@@ -17,4 +17,6 @@ double uniform();
 
 double normal();
 
+int random_integer_in_one_to_max(int max);
+
 #endif /* NORMAL_H */

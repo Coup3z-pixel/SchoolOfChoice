@@ -2,12 +2,12 @@
 
 /****************************** mcca code ****************************/
 
-struct partial_alloc mcca_alloc_plus_coarse_cutoffs_FDA(struct process_scp* myscp, int* coarse) {
+partial_alloc mcca_alloc_plus_coarse_cutoffs_FDA(process_scp* myscp, int* coarse) {
   int j, nsc;
   double excess_sum;
   double* cutoffs;
 
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
 
@@ -33,11 +33,11 @@ struct partial_alloc mcca_alloc_plus_coarse_cutoffs_FDA(struct process_scp* mysc
   return answer;
 }
 
-void naive_increase_of_cutoffs(struct process_scp* myscp, double* cutoffs) {
+void naive_increase_of_cutoffs(process_scp* myscp, double* cutoffs) {
   int j, nsc;
 
   double* excesses;
-  struct partial_alloc demands;
+  partial_alloc demands;
 
   nsc = myscp->no_schools;
   demands = compute_demands(myscp, cutoffs);
@@ -54,10 +54,10 @@ void naive_increase_of_cutoffs(struct process_scp* myscp, double* cutoffs) {
   destroy_partial_alloc(demands);
 }
 
-struct partial_alloc mcca_alloc_FDA(struct process_scp* myscp) {
+partial_alloc mcca_alloc_FDA(process_scp* myscp) {
   int nsc;
   int* coarse;
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
   coarse = malloc(nsc * sizeof(int));
@@ -70,12 +70,12 @@ struct partial_alloc mcca_alloc_FDA(struct process_scp* myscp) {
 
 /****************************** mccb code ****************************/
 
-struct partial_alloc mccb_alloc_plus_coarse_cutoffs_FDA(struct process_scp* myscp, int* coarse) {
+partial_alloc mccb_alloc_plus_coarse_cutoffs_FDA(process_scp* myscp, int* coarse) {
   int j, nsc;
   double deficit_sum, max_cutoff;
   double* cutoffs;
 
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
 
@@ -108,12 +108,12 @@ struct partial_alloc mccb_alloc_plus_coarse_cutoffs_FDA(struct process_scp* mysc
   return answer;
 }
 
-void naive_reduction_of_cutoffs(struct process_scp* myscp, double* cutoffs) {
+void naive_reduction_of_cutoffs(process_scp* myscp, double* cutoffs) {
   int j, nsc;
 
   double* deficits;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
 
   nsc = myscp->no_schools;
   
@@ -131,10 +131,10 @@ void naive_reduction_of_cutoffs(struct process_scp* myscp, double* cutoffs) {
   free(deficits);
 }
 
-struct partial_alloc mccb_alloc_FDA(struct process_scp* myscp) {
+partial_alloc mccb_alloc_FDA(process_scp* myscp) {
   int nsc;
   int* coarse;
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
   coarse = malloc(nsc * sizeof(int));
@@ -147,7 +147,7 @@ struct partial_alloc mccb_alloc_FDA(struct process_scp* myscp) {
 
 /************************** general functions and utilties ***************************/
 
-double student_demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands,
+double student_demand_at_new_cutoff(process_scp* myscp, partial_alloc* demands,
 				    int i, int j, double new_cutoff) {
   int k, l,hit, New_Cutoff;
   double answer, total_preferred;
@@ -177,7 +177,7 @@ double student_demand_at_new_cutoff(struct process_scp* myscp, struct partial_al
   return answer;
 }
 
-double demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* demands, int j,
+double demand_at_new_cutoff(process_scp* myscp, partial_alloc* demands, int j,
 				double new_cutoff) {
   int i, nst;
   double answer;
@@ -192,7 +192,7 @@ double demand_at_new_cutoff(struct process_scp* myscp, struct partial_alloc* dem
   return answer;
 }
 
-double naive_eq_cutoff(struct process_scp* myscp, struct partial_alloc* demands, int j) {
+double naive_eq_cutoff(process_scp* myscp, partial_alloc* demands, int j) {
   int max_priority;
   double lower_cand, upper_cand, new_cand, lower_dmd, upper_dmd, new_dmd, midpoint, midpoint_dmd, quota, slope;
   
@@ -234,7 +234,7 @@ double naive_eq_cutoff(struct process_scp* myscp, struct partial_alloc* demands,
   return new_cand;
 }
 
-double* naive_eq_cutoffs(struct process_scp* myscp, struct partial_alloc* demands) {
+double* naive_eq_cutoffs(process_scp* myscp, partial_alloc* demands) {
   int j, nsc;
   double* answer;
 
@@ -248,12 +248,12 @@ double* naive_eq_cutoffs(struct process_scp* myscp, struct partial_alloc* demand
   return answer;
 }
 
-int cutoffs_are_an_mcc(struct process_scp* myscp, double* cutoffs) {
+int cutoffs_are_an_mcc(process_scp* myscp, double* cutoffs) {
   int i, j, nst, nsc;
 
   double sum;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;

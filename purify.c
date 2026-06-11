@@ -3,9 +3,9 @@
 
 int main(int argc, char const *argv[])
 {
-  struct pure_alloc purified;
+  pure_alloc purified;
 
-  struct partial_alloc input_alloc;
+  partial_alloc input_alloc;
   
   if (argc == 1) {
     const char filename[20] = "allocate.mat";

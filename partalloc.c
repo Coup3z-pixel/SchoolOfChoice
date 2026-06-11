@@ -1,6 +1,6 @@
 #include "partalloc.h"
 
-double get_entry(struct partial_alloc* alloc, int i, int j) {
+double get_entry(partial_alloc* alloc, int i, int j) {
   double val;
   
   val = dbl_entry(&(alloc->sparse), i, j);
@@ -8,11 +8,11 @@ double get_entry(struct partial_alloc* alloc, int i, int j) {
   return val;
 }
 
-void set_entry(struct partial_alloc* alloc, int i, int j, double val) {
+void set_entry(partial_alloc* alloc, int i, int j, double val) {
   set_dbl_entry(&(alloc->sparse), i, j, val);
 }
 
-double get_integer_entry(struct pure_alloc* alloc, int i, int j) {
+double get_integer_entry(pure_alloc* alloc, int i, int j) {
   double val;
   
   val = int_entry(&(alloc->sparse), i, j);
@@ -20,18 +20,33 @@ double get_integer_entry(struct pure_alloc* alloc, int i, int j) {
   return val;
 }
 
-void set_integer_entry(struct pure_alloc* alloc, int i, int j, int val) {
+void set_integer_entry(pure_alloc* alloc, int i, int j, int val) {
   set_int_entry(&(alloc->sparse), i, j, val);
 }
 
-void increment_entry(struct partial_alloc* alloc, int i, int j, double incr) {
+void increment_entry(partial_alloc* alloc, int i, int j, double incr) {
   increment_dbl_entry(&(alloc->sparse), i, j, incr);
 }
 
-struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs) {
+double remaining_time(partial_alloc* alloc) {
+  int j, nsc;
+
+  double answer;
+
+  nsc = alloc->no_schools;
+
+  answer = 1.0;
+  for (j = 1; j <= nsc; j++) {
+    answer -= get_entry(alloc, 1, j);
+  }
+
+  return answer;
+}
+
+partial_alloc compute_demands(process_scp* myscp, double* cutoffs) {
   int i, j, k, nst, nsc;
   double unfilled_demand;
-  struct partial_alloc answer;
+  partial_alloc answer;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -69,8 +84,8 @@ struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs)
   return answer;
 }
 
-double get_total_demand_for_student(struct process_scp* myscp,
-				    struct partial_alloc* alloc, int i) {
+double get_total_demand_for_student(process_scp* myscp,
+				    partial_alloc* alloc, int i) {
   int j, k;
   double answer;
 
@@ -83,7 +98,7 @@ double get_total_demand_for_student(struct process_scp* myscp,
   return answer;
 }
 
-double get_total_demand_for_school(struct partial_alloc* alloc, int j) {
+double get_total_demand_for_school(partial_alloc* alloc, int j) {
   int i, nst;
   double answer;
 
@@ -97,7 +112,7 @@ double get_total_demand_for_school(struct partial_alloc* alloc, int j) {
   return answer;
 }
 
-double* school_sums(struct partial_alloc* my_alloc) {
+double* school_sums(partial_alloc* my_alloc) {
   int i, j;
   double* sums = malloc(my_alloc->no_schools * sizeof(double));
   for (j = 1; j <= my_alloc->no_schools; j++) {
@@ -109,7 +124,7 @@ double* school_sums(struct partial_alloc* my_alloc) {
   return sums;
 }
 
-double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands) {
+double* excess_demands(process_scp* myscp, partial_alloc* demands) {
   int j, nsc;
   double total_demand;
 
@@ -127,13 +142,13 @@ double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands)
   return answer;
 }
 
-double sum_of_excesses(struct process_scp* myscp, double* cutoffs) {
+double sum_of_excesses(process_scp* myscp, double* cutoffs) {
   int j, nsc;
   double excess_sum;
 
   double* excesses;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
 
   nsc = myscp->no_schools;
   
@@ -158,7 +173,7 @@ double sum_of_excesses(struct process_scp* myscp, double* cutoffs) {
   return excess_sum;
 }
 
-double* demand_deficits(struct process_scp* myscp, struct partial_alloc* demands) {
+double* demand_deficits(process_scp* myscp, partial_alloc* demands) {
   int j;
   double total_demand;
   
@@ -174,13 +189,13 @@ double* demand_deficits(struct process_scp* myscp, struct partial_alloc* demands
   return answer;
 }
 
-double sum_of_deficits(struct process_scp* myscp, double* cutoffs) {
+double sum_of_deficits(process_scp* myscp, double* cutoffs) {
   int j, nsc;
   double deficit_sum;
 
   double* deficits;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
 
   nsc = myscp->no_schools;
   
@@ -201,7 +216,7 @@ double sum_of_deficits(struct process_scp* myscp, double* cutoffs) {
   return deficit_sum;
 }
 
-int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second) {
+int partial_allocs_are_same(partial_alloc* first, partial_alloc* second) {
   int i, j, nst, nsc;
   double max_diff;
 
@@ -233,7 +248,7 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
 }
 
 /*
-int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second) {
+int partial_allocs_are_same(partial_alloc* first, partial_alloc* second) {
   int i, j;
 
   int nst = first->no_students;
@@ -255,28 +270,35 @@ int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* s
 }
 */
 
-int students_are_fully_allocated(struct partial_alloc* my_alloc) {
-  int i, j;
+int students_are_fully_allocated(partial_alloc* my_alloc, process_scp* myscp) {
+  int i, k, answer;
   double sum;
+
+  answer = 1;
 
   for (i = 1; i <= my_alloc->no_students; i++) {
     sum = 0.0;
-    for (j = 1; j <= my_alloc->no_schools; j++) {
-      sum += get_entry(my_alloc, i, j);
+
+    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+      sum += get_entry(my_alloc, i, myscp->preferences[i-1][k-1]);
     }
-    if (sum <= 0.999999 || sum >= 1.000001) {
-      return 0;
+
+    if (sum <= myscp->time_remaining - 0.000001 || sum >= myscp->time_remaining + 0.000001) {
+
+      fprintf(stderr, "Student %i's total allocation is %1.2f.\n", i, sum);
+      
+      answer = 0;
     }
   }
 
-  return 1;
+  return answer;
 }
 
-int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* myscp) {
+int is_a_feasible_allocation(partial_alloc* my_alloc, process_scp* myscp) {
   int i, j;
   double sum;
   
-  if (!students_are_fully_allocated(my_alloc)) {
+  if (!students_are_fully_allocated(my_alloc, myscp)) {
     return 0;
   }
 
@@ -286,6 +308,9 @@ int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp*
       sum += get_entry(my_alloc, i, j);
     }
     if (sum > myscp->quotas[j-1] + 0.000001) {
+
+      fprintf(stderr, "School %i's quota is exceeded.\n", j);
+      
       return 0;
     }
   }
@@ -293,7 +318,18 @@ int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp*
   return 1;
 }
 
-int is_a_feasible_pure_alloc(struct pure_alloc* my_alloc, struct input_sch_ch_prob* myiscp) {
+int is_feasible_for_input_scp(partial_alloc* my_alloc, input_sch_ch_prob* myiscp) {
+  int answer;
+  process_scp myscp;
+
+  myscp = process_scp_from_input(myiscp);
+  answer = is_a_feasible_allocation(my_alloc, &myscp);
+  destroy_process_scp(myscp);
+
+  return answer;
+}
+
+int is_a_feasible_pure_alloc(pure_alloc* my_alloc, input_sch_ch_prob* myiscp) {
   int i, j, nst, nsc, sum;
 
   nst = myiscp->no_students;
@@ -322,13 +358,34 @@ int is_a_feasible_pure_alloc(struct pure_alloc* my_alloc, struct input_sch_ch_pr
   return 1;
 }
 
-struct partial_alloc zero_alloc_for_process_scp(struct process_scp* myscp) {
+int gives_some_student_nothing(partial_alloc* myalloc) {
+  int i, j, nst, nsc;
+
+  double total_prob;
+  
+  nst = myalloc->no_students;
+  nsc = myalloc->no_schools;
+
+  for (i = 1; i <= nst; i++) {
+    total_prob = 0.0;
+    for (j = 1; j <= nsc; j++) {
+      total_prob += get_entry(myalloc, i, j);
+    }
+    if (total_prob < 0.000001) {
+      return i;
+    }
+  }
+
+  return 0;
+}
+
+partial_alloc zero_alloc_for_process_scp(process_scp* myscp) {
   int nst, nsc;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
   
-  struct partial_alloc answer;
+  partial_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
@@ -337,13 +394,13 @@ struct partial_alloc zero_alloc_for_process_scp(struct process_scp* myscp) {
   return answer;
 }
 
-struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* myscp) {
+partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myscp) {
   int nst, nsc;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
   
-  struct partial_alloc answer;
+  partial_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
@@ -352,14 +409,14 @@ struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* myscp) {
   return answer;
 }
 
-struct pure_alloc zero_pure_alloc_for_input_scp(struct input_sch_ch_prob* myscp) {
+pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myscp) {
 
   int nst, nsc;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
   
-  struct pure_alloc answer;
+  pure_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
@@ -368,8 +425,8 @@ struct pure_alloc zero_pure_alloc_for_input_scp(struct input_sch_ch_prob* myscp)
   return answer;
 }
 
-struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
-					    struct subset* J_subset, struct subset* P_subset) {
+partial_alloc left_sub_process_feasible_guide(partial_alloc* feasible_guide,
+					    subset* J_subset, subset* P_subset) {
   int i, j, k, l, m, elt_no, new_nst, new_nsc;
 
   int* stu_no_key;
@@ -378,7 +435,7 @@ struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasi
   new_nst = J_subset->subset_size;
   new_nsc = P_subset->subset_size;
 
-  struct partial_alloc new_guide;
+  partial_alloc new_guide;
 
   new_guide.no_students = new_nst;
   new_guide.no_schools = new_nsc;
@@ -419,13 +476,15 @@ struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasi
   return new_guide;
 }
 
-struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
-					  struct subset* J_subset, struct subset* P_subset) {
-  struct subset J_compl = complement_of_subset(J_subset);
-  struct subset P_compl = complement_of_subset(P_subset);
-
-  struct partial_alloc new_guide = left_sub_process_feasible_guide(feasible_guide,
-								   &J_compl, &P_compl);
+partial_alloc right_sub_process_feasible_guide(partial_alloc* feasible_guide,
+					  subset* J_subset, subset* P_subset) {
+  subset J_compl;
+  subset P_compl;
+  partial_alloc new_guide;
+  
+  J_compl = complement_of_subset(J_subset);
+  P_compl = complement_of_subset(P_subset);
+  new_guide = left_sub_process_feasible_guide(feasible_guide, &J_compl, &P_compl);
 
   destroy_subset(J_compl);
   destroy_subset(P_compl);
@@ -433,8 +492,8 @@ struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feas
   return new_guide;
 }
 
-void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
-			     struct index* stu_index,struct index* sch_index) {
+void increment_partial_alloc(partial_alloc* base, partial_alloc* increment,
+			     element_list* stu_index,element_list* sch_index) {
   int i,j;
   
   for (i = 1; i <= increment->no_students; i++) {
@@ -448,13 +507,13 @@ void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* i
 }
 
 
-struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given) {
+partial_alloc copy_of_partial_alloc(partial_alloc* given) {
   int nst, nsc;
 
   nst = given->no_students;
   nsc = given->no_schools;
   
-  struct partial_alloc copy;
+  partial_alloc copy;
 
   copy.no_students = nst;
   copy.no_schools = nsc;
@@ -464,12 +523,12 @@ struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given) {
   return copy;
 }
 
-struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
+pure_alloc pure_allocation_from_partial(partial_alloc* my_alloc) {
   int i, j;
   int nst = my_alloc->no_students;
   int nsc = my_alloc->no_schools;
   
-  struct pure_alloc my_pure;
+  pure_alloc my_pure;
   my_pure.no_students = nst;
   my_pure.no_schools = nsc;
 
@@ -489,12 +548,38 @@ struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc) {
   return my_pure;
 }
 
-struct partial_alloc partial_allocation_from_pure(struct pure_alloc* my_alloc) {
+int split_is_valid(partial_alloc* given, subset* J_subset, subset* P_subset) {
+  int i, j, nst, nsc, answer;
+
+  nst = given->no_students;
+  nsc = given->no_schools;
+
+  answer = 1;
+
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      if (!is_element(J_subset, i) && is_element(P_subset, j) && get_entry(given, i, j) > 0.0001) {
+	fprintf(stderr, "Student %i outside of J is getting a positive amount of %i in P.\n",
+		i, j);
+	answer = 0;
+      }
+      if (is_element(J_subset, i) && !is_element(P_subset, j) && get_entry(given, i, j) > 0.0001) {
+	fprintf(stderr, "Student %i in J is getting a positive amount of %i outside of P.\n",
+		i, j);
+	answer = 0;
+      }
+    }
+  }
+
+  return answer;
+}
+
+partial_alloc partial_allocation_from_pure(pure_alloc* my_alloc) {
   int i, j;
   int nst = my_alloc->no_students;
   int nsc = my_alloc->no_schools;
   
-  struct partial_alloc my_partial;
+  partial_alloc my_partial;
   my_partial.no_students = nst;
   my_partial.no_schools = nsc;
 
@@ -509,20 +594,20 @@ struct partial_alloc partial_allocation_from_pure(struct pure_alloc* my_alloc) {
   return my_partial;
 }
 
-int get_pure_entry(struct pure_alloc* alloc, int i, int j)  {
+int get_pure_entry(pure_alloc* alloc, int i, int j)  {
   return int_entry(&(alloc->sparse), i, j);
 }
 
-void set_pure_entry(struct pure_alloc* alloc, int i, int j, int val) {
+void set_pure_entry(pure_alloc* alloc, int i, int j, int val) {
   set_int_entry(&(alloc->sparse), i, j, val);
 }
 
-void increment_pure_entry(struct pure_alloc* alloc, int i, int j, int incr) {
+void increment_pure_entry(pure_alloc* alloc, int i, int j, int incr) {
   increment_int_entry(&(alloc->sparse), i, j, incr);
 }
 
 
-void print_sparse_partial_alloc(struct partial_alloc* my_alloc) {
+void print_sparse_partial_alloc(partial_alloc* my_alloc) {
   int i, k, l, nst, nsc, sch_no, old_sch_no;
   
   nst = my_alloc->no_students;
@@ -572,7 +657,7 @@ void print_sparse_partial_alloc(struct partial_alloc* my_alloc) {
   printf("\n");
 }
 
-void print_partial_alloc(struct partial_alloc* my_alloc) {
+void print_partial_alloc(partial_alloc* my_alloc) {
   int i, j, nst, nsc;
   
   nst = my_alloc->no_students;
@@ -603,11 +688,42 @@ void print_partial_alloc(struct partial_alloc* my_alloc) {
     }
   }
   printf("\n");
-
-  exit(0);
 }
 
-int pure_alloc_is_valid(struct pure_alloc* my_pure_alloc) {
+void fprint_partial_alloc(partial_alloc* my_alloc) {
+  int i, j, nst, nsc;
+  
+  nst = my_alloc->no_students;
+  nsc = my_alloc->no_schools;
+  
+  fprintf(stderr, "/* This is a sample introductory comment. */\n");
+
+  fprintf(stderr, "There are %d students and %d schools\n",nst,nsc); 
+  
+  for (j = 1; j <= my_alloc->no_schools; j++) {
+    if (j < 10) {
+      fprintf(stderr, " ");
+    }
+    fprintf(stderr, "         %i:", j);
+  }
+  
+  for (i = 1; i <= my_alloc->no_students; i++) {
+    fprintf(stderr, "\n%i:",i);
+    if (i < 10) {
+      fprintf(stderr, " ");
+    }
+    for (j = 1; j <= my_alloc->no_schools; j++) {
+      if (get_entry(my_alloc, i, j) < -0.000001) {
+	fprintf(stderr, "We have a negative allocation probability.\n");
+	exit(0);
+      }
+      fprintf(stderr, "  %2.8f", fabs(get_entry(my_alloc, i, j)));
+    }
+  }
+  fprintf(stderr, "\n");
+}
+
+int pure_alloc_is_valid(pure_alloc* my_pure_alloc) {
   int i, k, count;
 
   for (i = 1; i <= my_pure_alloc->no_students; i++) {
@@ -625,7 +741,7 @@ int pure_alloc_is_valid(struct pure_alloc* my_pure_alloc) {
   return 1;
 }
 
-void print_pure_alloc(struct pure_alloc* my_pure_alloc) {
+void print_pure_alloc(pure_alloc* my_pure_alloc) {
   int i, k, done, sch_no, tencount, hundredcount;
 
   if (!pure_alloc_is_valid(my_pure_alloc)) {
@@ -686,10 +802,10 @@ void print_pure_alloc(struct pure_alloc* my_pure_alloc) {
   printf("\n");
 }
 
-void destroy_partial_alloc(struct partial_alloc my_alloc) {
+void destroy_partial_alloc(partial_alloc my_alloc) {
   destroy_dbl_sp_mat(&(my_alloc.sparse));
 }
 
-void destroy_pure_alloc(struct pure_alloc my_pure_alloc) {
+void destroy_pure_alloc(pure_alloc my_pure_alloc) {
   destroy_int_sp_mat(&(my_pure_alloc.sparse));
 }

@@ -1,6 +1,6 @@
 #include "sprsmtrx.h"
 
-int int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no) {
+int int_entry(int_sparse_matrix* mymat, int row_no, int col_no) {
   int probe;
 
   probe = 1;
@@ -17,7 +17,7 @@ int int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no) {
   }
 }
 
-void set_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no, int val) {
+void set_int_entry(int_sparse_matrix* mymat, int row_no, int col_no, int val) {
   int probe;
 
   probe = 1;
@@ -31,7 +31,7 @@ void set_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no, int 
   }
 }
 
-void increment_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no, int incr) {
+void increment_int_entry(int_sparse_matrix* mymat, int row_no, int col_no, int incr) {
   int probe;
 
   probe = 1;
@@ -48,7 +48,7 @@ void increment_int_entry(struct int_sparse_matrix* mymat, int row_no, int col_no
   mymat->entries[row_no-1][probe-1] += incr;
 }
 
-double dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no) {
+double dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no) {
   int probe;
 
   probe = 1;
@@ -66,7 +66,7 @@ double dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no) {
 }
 
 
-void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double val) {
+void set_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, double val) {
   int probe;
   
   probe = 1;
@@ -80,7 +80,7 @@ void set_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, doub
   }
 }
 
-void increment_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no, double incr) {
+void increment_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, double incr) {
   int probe;
 
   probe = 1;
@@ -94,10 +94,10 @@ void increment_dbl_entry(struct dbl_sparse_matrix* mymat, int row_no, int col_no
   }
 }
 
-struct int_sparse_matrix copy_of_int_sp_matrix(struct int_sparse_matrix* given) {
+int_sparse_matrix copy_of_int_sp_matrix(int_sparse_matrix* given) {
   int i, k, no_rows;
 
-  struct int_sparse_matrix answer;
+  int_sparse_matrix answer;
 
   answer.no_rows = given->no_rows;
   answer.no_cols = given->no_cols;
@@ -128,10 +128,10 @@ struct int_sparse_matrix copy_of_int_sp_matrix(struct int_sparse_matrix* given) 
   return answer;
 }
 
-struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given) {
+dbl_sparse_matrix copy_of_dbl_sp_mat(dbl_sparse_matrix* given) {
   int i, j, no_rows;
 
-  struct dbl_sparse_matrix copy;
+  dbl_sparse_matrix copy;
 
   copy.no_rows = given->no_rows;
   copy.no_cols = given->no_cols;
@@ -163,8 +163,8 @@ struct dbl_sparse_matrix copy_of_dbl_sp_mat(struct dbl_sparse_matrix* given) {
 }
 
 
-int* new_nos_active_cols(struct dbl_sparse_matrix* mydsp,
-			 struct subset* J_subset, struct subset* P_subset) {
+int* new_nos_active_cols(dbl_sparse_matrix* mydsp,
+			 subset* J_subset, subset* P_subset) {
   int i, k, new_row_no;
   int* new_nos;
 
@@ -185,8 +185,8 @@ int* new_nos_active_cols(struct dbl_sparse_matrix* mydsp,
   return new_nos;
 }
 
-int** new_index_of_active_cols(struct dbl_sparse_matrix* mydsp,
-			       struct subset* J_subset, struct subset* P_subset) {
+int** new_index_of_active_cols(dbl_sparse_matrix* mydsp,
+			       subset* J_subset, subset* P_subset) {
   int i, j, k, new_elt_no, new_no_cols, new_row_no, new_col_no;
   
   int* elt_no_key;
@@ -231,11 +231,11 @@ int** new_index_of_active_cols(struct dbl_sparse_matrix* mydsp,
   return new_index;
 }
 
-struct dbl_sparse_matrix zero_dbl_sp_mat_for_subsets(struct dbl_sparse_matrix* mydsp,
-						     struct subset* J_subset, struct subset* P_subset) {
+dbl_sparse_matrix zero_dbl_sp_mat_for_subsets(dbl_sparse_matrix* mydsp,
+						     subset* J_subset, subset* P_subset) {
   int i, j;
   
-  struct dbl_sparse_matrix answer;
+  dbl_sparse_matrix answer;
 
   answer.no_rows = J_subset->subset_size;
   answer.no_cols = P_subset->subset_size;
@@ -253,10 +253,10 @@ struct dbl_sparse_matrix zero_dbl_sp_mat_for_subsets(struct dbl_sparse_matrix* m
   return answer;
 }
 
-struct int_sparse_matrix zero_int_sp_mat_from_dbl_sp_mat(struct dbl_sparse_matrix* given) {
+int_sparse_matrix zero_int_sp_mat_from_dbl_sp_mat(dbl_sparse_matrix* given) {
   int i, j, no_rows;
 
-  struct int_sparse_matrix answer;
+  int_sparse_matrix answer;
 
   answer.no_rows = given->no_rows;
   answer.no_cols = given->no_cols;
@@ -287,10 +287,10 @@ struct int_sparse_matrix zero_int_sp_mat_from_dbl_sp_mat(struct dbl_sparse_matri
   return answer;
 }
 
-struct dbl_sparse_matrix zero_dbl_sp_mat_from_int_sp_mat(struct int_sparse_matrix* given) {
+dbl_sparse_matrix zero_dbl_sp_mat_from_int_sp_mat(int_sparse_matrix* given) {
   int i, j, no_rows;
 
-  struct dbl_sparse_matrix answer;
+  dbl_sparse_matrix answer;
 
   answer.no_rows = given->no_rows;
   answer.no_cols = given->no_cols;
@@ -322,7 +322,7 @@ struct dbl_sparse_matrix zero_dbl_sp_mat_from_int_sp_mat(struct int_sparse_matri
 }
 
 
-void destroy_int_sp_mat(struct int_sparse_matrix* mymat) {
+void destroy_int_sp_mat(int_sparse_matrix* mymat) {
   int i, nst;
 
   nst = mymat->no_rows;
@@ -339,7 +339,7 @@ void destroy_int_sp_mat(struct int_sparse_matrix* mymat) {
   free(mymat->entries);
 }
 
-void destroy_dbl_sp_mat(struct dbl_sparse_matrix* mymat) {
+void destroy_dbl_sp_mat(dbl_sparse_matrix* mymat) {
   int i, nst;
 
   nst = mymat->no_rows;

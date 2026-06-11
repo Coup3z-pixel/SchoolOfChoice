@@ -1,7 +1,7 @@
 #include "parser.h"
 
-struct input_sch_ch_prob sch_ch_prob_from_file(const char filename[]) {
-  struct input_sch_ch_prob my_sch_ch_prob;
+input_sch_ch_prob sch_ch_prob_from_file(const char filename[]) {
+  input_sch_ch_prob my_sch_ch_prob;
 
   int i, j;
 
@@ -104,10 +104,10 @@ struct input_sch_ch_prob sch_ch_prob_from_file(const char filename[]) {
   return my_sch_ch_prob;
 }
 
-struct partial_alloc allocation_from_file(const char filename[])  {
+partial_alloc allocation_from_file(const char filename[])  {
   int i, k, nst, nsc;
   
-  struct partial_alloc alloc;
+  partial_alloc alloc;
 
   FILE *fp;
 

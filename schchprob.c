@@ -1,14 +1,14 @@
 #include "schchprob.h"
 
-int get_input_priority(struct input_sch_ch_prob* myiscp, int i, int j){
+int get_input_priority(input_sch_ch_prob* myiscp, int i, int j){
       return myiscp->priorities[i-1][j-1];
 }
 
-int get_priority(struct process_scp* myscp, int i, int j) {
+int get_priority(process_scp* myscp, int i, int j) {
   return int_entry(&(myscp->priorities), i, j);
 }
 
-int maximum_priority(struct process_scp* myscp) {
+int maximum_priority(process_scp* myscp) {
   int i, j, nst, nsc;
 
   nst = myscp->no_students;
@@ -26,7 +26,7 @@ int maximum_priority(struct process_scp* myscp) {
   return answer;
 }
 
-int* get_favorites(struct process_scp* working_scp) {
+int* get_favorites(process_scp* working_scp) {
   int i;
   int* favorites;
 
@@ -39,7 +39,7 @@ int* get_favorites(struct process_scp* working_scp) {
   return favorites;
 }
 
-int is_eligible(struct process_scp* myscp, int i, int j) {
+int is_eligible(process_scp* myscp, int i, int j) {
   int k;
 
   for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
@@ -51,15 +51,81 @@ int is_eligible(struct process_scp* myscp, int i, int j) {
   return 0;
 }
 
-int inp_safe_school(struct input_sch_ch_prob* myiscp, int i) {
+int inp_safe_school(input_sch_ch_prob* myiscp, int i) {
   return myiscp->preferences[i-1][myiscp->no_eligible_schools[i-1]-1];
 }
 
-int safe_school(struct process_scp* myscp, int i) {
+int safe_school(process_scp* myscp, int i) {
   return myscp->preferences[i-1][myscp->no_eligible_schools[i-1]-1];
 }
 
-int student_ranking_of_school(struct process_scp* myscp, int i, int j) {
+int j_is_only_school_for_i(process_scp* myscp, int i, int j) {
+  if (myscp->no_eligible_schools[i-1] == 1 && myscp->preferences[i-1][0] == j) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+int two_iscp_are_same(input_sch_ch_prob* myiscp1, input_sch_ch_prob* myiscp2) {
+  int i, j, k, nst, nsc;
+
+  nst = myiscp1->no_students;
+  nsc = myiscp1->no_schools;
+  if (nst != myiscp2->no_students || nsc != myiscp2->no_schools) {
+    return 0;
+  }
+
+  for (j = 1; j <= nsc; j++) {
+    if (myiscp1->quotas[j-1] != myiscp2->quotas[j-1]) {
+      return 0;
+    }
+  }
+
+  for (i = 1; i <= nst; i++) {
+    if (myiscp1->no_eligible_schools[i-1] != myiscp2->no_eligible_schools[i-1]) {
+      return 0;
+    }
+
+    for (k = 1; k <= myiscp1->no_eligible_schools[i-1]; k++) {
+      if (myiscp1->preferences[i-1][k-1] != myiscp2->preferences[i-1][k-1]) {
+	return 0;
+      }
+    }
+
+    for (j = 1; j <= nsc; j++) {
+      if (myiscp1->priorities[i-1][j-1] != myiscp2->priorities[i-1][j-1]) {
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
+int a_school_has_too_many_only_students(process_scp* myscp) {
+  int i, j, nst, nsc, no_only;
+
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+
+  for (j = 1; j <= nsc; j++) {
+    no_only = 0;
+    for (i = 1; i <= nst; i++) {
+      if (j_is_only_school_for_i(myscp, i, j)) {
+	no_only++;
+      }
+      if ((double)no_only > myscp->quotas[j-1]) {
+	return j;
+      }
+    }
+  }
+
+  return 0;
+}
+
+int student_ranking_of_school(process_scp* myscp, int i, int j) {
   int k;
 
   for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
@@ -71,7 +137,7 @@ int student_ranking_of_school(struct process_scp* myscp, int i, int j) {
   return 0;
 }
 
-int safe_schools_are_safe(struct input_sch_ch_prob* myiscp) {
+int safe_schools_are_safe(input_sch_ch_prob* myiscp) {
   int i, j, nst, nsc, top_pr, no_safe_st;
 
   nst = myiscp->no_students;
@@ -100,13 +166,13 @@ int safe_schools_are_safe(struct input_sch_ch_prob* myiscp) {
   return 1;
 }
 
-struct int_sparse_matrix new_int_sp_mat(struct process_scp* myscp) {
+int_sparse_matrix new_int_sp_mat(process_scp* myscp) {
   int i, k, nst, nsc;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
 
-  struct int_sparse_matrix answer;
+  int_sparse_matrix answer;
 
   answer.no_rows = nst;
   answer.no_cols = nsc;
@@ -135,13 +201,13 @@ struct int_sparse_matrix new_int_sp_mat(struct process_scp* myscp) {
   return answer;
 } 
 
-struct dbl_sparse_matrix new_dbl_sp_mat_for_process(struct process_scp* myscp) {
+dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp) {
   int i, k, swap, nst, nsc;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
 
-  struct dbl_sparse_matrix answer;
+  dbl_sparse_matrix answer;
 
   answer.no_rows = nst;
   answer.no_cols = nsc;
@@ -187,13 +253,13 @@ struct dbl_sparse_matrix new_dbl_sp_mat_for_process(struct process_scp* myscp) {
   return answer;
 }
 
-struct dbl_sparse_matrix new_dbl_sp_mat_for_input(struct input_sch_ch_prob* myscp) {
+dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp) {
   int i, k, swap, nst, nsc;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
 
-  struct dbl_sparse_matrix answer;
+  dbl_sparse_matrix answer;
 
   answer.no_rows = nst;
   answer.no_cols = nsc;
@@ -239,13 +305,13 @@ struct dbl_sparse_matrix new_dbl_sp_mat_for_input(struct input_sch_ch_prob* mysc
   return answer;
 }
 
-struct int_sparse_matrix new_int_sp_mat_for_input(struct input_sch_ch_prob* myscp) {
+int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myscp) {
   int i, k, swap, nst, nsc;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
 
-  struct int_sparse_matrix answer;
+  int_sparse_matrix answer;
 
   answer.no_rows = nst;
   answer.no_cols = nsc;
@@ -291,9 +357,9 @@ struct int_sparse_matrix new_int_sp_mat_for_input(struct input_sch_ch_prob* mysc
   return answer;
 }
 
-struct process_scp process_scp_from_input(struct input_sch_ch_prob* myscp) {
+process_scp process_scp_from_input(input_sch_ch_prob* myscp) {
   
-  struct process_scp new_scp;
+  process_scp new_scp;
 
   int i, j, k;
 
@@ -328,10 +394,10 @@ struct process_scp process_scp_from_input(struct input_sch_ch_prob* myscp) {
   return new_scp;
 } 
 
-struct int_sparse_matrix sparse_priorities(struct input_sch_ch_prob* myscp) {
+int_sparse_matrix sparse_priorities(input_sch_ch_prob* myscp) {
   int i, k, l, nst, nsc;
 
-  struct int_sparse_matrix answer;
+  int_sparse_matrix answer;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -359,15 +425,16 @@ struct int_sparse_matrix sparse_priorities(struct input_sch_ch_prob* myscp) {
   return answer;
 }
 
-struct process_scp left_sub_process_scp(struct process_scp* myscp, struct subset* J_subset,
-					      struct subset* P_subset) {
-  struct process_scp new_scp;
+process_scp left_sub_process_scp(process_scp* myscp, subset* J_subset,
+					      subset* P_subset) {
+  process_scp new_scp;
   
   int i, j, k, l, p, count;
 
-  struct index J_index, P_index;
-  J_index = index_of_subset(J_subset);
-  P_index = index_of_subset(P_subset);
+  element_list J_index, P_index;
+	  
+  J_index = element_list_of_subset(J_subset);
+  P_index = element_list_of_subset(P_subset);
 
   int* reverse_P_index = malloc(myscp->no_schools * sizeof(int));
   count = 0;
@@ -424,25 +491,25 @@ struct process_scp left_sub_process_scp(struct process_scp* myscp, struct subset
 
   new_scp.time_remaining = myscp->time_remaining;
 
-  destroy_index(J_index);
-  destroy_index(P_index);
+  destroy_element_list(J_index);
+  destroy_element_list(P_index);
   free(reverse_P_index); 
 
   return new_scp;    
 }
 
-struct process_scp right_sub_process_scp(struct process_scp* myscp, struct subset* J_subset,
-					      struct subset* P_subset) {
-  struct process_scp new_scp;
+process_scp right_sub_process_scp(process_scp* myscp, subset* J_subset,
+					      subset* P_subset) {
+  process_scp new_scp;
   
   int i, j, k, l, p, count;
 
-  struct subset J_compl, P_compl;
+  subset J_compl, P_compl;
   J_compl = complement_of_subset(J_subset);
   P_compl = complement_of_subset(P_subset);
-  struct index J_index, P_index;
-  J_index = index_of_subset(&J_compl);
-  P_index = index_of_subset(&P_compl);
+  element_list J_index, P_index;
+  J_index = element_list_of_subset(&J_compl);
+  P_index = element_list_of_subset(&P_compl);
 
   int* reverse_P_index = malloc(myscp->no_schools * sizeof(int));
   count = 0;
@@ -476,6 +543,12 @@ struct process_scp right_sub_process_scp(struct process_scp* myscp, struct subse
 	new_scp.no_eligible_schools[i-1]++;
       }
     }
+    
+    if (new_scp.no_eligible_schools[i-1] == 0) {
+      fprintf(stderr, "We have no schools for %i.\n", i);
+      exit(0);
+    }
+    
     new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
     count = 0;
     for (l = 1; l <= myscp->no_eligible_schools[J_index.indices[i-1]-1]; l++) {
@@ -500,16 +573,16 @@ struct process_scp right_sub_process_scp(struct process_scp* myscp, struct subse
 
   destroy_subset(J_compl);
   destroy_subset(P_compl);
-  destroy_index(J_index);
-  destroy_index(P_index);
+  destroy_element_list(J_index);
+  destroy_element_list(P_index);
   free(reverse_P_index); 
 
   return new_scp;    
 }
 
-struct process_scp reduced_scp(struct process_scp* myscp, int* coarse_cutoffs) {
+process_scp reduced_scp(process_scp* myscp, int* coarse_cutoffs) {
   int i, j, k, l, p, safe_school_index, hit, cursor, nst, nsc;
-  struct process_scp answer;
+  process_scp answer;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -568,9 +641,9 @@ struct process_scp reduced_scp(struct process_scp* myscp, int* coarse_cutoffs) {
   return answer;
 }
 
-struct input_sch_ch_prob reduced_input_scp(struct input_sch_ch_prob* myiscp, int* coarse_cutoffs) {
+input_sch_ch_prob reduced_input_scp(input_sch_ch_prob* myiscp, int* coarse_cutoffs) {
   int i, j, k, l, p, safe_school_index, hit, cursor, nst, nsc;
-  struct input_sch_ch_prob answer;
+  input_sch_ch_prob answer;
 
   nst = myiscp->no_students;
   nsc = myiscp->no_schools;
@@ -630,10 +703,10 @@ struct input_sch_ch_prob reduced_input_scp(struct input_sch_ch_prob* myiscp, int
   return answer;
 }
 
-struct input_sch_ch_prob copy_of_input_scp(struct input_sch_ch_prob* myiscp) {
+input_sch_ch_prob copy_of_input_scp(input_sch_ch_prob* myiscp) {
   int i, j, k, nst, nsc;
 
-  struct input_sch_ch_prob answer;
+  input_sch_ch_prob answer;
 
   nst = myiscp->no_students;
   nsc = myiscp->no_schools;
@@ -670,10 +743,10 @@ struct input_sch_ch_prob copy_of_input_scp(struct input_sch_ch_prob* myiscp) {
   return answer;
 }
 
-struct input_sch_ch_prob stu_no_priority_scp(struct input_sch_ch_prob* myiscp) {
+input_sch_ch_prob stu_no_priority_scp(input_sch_ch_prob* myiscp) {
   int i, j, k, nst, nsc;
   
-  struct input_sch_ch_prob answer;
+  input_sch_ch_prob answer;
 
   answer = copy_of_input_scp(myiscp);
 
@@ -692,9 +765,9 @@ struct input_sch_ch_prob stu_no_priority_scp(struct input_sch_ch_prob* myiscp) {
   return answer;
 }
 
-struct input_sch_ch_prob make_toy_sch_ch_prob() {
+input_sch_ch_prob make_toy_sch_ch_prob() {
   int i,j;
-  struct input_sch_ch_prob myscp;
+  input_sch_ch_prob myscp;
   
   
   myscp.no_students = 4;
@@ -732,8 +805,8 @@ struct input_sch_ch_prob make_toy_sch_ch_prob() {
   return myscp;
 }
 
-struct process_scp make_toy_process_scp() {
-  struct process_scp myscp;
+process_scp make_toy_process_scp() {
+  process_scp myscp;
 
   myscp.no_eligible_schools = malloc(4 * sizeof(int));
   myscp.no_eligible_schools[0] = 3;
@@ -765,11 +838,51 @@ struct process_scp make_toy_process_scp() {
   return myscp;
 }
 
+int J_P_split_OK(process_scp* myscp, subset* J_subset, subset* P_subset) {
+  int i, k, nst, is_ok, answer;
+
+  nst = myscp->no_students;
+
+  answer = 1;
+
+  for (i = 1; i <= nst; i++) {
+    is_ok = 0;
+    if (is_element(J_subset, i)) {
+      for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+	if (is_element(P_subset, myscp->preferences[i-1][k-1])) {
+	  is_ok = 1;
+	}
+      }
+    }
+    else {
+      for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+	if (!is_element(P_subset, myscp->preferences[i-1][k-1])) {
+	  is_ok = 1;
+	}
+      }
+    }
+    if (!is_ok) {
+
+      fprintf(stderr, "Student %i doesn't have any schools.\n", i);
+      fprintf(stderr, "Student %i's preferences are ", i);
+      for (int k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+	fprintf(stderr, " %i", myscp->preferences[i-1][k-1]);
+      }
+      fprintf(stderr, ".\n");
+      
+      
+      answer = 0;
+    }
+  }
+
+  return answer;
+}
+
 void print_generic_header() {
   printf("/* This is a sample introductory comment. */\n");
 }
 
-void print_input_scp_body(struct input_sch_ch_prob* myscp) {
+void print_input_scp_body(input_sch_ch_prob* myscp) {
   int i, j, nst, nsc;
 
   nst = myscp->no_students;
@@ -811,12 +924,54 @@ void print_input_scp_body(struct input_sch_ch_prob* myscp) {
   }
 }
 
-void print_input_sch_ch_prob(struct input_sch_ch_prob* myscp) {
+void fprint_input_scp_body(input_sch_ch_prob* myscp) {
+  int i, j, nst, nsc;
+
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+  
+  fprintf(stderr, "There are %d students and %d schools\n", myscp->no_students, myscp->no_schools);
+    
+  fprintf(stderr, "The vector of quotas is (");
+  for (i = 1; i < myscp->no_schools; i++) {
+    fprintf(stderr, "%d,",myscp->quotas[i-1]);
+  }
+  fprintf(stderr, "%d)\n",myscp->quotas[myscp->no_schools-1]);
+  
+  /*  fprintf(stderr, "\n"); */
+  
+  fprintf(stderr, "The priority matrix is\n");
+  for (i = 1; i <= nst; i++) {
+    fprintf(stderr, "    ");
+    for (j = 1; j <= nsc; j++) {
+      fprintf(stderr, "%i    ",  get_input_priority(myscp, i, j));
+    }
+    fprintf(stderr, "\n");
+  }
+
+  fprintf(stderr, "The students numbers of ranked schools are\n");
+  fprintf(stderr, "(");
+  for (i = 1; i <= nst - 1; i++) {
+    fprintf(stderr, "%i,", myscp->no_eligible_schools[i-1]);
+  }
+    fprintf(stderr, "%i)\n", myscp->no_eligible_schools[nst-1]);
+  
+  fprintf(stderr, "The preferences of the students are\n");
+  for (i = 1; i <= nst; i++) {
+    fprintf(stderr, "%i:  ", i);
+    for (j = 1; j <= myscp->no_eligible_schools[i-1]; j++) {
+      fprintf(stderr, "%i  ",  myscp->preferences[i-1][j-1]);
+    }
+    fprintf(stderr, "\n");
+  }
+}
+
+void print_input_sch_ch_prob(input_sch_ch_prob* myscp) {
   print_generic_header();
   print_input_scp_body(myscp);
 }
 
-void print_process_scp(struct process_scp* myscp) {
+void print_process_scp(process_scp* myscp) {
   int i, j, nst, nsc;
 
   nst = myscp->no_students;
@@ -865,8 +1020,57 @@ void print_process_scp(struct process_scp* myscp) {
   printf("The time remaining is %1.3f.\n", myscp->time_remaining);
 }
 
+void fprint_process_scp(process_scp* myscp) {
+  int i, j, nst, nsc;
 
-void destroy_input_sch_ch_prob(struct input_sch_ch_prob myscp) {
+  nst = myscp->no_students;
+  nsc = myscp->no_schools;
+
+  fprintf(stderr, "/* This is a sample introductory comment. */\n");
+  
+  fprintf(stderr, "There are %d students and %d schools\n", nst, nsc);
+    
+  fprintf(stderr, "The vector of quotas is (");
+  for (i = 1; i < nsc; i++) {
+    fprintf(stderr, "%1.3f,",myscp->quotas[i-1]);
+  }
+  fprintf(stderr, "%1.3f)\n",myscp->quotas[nsc-1]);
+
+  fprintf(stderr, "The students numbers of ranked schools are ");
+  fprintf(stderr, "(");
+  for (i = 1; i <= nst - 1; i++) {
+    fprintf(stderr, "%i,", myscp->no_eligible_schools[i-1]);
+  }
+    fprintf(stderr, "%i)\n", myscp->no_eligible_schools[nst-1]);
+  
+  fprintf(stderr, "The preferences of the students are\n");
+  for (i = 1; i <= nst; i++) {
+    fprintf(stderr, "%i:  ", i);
+    if (i < 10) {
+      fprintf(stderr, " ");
+    }
+    for (j = 1; j <= myscp->no_eligible_schools[i-1]; j++) {
+      fprintf(stderr, "%i  ",  myscp->preferences[i-1][j-1]);
+    }
+    fprintf(stderr, "\n");
+  }
+  
+  fprintf(stderr, "The priorities of the schools are\n");
+  for (i = 1; i <= nst; i++) {
+    fprintf(stderr, "%i:  ", i);
+    if (i < 10) {
+      fprintf(stderr, " ");
+    }
+    for (j = 1; j <= nsc; j++) {
+      fprintf(stderr, "%i  ",  get_priority(myscp, i, j));
+    }
+    fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "The time remaining is %1.10f.\n", myscp->time_remaining);
+}
+
+
+void destroy_input_sch_ch_prob(input_sch_ch_prob myscp) {
   free(myscp.quotas);
   for (int i = 1; i <= myscp.no_students; i++) {
     free(myscp.priorities[i-1]);
@@ -879,7 +1083,7 @@ void destroy_input_sch_ch_prob(struct input_sch_ch_prob myscp) {
   free(myscp.no_eligible_schools);
 }
 
-void destroy_process_scp(struct process_scp myscp) {
+void destroy_process_scp(process_scp myscp) {
   int i;
   
   int nst = myscp.no_students;

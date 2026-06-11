@@ -5,8 +5,11 @@
 #include "gcpsacode.h"
 
 int main(int argc, char *argv[]) {
-  struct input_sch_ch_prob input_scp;
-  struct partial_alloc gcpsa_alloc;
+  input_sch_ch_prob input_scp;
+  partial_alloc gcpsa_alloc;
+  process_scp input_process_scp;
+
+  dgraph* graph; 
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -19,12 +22,33 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "emcc invoked with too many (> 2) command line arguments.\n");
     exit(0);
   }
+  
+  input_process_scp = process_scp_from_input(&input_scp);
 
   gcpsa_alloc = gcpsa_allocation(&input_scp);
+
+  if (!allocation_is_efficient(&gcpsa_alloc, &input_process_scp, 0)) {
+    fprintf(stderr, "The gcpsa allocation is inefficient.\n");
+
+    graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
+    report_on_the_directed_graph(graph); 
+    destroy_dgraph(graph);
+
+    graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
+    report_on_the_components(graph);
+    destroy_dgraph(graph);
+
+    graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
+    report_on_trade_set_decomp(graph);
+    destroy_dgraph(graph);
+  }
+
   
   print_sparse_partial_alloc(&gcpsa_alloc); 
 
   destroy_partial_alloc(gcpsa_alloc);
+  destroy_process_scp(input_process_scp);
+  destroy_input_sch_ch_prob(input_scp);
 
   return 0;
 }

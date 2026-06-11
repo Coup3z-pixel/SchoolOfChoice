@@ -9,9 +9,9 @@
 #include "schchprob.h"
 #include "partalloc.h"
 
-struct input_sch_ch_prob sch_ch_prob_from_file(const char filename[]);
+input_sch_ch_prob sch_ch_prob_from_file(const char filename[]);
 
-struct partial_alloc allocation_from_file(const char filename[]);
+partial_alloc allocation_from_file(const char filename[]);
 
 void file_begins_with_comment(FILE* fp);
 

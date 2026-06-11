@@ -4,7 +4,7 @@
 
 int main(int argc, char const *argv[])
 {
-  struct input_sch_ch_prob input_scp;
+  input_sch_ch_prob input_scp;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -18,7 +18,7 @@ int main(int argc, char const *argv[])
     exit(0);
   }
   
-  struct pure_alloc da_alloc;
+  pure_alloc da_alloc;
   da_alloc = deferred_acceptance(&input_scp);
 
   print_pure_alloc(&da_alloc); 

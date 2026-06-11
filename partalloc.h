@@ -8,96 +8,107 @@
 
 #include "schchprob.h"
 #include "sprsmtrx.h"
+#include "dgraph.h"
 
-struct partial_alloc {
+typedef struct Partial_Alloc {
   int no_students;
   int no_schools;
-  struct dbl_sparse_matrix sparse;
-};
+  dbl_sparse_matrix sparse;
+} partial_alloc;
 
-struct pure_alloc {
+typedef struct Pure_Alloc {
   int no_students;
   int no_schools;
-  struct int_sparse_matrix sparse;
-};
+  int_sparse_matrix sparse;
+} pure_alloc;
 
-double get_entry(struct partial_alloc* alloc, int i, int j);
+double get_entry(partial_alloc* alloc, int i, int j);
 
-void set_entry(struct partial_alloc* alloc, int i, int j, double val);
+void set_entry(partial_alloc* alloc, int i, int j, double val);
 
-double get_integer_entry(struct pure_alloc* alloc, int i, int j);
+double get_integer_entry(pure_alloc* alloc, int i, int j);
 
-void set_integer_entry(struct pure_alloc* alloc, int i, int j, int val);
+void set_integer_entry(pure_alloc* alloc, int i, int j, int val);
 
-void increment_entry(struct partial_alloc* alloc, int i, int j, double incr);
+void increment_entry(partial_alloc* alloc, int i, int j, double incr);
 
-struct partial_alloc compute_demands(struct process_scp* myscp, double* cutoffs);
+double remaining_time(partial_alloc* alloc);
 
-double get_total_demand_for_student(struct process_scp* myscp, struct partial_alloc* alloc, int i);
+partial_alloc compute_demands(process_scp* myscp, double* cutoffs);
 
-double get_total_demand_for_school(struct partial_alloc* alloc, int j);
+double get_total_demand_for_student(process_scp* myscp, partial_alloc* alloc, int i);
 
-double* school_sums(struct partial_alloc* my_alloc);
+double get_total_demand_for_school(partial_alloc* alloc, int j);
 
-double* excess_demands(struct process_scp* myscp, struct partial_alloc* demands);
+double* school_sums(partial_alloc* my_alloc);
 
-double sum_of_excesses(struct process_scp* myscp, double* cutoffs);
+double* excess_demands(process_scp* myscp, partial_alloc* demands);
 
-double* demand_deficits(struct process_scp* myscp, struct partial_alloc* demands);
+double sum_of_excesses(process_scp* myscp, double* cutoffs);
 
-double sum_of_deficits(struct process_scp* myscp, double* cutoffs);
+double* demand_deficits(process_scp* myscp, partial_alloc* demands);
 
-int partial_allocs_are_same(struct partial_alloc* first, struct partial_alloc* second);
+double sum_of_deficits(process_scp* myscp, double* cutoffs);
 
-int students_are_fully_allocated(struct partial_alloc* my_alloc);
+int partial_allocs_are_same(partial_alloc* first, partial_alloc* second);
 
-int partial_alloc_is_consistent(struct partial_alloc* my_alloc);
+int students_are_fully_allocated(partial_alloc* my_alloc, process_scp* myscp);
 
-int is_a_feasible_allocation(struct partial_alloc* my_alloc, struct process_scp* myscp);
+int partial_alloc_is_consistent(partial_alloc* my_alloc);
 
-int is_a_feasible_pure_alloc(struct pure_alloc* my_alloc, struct input_sch_ch_prob* myiscp);
+int is_a_feasible_allocation(partial_alloc* my_alloc, process_scp* myscp);
 
-struct partial_alloc zero_alloc_for_process_scp(struct process_scp* myscp);
+int is_feasible_for_input_scp(partial_alloc* my_alloc, input_sch_ch_prob* myiscp);
 
-struct partial_alloc zero_alloc_for_input_scp(struct input_sch_ch_prob* myscp);
+int is_a_feasible_pure_alloc(pure_alloc* my_alloc, input_sch_ch_prob* myiscp);
 
-struct pure_alloc zero_pure_alloc_for_input_scp(struct input_sch_ch_prob* myscp);
+int gives_some_student_nothing(partial_alloc* myalloc);
 
-struct partial_alloc left_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
-					    struct subset* J_subset, struct subset* P_subset);
+partial_alloc zero_alloc_for_process_scp(process_scp* myscp);
 
-struct partial_alloc right_sub_process_feasible_guide(struct partial_alloc* feasible_guide,
-					  struct subset* J_subset, struct subset* P_subset);
+partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myscp);
 
-void increment_partial_alloc(struct partial_alloc* base, struct partial_alloc* increment,
-			     struct index* stu_index,struct index* sch_index);
+pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myscp);
 
-struct partial_alloc copy_of_partial_alloc(struct partial_alloc* given);
+partial_alloc left_sub_process_feasible_guide(partial_alloc* feasible_guide,
+					    subset* J_subset, subset* P_subset);
+
+partial_alloc right_sub_process_feasible_guide(partial_alloc* feasible_guide,
+					  subset* J_subset, subset* P_subset);
+
+void increment_partial_alloc(partial_alloc* base, partial_alloc* increment,
+			     element_list* stu_index, element_list* sch_index);
+
+partial_alloc copy_of_partial_alloc(partial_alloc* given);
+
+int split_is_valid(partial_alloc* given, subset* J_subset, subset* P_subset);
 
 /* At the end we need to pass from a partial_alloc whose values (which
    are doubles) are all close to 0 and 1, to the corresponding pure
    allocation, whose values are in {0,1}. */
 
-struct pure_alloc pure_allocation_from_partial(struct partial_alloc* my_alloc);
+pure_alloc pure_allocation_from_partial(partial_alloc* my_alloc);
 
-struct partial_alloc partial_allocation_from_pure(struct pure_alloc* my_alloc);
+partial_alloc partial_allocation_from_pure(pure_alloc* my_alloc);
 
-int get_pure_entry(struct pure_alloc* alloc, int i, int j);
+int get_pure_entry(pure_alloc* alloc, int i, int j);
 
-void set_pure_entry(struct pure_alloc* alloc, int i, int j, int val);
+void set_pure_entry(pure_alloc* alloc, int i, int j, int val);
 
-int pure_alloc_is_valid(struct pure_alloc* my_pure_alloc);
+int pure_alloc_is_valid(pure_alloc* my_pure_alloc);
 
-void increment_pure_entry(struct pure_alloc* alloc, int i, int j, int incr);
+void increment_pure_entry(pure_alloc* alloc, int i, int j, int incr);
 
-void print_sparse_partial_alloc(struct partial_alloc* my_alloc);
+void print_sparse_partial_alloc(partial_alloc* my_alloc);
 
-void print_partial_alloc(struct partial_alloc* my_alloc);
+void print_partial_alloc(partial_alloc* my_alloc);
 
-void print_pure_alloc(struct pure_alloc* my_pure_alloc);
+void fprint_partial_alloc(partial_alloc* my_alloc);
 
-void destroy_partial_alloc(struct partial_alloc my_alloc);
+void print_pure_alloc(pure_alloc* my_pure_alloc);
 
-void destroy_pure_alloc(struct pure_alloc my_pure_alloc);
+void destroy_partial_alloc(partial_alloc my_alloc);
+
+void destroy_pure_alloc(pure_alloc my_pure_alloc);
 
 #endif /* PARTALLOC_H */

@@ -4,8 +4,8 @@
 
 int main(int argc, char const *argv[])
 {
-  struct input_sch_ch_prob input_scp;
-  struct process_scp input_process_scp;
+  input_sch_ch_prob input_scp;
+  process_scp input_process_scp;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
 
   input_process_scp = process_scp_from_input(&input_scp);
 
-  struct partial_alloc gcps_alloc;
+  partial_alloc gcps_alloc;
   gcps_alloc = simple_GCPS_alloc(&input_scp);
 
   if (!is_a_feasible_allocation(&gcps_alloc, &input_process_scp)) {
@@ -30,11 +30,12 @@ int main(int argc, char const *argv[])
   }
 
   else {
-    if (!allocation_is_efficient(&gcps_alloc, &input_process_scp)) {
+    if (!allocation_is_efficient(&gcps_alloc, &input_process_scp, 0)) {
       fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
       exit(0);
     }
   }
+
 
   print_sparse_partial_alloc(&gcps_alloc); 
   

@@ -1,6 +1,6 @@
 #include "purifycode.h"
 
-int graph_has_a_leaf(struct nonintegral_graph* graph) {
+int graph_has_a_leaf(nonintegral_graph* graph) {
   int i, j;
 
   for (i = 1; i <= graph->no_students; i++) {
@@ -38,7 +38,7 @@ int graph_has_a_leaf(struct nonintegral_graph* graph) {
   return 0;
 }
 
-void repeatedly_remove_leaves_from_graph(struct nonintegral_graph* graph) {
+void repeatedly_remove_leaves_from_graph(nonintegral_graph* graph) {
   int i, j, done;
 
   done = 0;
@@ -72,14 +72,14 @@ void repeatedly_remove_leaves_from_graph(struct nonintegral_graph* graph) {
   }
 }
 
-struct pure_alloc random_pure_allocation(struct partial_alloc* my_alloc) {
+pure_alloc random_pure_allocation(partial_alloc* my_alloc) {
 
   transform_to_random_floating_point_pure_allocation(my_alloc);
 
   return pure_allocation_from_partial(my_alloc);
 }
 
-void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my_alloc) {
+void transform_to_random_floating_point_pure_allocation(partial_alloc* my_alloc) {
   int up, down;
   
   up = 1;
@@ -89,9 +89,9 @@ void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my
   double beta;
   double uniform_rv;
 
-  struct path_node* cycle;
+  path_node* cycle;
   double* sch_sums;
-  struct nonintegral_graph my_graph;
+  nonintegral_graph my_graph;
   
   sch_sums = school_sums(my_alloc);
   my_graph = graph_from_alloc(my_alloc);
@@ -122,7 +122,7 @@ void transform_to_random_floating_point_pure_allocation(struct partial_alloc* my
   destroy_nonintegral_graph(&my_graph);
 }
 
-struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc) {
+nonintegral_graph graph_from_alloc(partial_alloc* my_alloc) {
   int i, j, cursor;
   int nst = my_alloc->no_students;
   int nsc = my_alloc->no_schools;
@@ -131,7 +131,7 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc) {
 
   sch_sums = school_sums(my_alloc);
 
-  struct nonintegral_graph my_graph;
+  nonintegral_graph my_graph;
   my_graph.no_students = nst;
   my_graph.no_schools  = nsc;
 
@@ -236,7 +236,7 @@ struct nonintegral_graph graph_from_alloc(struct partial_alloc* my_alloc) {
   return my_graph;
 }
 
-int graph_is_nonempty(struct nonintegral_graph* my_graph) {
+int graph_is_nonempty(nonintegral_graph* my_graph) {
   int j;
 
   for (j = 1; j <= my_graph->no_schools; j++) {
@@ -248,17 +248,17 @@ int graph_is_nonempty(struct nonintegral_graph* my_graph) {
   return 0;
 }
 
-struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph) {
+path_node* find_cyclic_path(nonintegral_graph* my_graph) {
   int i, j, done;
 
-  struct path_node* start;
-  struct path_node* first_step; 
-  struct path_node* previous; 
-  struct path_node* current; 
-  struct path_node* new_node; 
-  struct path_node* probe; 
+  path_node* start;
+  path_node* first_step; 
+  path_node* previous; 
+  path_node* current; 
+  path_node* new_node; 
+  path_node* probe; 
 
-  start = malloc(sizeof(struct path_node));
+  start = malloc(sizeof(path_node));
   start->type = 1;
   i = 1;
   while (my_graph->stu_no_nbrs[i-1] == 0) {
@@ -266,7 +266,7 @@ struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph) {
   }
   start->index = i;
   
-  first_step = malloc(sizeof(struct path_node));
+  first_step = malloc(sizeof(path_node));
   first_step->type = 2;
   j = 1;
   while (my_graph->stu_sch_edges[i-1][j-1] == 0) {
@@ -281,7 +281,7 @@ struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph) {
 
   done = 0;
   while (!done) {
-    new_node = malloc(sizeof(struct path_node));
+    new_node = malloc(sizeof(path_node));
     new_node->next = NULL;
     
     if (current->type == 1) {
@@ -346,11 +346,11 @@ struct path_node* find_cyclic_path(struct nonintegral_graph* my_graph) {
   return probe;
 }
 
-double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
-		      struct path_node* my_cycle) {
+double bound_of_cycle(partial_alloc* my_alloc, double* sch_sums, int up,
+		      path_node* my_cycle) {
   int done, stu, sch;
   double max, gap;
-  struct path_node* probe;
+  path_node* probe;
 
   max = 1.0;
   probe = my_cycle;
@@ -419,10 +419,10 @@ double bound_of_cycle(struct partial_alloc* my_alloc, double* sch_sums, int up,
   return max;
 }
 
-void cycle_adjustment_of_allocation(struct partial_alloc* my_alloc, double* sch_sums, int up,
-				    double adjustment, struct path_node* my_cycle) {
+void cycle_adjustment_of_allocation(partial_alloc* my_alloc, double* sch_sums, int up,
+				    double adjustment, path_node* my_cycle) {
   int done, stu, sch;
-  struct path_node* probe;
+  path_node* probe;
 
   probe = my_cycle;
   done = 0;
@@ -488,8 +488,8 @@ void cycle_adjustment_of_allocation(struct partial_alloc* my_alloc, double* sch_
   }
 }
 
-void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
-			       struct nonintegral_graph* my_graph, struct path_node* my_cycle) {  
+void cycle_adjustment_of_graph(partial_alloc* my_alloc, double* sch_sums,
+			       nonintegral_graph* my_graph, path_node* my_cycle) {  
   int done, stu, sch, removed_something;
 
   if (!graph_is_nonempty(my_graph)) {
@@ -497,7 +497,7 @@ void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
     exit(0);
   }
   
-  struct path_node* probe;
+  path_node* probe;
 
   removed_something = 0;  
   probe = my_cycle;
@@ -567,16 +567,16 @@ void cycle_adjustment_of_graph(struct partial_alloc* my_alloc, double* sch_sums,
   }
 }
 
-void cycle_adjustment(struct partial_alloc* my_alloc, double* sch_sums,
-			  struct nonintegral_graph* my_graph, int up,
-		      double adjustment, struct path_node* my_cycle) {
+void cycle_adjustment(partial_alloc* my_alloc, double* sch_sums,
+			  nonintegral_graph* my_graph, int up,
+		      double adjustment, path_node* my_cycle) {
     
   cycle_adjustment_of_allocation(my_alloc, sch_sums, up, adjustment, my_cycle);
 
   cycle_adjustment_of_graph(my_alloc, sch_sums, my_graph, my_cycle);
 }
 
-void student_edge_removal(struct nonintegral_graph* my_graph, int i, int j) {
+void student_edge_removal(nonintegral_graph* my_graph, int i, int j) {
   my_graph->stu_sch_edges[i-1][j-1] = 0;
 
   my_graph->stu_nbrs[i-1] = list_with_element_removed(my_graph->stu_nbrs[i-1],
@@ -589,7 +589,7 @@ void student_edge_removal(struct nonintegral_graph* my_graph, int i, int j) {
   my_graph->sch_no_nbrs[j-1]--;
 }
 
-void sink_edge_removal(struct nonintegral_graph* my_graph, int j) {
+void sink_edge_removal(nonintegral_graph* my_graph, int j) {
   my_graph->sch_sink_edges[j-1] = 0;
 
   my_graph->sch_nbrs[j-1] = list_with_element_removed(my_graph->sch_nbrs[j-1],
@@ -619,7 +619,7 @@ int* list_with_element_removed(int* old_list, int old_no_elements, int elt) {
   return(new_list);
 } 
 
-void destroy_nonintegral_graph(struct nonintegral_graph* my_graph) {
+void destroy_nonintegral_graph(nonintegral_graph* my_graph) {
   int i, j;
 
   for (i = 1; i <= my_graph->no_students; i++) {
@@ -640,9 +640,9 @@ void destroy_nonintegral_graph(struct nonintegral_graph* my_graph) {
   free(my_graph->sink_nbrs);
 }
 
-void destroy_cycle(struct path_node* cycle) {
-  struct path_node* trailer = cycle;
-  struct path_node* leader = cycle->next;
+void destroy_cycle(path_node* cycle) {
+  path_node* trailer = cycle;
+  path_node* leader = cycle->next;
 
   while (leader != cycle) {
     free(trailer);
@@ -653,7 +653,7 @@ void destroy_cycle(struct path_node* cycle) {
   free(trailer); 
 }
 
-int alloc_and_sch_sums_are_consistent(double* sch_sums, struct partial_alloc* my_alloc) {
+int alloc_and_sch_sums_are_consistent(double* sch_sums, partial_alloc* my_alloc) {
   int i, j, nst, nsc;
 
   double sum;
@@ -675,8 +675,8 @@ int alloc_and_sch_sums_are_consistent(double* sch_sums, struct partial_alloc* my
   return 1;
 }
 
-int graph_and_alloc_are_consistent(struct nonintegral_graph* my_graph, double* sch_sums,
-				   struct partial_alloc* my_alloc) {
+int graph_and_alloc_are_consistent(nonintegral_graph* my_graph, double* sch_sums,
+				   partial_alloc* my_alloc) {
   int i, j, nst, nsc, count;
 
   nst = my_alloc->no_students;

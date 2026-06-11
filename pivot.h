@@ -7,61 +7,61 @@
 
 #include "sprsmtrx.h"
 
-struct pivot {
+typedef struct Pivot {
   int h;
   int* schools;
   int* students;
-};
+} pivot;
 
-struct pivot_list_node {
-  struct pivot* the_pivot;
-  struct pivot_list_node* next;
-};
+typedef struct Pivot_List_Node {
+  pivot* the_pivot;
+  struct Pivot_List_Node* next;
+} pivot_list_node;
 
-struct pivot_list {
-  struct pivot_list_node* first_node;
-  struct pivot_list_node* last_node;
-};
+typedef struct Pivot_List {
+  pivot_list_node* first_node;
+  pivot_list_node* last_node;
+} pivot_list;
 
-struct pivot initialized_pivot(int h);
+pivot initialized_pivot(int h);
 
-struct pivot* copy_of_pivot(struct pivot* my_pivot);
+pivot* copy_of_pivot(pivot* my_pivot);
 
-void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums);
-
-
-int pivot_list_node_has_NULL_the_pivot(struct pivot_list_node* my_node);
-
-int pivot_list_has_NULL_the_pivot(struct pivot_list* my_list);
-
-struct pivot_list void_pivot_list();
-
-int pivot_list_is_void(struct pivot_list* my_list);
-
-void add_pivot_to_list(struct pivot_list* my_list, struct pivot* new_pivot);
-
-void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addition);
-
-struct pivot_list reduced_pivot_list(struct pivot_list* given_list,
-				     struct subset* J_subset, struct subset* P_subset);
-
-struct pivot_list left_reduced_pivot_list(struct pivot_list* given_list,
-					  struct subset* J_subset, struct subset* P_subset);
-
-struct pivot_list right_reduced_pivot_list(struct pivot_list* given_list,
-					   struct subset* J_subset, struct subset* P_subset);
+void execute_pivot(pivot* my_pivot, int_sparse_matrix* theta, int* theta_sums);
 
 
-void print_pivot(struct pivot* my_pivot);
+int pivot_list_node_has_NULL_the_pivot(pivot_list_node* my_node);
 
-void print_pivot_list(struct pivot_list* my_list);
+int pivot_list_has_NULL_the_pivot(pivot_list* my_list);
 
-void destroy_pivot(struct pivot my_pivot);
+pivot_list void_pivot_list();
 
-void destroy_pivot_ptr(struct pivot* my_pivot);
+int pivot_list_is_void(pivot_list* my_list);
 
-void destroy_pivot_list_node(struct pivot_list_node my_pivot_list_node);
+void add_pivot_to_list(pivot_list* my_list, pivot* new_pivot);
 
-void destroy_pivot_list(struct pivot_list my_pivot_list);
+void concatenate_pivot_lists(pivot_list* target, pivot_list* addition);
+
+pivot_list reduced_pivot_list(pivot_list* given_list,
+				     subset* J_subset, subset* P_subset);
+
+pivot_list left_reduced_pivot_list(pivot_list* given_list,
+					  subset* J_subset, subset* P_subset);
+
+pivot_list right_reduced_pivot_list(pivot_list* given_list,
+					   subset* J_subset, subset* P_subset);
+
+
+void print_pivot(pivot* my_pivot);
+
+void print_pivot_list(pivot_list* my_list);
+
+void destroy_pivot(pivot my_pivot);
+
+void destroy_pivot_ptr(pivot* my_pivot);
+
+void destroy_pivot_list_node(pivot_list_node my_pivot_list_node);
+
+void destroy_pivot_list(pivot_list my_pivot_list);
 
 #endif /* PIVOT_H */

@@ -4,123 +4,127 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct subset {
+typedef struct Subset {
   int large_set_size;
   int subset_size;
   int* indicator;
-};
+} subset;
 
-struct index {
+typedef struct Element_List {
   int no_elements;
   int* indices;
-};
+} element_list;
 
-struct index_list {
-  struct index* node_index;
-  struct index_list* next;
-};
+typedef struct List_of_Element_Lists {
+  element_list* node_index;
+  struct List_of_Element_Lists* next;
+} list_of_elt_lists;
 
-struct subset nullset(int large_set_size);
+subset nullset(int large_set_size);
 
-struct subset fullset(int large_set_size);
+subset fullset(int large_set_size);
 
-int is_nullset(struct subset* my_set);
+int is_nullset(subset* my_set);
 
-int is_fullset(struct subset* my_set);
+int is_fullset(subset* my_set);
 
-int is_element(struct subset* my_set, int i);
+int is_element(subset* my_set, int i);
 
-void add_element(struct subset* my_set, int new_elt);
+void add_element(subset* my_set, int new_elt);
 
-void remove_element(struct subset* my_set, int old_elt);
+void add_subset(subset* my_set, subset* increment);
 
-void remove_all_elements(struct subset* my_set);
+void remove_subset(subset* my_set, subset* decrement);
 
-int subsets_are_same(struct subset* first, struct subset* second);
+void remove_element(subset* my_set, int old_elt);
 
-int subsets_are_disjoint(struct subset* first, struct subset* second);
+void remove_all_elements(subset* my_set);
 
-void copy_subset(struct subset* given_subset, struct subset* copy_subset);
+int subsets_are_same(subset* first, subset* second);
 
-struct subset copy_of_subset(struct subset* given_subset);
+int subsets_are_disjoint(subset* first, subset* second);
 
-struct subset complement_of_subset(struct subset* given_subset);
+void copy_subset(subset* given_subset, subset* copy_subset);
 
-void complement(struct subset* given_subset, struct subset* comp);
+subset copy_of_subset(subset* given_subset);
 
-struct subset singleton_subset(int elmnt, int large_size);
+subset complement_of_subset(subset* given_subset);
 
-void becomes_nullset(struct subset* my_set);
+void complement(subset* given_subset, subset* comp);
 
-void becomes_singleton(struct subset* my_set, int elmnt);
+subset singleton_subset(int elmnt, int large_size);
 
-int* subset_element_numbers(struct subset* my_subset);
+void becomes_nullset(subset* my_set);
 
-struct index singleton_index(int i);
+void becomes_singleton(subset* my_set, int elmnt);
 
-struct index index_of_subset(struct subset* my_subset);
+int* subset_element_numbers(subset* my_subset);
 
-struct index index_of_complement(struct subset* my_subset);
+element_list singleton_element_list(int i);
 
-struct subset subset_of_index(struct index* my_index, int large_set_size);
+element_list element_list_of_subset(subset* my_subset);
 
-void subset_of_subset_to_subset(struct subset* new_subset, struct subset* given_subset,
-				struct subset* subset_of_subset);
+element_list element_list_of_complement(subset* my_subset);
 
-int indices_are_same(struct index* first, struct index* second);
+subset subset_of_element_list(element_list* my_index, int large_set_size);
 
-int index_has_element(struct index* my_ind, int elt);
+void subset_of_subset_to_subset(subset* new_subset, subset* given_subset,
+				subset* subset_of_subset);
 
-int* indices_of_elements(struct subset* my_subset);
+int indices_are_same(element_list* first, element_list* second);
 
-void add_element_to_index(struct index* index_ptr, int elt);
+int element_list_has_element(element_list* my_ind, int elt);
 
-void add_element_to_possibly_NULL_index(struct index** index_ptr, int elt);
+int* indices_of_elements(subset* my_subset);
 
-void remove_element_from_index(struct index* index_ptr, int elt);
+void add_element_to_element_list(element_list* index_ptr, int elt);
 
-void add_element_to_index_ptr(struct index** index_ptr, int elt);
+void add_element_to_possibly_NULL_element_list(element_list** index_ptr, int elt);
 
-struct index* copy_of_index(struct index* given_index);
+void remove_element_from_element_list(element_list* index_ptr, int elt);
 
-struct index index_of_fullset(int large_set_size);
+void add_element_to_element_list_ptr(element_list** index_ptr, int elt);
 
-struct index singleton_index(int j);
+element_list* copy_of_element_list(element_list* given_index);
 
-struct index index_with_element_added(struct index* my_index, int j);
+element_list element_list_of_fullset(int large_set_size);
 
-struct index* reverse_of_correspondence_graph(struct index* my_list,
-					      struct index* active_range_elts,
+element_list singleton_element_list(int j);
+
+element_list element_list_with_element_added(element_list* my_index, int j);
+
+element_list* reverse_of_correspondence_graph(element_list* my_list,
+					      element_list* active_range_elts,
 					      int no_domain_elts);
 
+list_of_elt_lists* initialized_list_of_elt_lists(); 
 
-struct index_list* initialized_index_list(); 
+int list_of_elt_lists_is_empty(list_of_elt_lists* my_list);
 
-int index_list_is_empty(struct index_list* my_list);
+int length_of_list_of_elt_lists(list_of_elt_lists* my_list);
 
-int length_of_index_list(struct index_list* my_list);
+int element_of_list_set(list_of_elt_lists* my_list, int set_no, int elt_no);
 
-int element_of_list_set(struct index_list* my_list, int set_no, int elt_no);
+void add_element_list_to_list_of_elt_lists(list_of_elt_lists* my_list, element_list* my_index);
 
-void add_index_to_index_list(struct index_list* my_list, struct index* my_index);
+void add_list_of_set_to_list_of_elt_lists(list_of_elt_lists* my_list, subset* my_subset);
 
-struct subset union_of_indices(struct index* my_list, int large_set_size, int list_length);
-
+void list_of_set_to_list_of_elt_lists(list_of_elt_lists* my_list, subset* my_subset);
 
 void print_vector_of_ints(int* vector, int dim);
 
-void print_subset(struct subset* my_subset);
+void fprint_subset(subset* my_subset);
 
-void print_index(struct index* my_index);
+void print_element_list(element_list* my_index);
 
-void print_index_of_subset(struct subset* my_subset);
+void print_element_list_of_subset(subset* my_subset);
 
-void print_index_list(struct index_list* my_list);
+void print_list_of_elt_lists(list_of_elt_lists* my_list);
 
-void destroy_subset(struct subset my_subset);
+void destroy_subset(subset my_subset);
 
-void destroy_index(struct index my_index);
+void destroy_element_list(element_list my_index);
 
-void destroy_index_list(struct index_list* my_list);
+void destroy_list_of_elt_lists(list_of_elt_lists* my_list);
 
 #endif /* SUBSET_H */

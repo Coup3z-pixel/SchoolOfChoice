@@ -58,3 +58,17 @@ double normal() {
 
   return sqrt(-2 * log(u_one)) * cos(2 * pi * u_two); /* Box-Muller */
 }
+
+int random_integer_in_one_to_max(int max) {
+  int answer;
+  double unif_rv;
+
+  unif_rv = uniform();
+
+  answer = 1;
+  while (!(answer/max <= unif_rv && (answer+1)/max >= unif_rv)) {
+    answer++;
+  }
+
+  return answer;
+}

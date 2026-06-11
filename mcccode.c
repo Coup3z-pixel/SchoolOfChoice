@@ -1,6 +1,6 @@
 #include "mcccode.h"
 
-int linear_adjustment_a(struct process_scp* myscp, struct partial_alloc* demands,
+int linear_adjustment_a(process_scp* myscp, partial_alloc* demands,
 			double* cutoffs, int debug) {
   int j, nsc, no_act_sch, done;
 
@@ -9,10 +9,10 @@ int linear_adjustment_a(struct process_scp* myscp, struct partial_alloc* demands
   int* rev_lex;
   int* next_sch;
   
-  struct index** constrained_stu;
+  element_list** constrained_stu;
   
-  struct square_int_matrix displacements;
-  struct subset T_sub;
+  square_int_matrix displacements;
+  subset T_sub;
 
   nsc = myscp->no_schools;
 
@@ -56,7 +56,7 @@ int linear_adjustment_a(struct process_scp* myscp, struct partial_alloc* demands
   free(next_sch);
   for (j = 1; j <= nsc; j++) {
     if (constrained_stu[j-1]  != NULL) {
-      destroy_index(*constrained_stu[j-1]);
+      destroy_element_list(*constrained_stu[j-1]);
       free(constrained_stu[j-1]);
     }
   }
@@ -68,8 +68,8 @@ int linear_adjustment_a(struct process_scp* myscp, struct partial_alloc* demands
   return done;
 }
 
-void adjust_cutoffs_to_create_constrained_students_a(struct process_scp* myscp,
-						   struct partial_alloc* demands,
+void adjust_cutoffs_to_create_constrained_students_a(process_scp* myscp,
+						   partial_alloc* demands,
 						   double* cutoffs) {
   int i, j, k, nst, nsc;
   double dem;
@@ -108,16 +108,16 @@ void adjust_cutoffs_to_create_constrained_students_a(struct process_scp* myscp,
   free(min_cutoffs);
 }
 
-struct index** constrained_students(struct process_scp* myscp, struct partial_alloc* demands,
+element_list** constrained_students(process_scp* myscp, partial_alloc* demands,
 					double* cutoffs) {
   int i, j, k, p, f, nst, nsc;
   
-  struct index** answer;
+  element_list** answer;
 
   nst = myscp->no_students;
   nsc = myscp->no_schools;
 
-  answer = malloc(nsc * sizeof(struct index*));
+  answer = malloc(nsc * sizeof(element_list*));
   for (j = 1; j <= nsc; j++) {
     answer[j-1] = NULL;
   }
@@ -128,7 +128,7 @@ struct index** constrained_students(struct process_scp* myscp, struct partial_al
       p = get_priority(myscp, i, j);
       f = (int)floor(cutoffs[j-1]);
       if (p == f && dbl_entry(&(demands->sparse), i, j) > (double)f + 0.999999 - cutoffs[j-1]) {
-	add_element_to_index_ptr(&(answer[j-1]),i);
+	add_element_to_element_list_ptr(&(answer[j-1]),i);
       }
     }
   }
@@ -136,7 +136,7 @@ struct index** constrained_students(struct process_scp* myscp, struct partial_al
   return answer;
 }
 
-int* next_schools(struct process_scp* myscp, struct partial_alloc* demands, double* cutoffs) {
+int* next_schools(process_scp* myscp, partial_alloc* demands, double* cutoffs) {
   int i, j, k, p, nst, done, found, no_sch, candidate_rank;
   double c, f;
   
@@ -182,14 +182,14 @@ int* next_schools(struct process_scp* myscp, struct partial_alloc* demands, doub
   return answer;
 }
 
-struct square_int_matrix displacement_matrix(struct process_scp* myscp, int* next_sch,
-					     struct index** constrained_stu,
+square_int_matrix displacement_matrix(process_scp* myscp, int* next_sch,
+					     element_list** constrained_stu,
 					     int no_act_sch, int* rev_lex) {
   int i, j;
 
-  struct square_int_matrix big_displ;
+  square_int_matrix big_displ;
 
-  struct square_int_matrix answer;
+  square_int_matrix answer;
   
   big_displ = big_displ_mat(myscp, next_sch, constrained_stu);
   
@@ -205,15 +205,15 @@ struct square_int_matrix displacement_matrix(struct process_scp* myscp, int* nex
   return answer;
 }
 
-int adjust_cutoffs_empty_T_sub_a(struct process_scp* myscp, double* cutoffs,
-				 struct partial_alloc* demands, int* next_sch,
-				 int* active_schools, struct index** constrained_stu,
-				 struct square_int_matrix* displacements, 
+int adjust_cutoffs_empty_T_sub_a(process_scp* myscp, double* cutoffs,
+				 partial_alloc* demands, int* next_sch,
+				 int* active_schools, element_list** constrained_stu,
+				 square_int_matrix* displacements, 
 				 int* lexicon, int* rev_lex) {
   int nsc, no_act_sch;
   double tuncc, tuncs, tunas, t_star;
 
-  struct vector delta;
+  vector delta;
   
   nsc = myscp->no_schools;
   no_act_sch = displacements->dimension;
@@ -257,9 +257,9 @@ int adjust_cutoffs_empty_T_sub_a(struct process_scp* myscp, double* cutoffs,
   }
 }
 
-double time_until_new_active_school(struct process_scp* myscp, struct partial_alloc* demands,
-				    int* active_schools, struct index** constrained_stu,
-				    int* next_sch, struct vector* delta) {
+double time_until_new_active_school(process_scp* myscp, partial_alloc* demands,
+				    int* active_schools, element_list** constrained_stu,
+				    int* next_sch, vector* delta) {
   int i, j, k, l, nsc, hit;
   double answer, total_demand, time_required;
 
@@ -305,8 +305,8 @@ double time_until_new_active_school(struct process_scp* myscp, struct partial_al
   return answer;
 }
 
-double time_until_new_coarse_cutoff(struct process_scp* myscp, double* cutoffs,
-				    struct vector* delta, int sign) {
+double time_until_new_coarse_cutoff(process_scp* myscp, double* cutoffs,
+				    vector* delta, int sign) {
   int j, nsc, hit;
   double distance, candidate, answer;
   
@@ -341,9 +341,9 @@ double time_until_new_coarse_cutoff(struct process_scp* myscp, double* cutoffs,
   return answer;
 }
 
-double time_until_student_constrained_at_school(struct process_scp* myscp,
-						struct partial_alloc* demands, double* cutoffs,
-						struct vector* delta, int stu, int sch) {
+double time_until_student_constrained_at_school(process_scp* myscp,
+						partial_alloc* demands, double* cutoffs,
+						vector* delta, int stu, int sch) {
   int j, k, rank, done;
   double delta_sum, distance;
 
@@ -368,8 +368,8 @@ double time_until_student_constrained_at_school(struct process_scp* myscp,
   return distance/delta_sum;;
 }
 
-double time_until_new_constrained_student(struct process_scp* myscp, struct partial_alloc* demands,
-					  double* cutoffs, struct vector* delta, int* next_sch) {
+double time_until_new_constrained_student(process_scp* myscp, partial_alloc* demands,
+					  double* cutoffs, vector* delta, int* next_sch) {
   int i, nst, hit;
   double candidate, answer;
 
@@ -417,13 +417,13 @@ double time_until_new_constrained_student(struct process_scp* myscp, struct part
   return answer;
 }
 
-void adjust_cutoffs_nonempty_T_sub_a(struct process_scp* myscp,  double* cutoffs,
-				     struct partial_alloc* demands, int* next_sch,
-				     struct square_int_matrix* displacements, struct subset* T_sub,
+void adjust_cutoffs_nonempty_T_sub_a(process_scp* myscp,  double* cutoffs,
+				     partial_alloc* demands, int* next_sch,
+				     square_int_matrix* displacements, subset* T_sub,
 				     int* lexicon) {
   int nsc;
 
-  struct vector delta;
+  vector delta;
   double tuncc, tuncs, t_star;
   
   nsc = myscp->no_schools;
@@ -443,7 +443,7 @@ void adjust_cutoffs_nonempty_T_sub_a(struct process_scp* myscp,  double* cutoffs
   destroy_vector(&delta);
 }
 
-struct partial_alloc mcca_alloc_plus_coarse_cutoffs(struct process_scp* myscp, int* coarse) {
+partial_alloc mcca_alloc_plus_coarse_cutoffs(process_scp* myscp, int* coarse) {
   int j, nsc, done, debug;
   double* cutoffs;
 
@@ -482,19 +482,19 @@ struct partial_alloc mcca_alloc_plus_coarse_cutoffs(struct process_scp* myscp, i
     exit(0);
   }
 
-  struct partial_alloc answer = compute_demands(myscp, cutoffs);
+  partial_alloc answer = compute_demands(myscp, cutoffs);
 
   free(cutoffs);
 
   return answer;
 }
 
-int compute_new_cutoffs_a(struct process_scp* myscp, double* cutoffs, int debug) {
+int compute_new_cutoffs_a(process_scp* myscp, double* cutoffs, int debug) {
   int done;
 
   double excess_sum;
   
-  struct partial_alloc demands;
+  partial_alloc demands;
 
   if (demand_of_zero_cutoff_school_above_quota(myscp, cutoffs)) {
 
@@ -531,11 +531,11 @@ int compute_new_cutoffs_a(struct process_scp* myscp, double* cutoffs, int debug)
   return done;
 }
 
-int demand_of_zero_cutoff_school_above_quota(struct process_scp* myscp, double* cutoffs) {
+int demand_of_zero_cutoff_school_above_quota(process_scp* myscp, double* cutoffs) {
   int i, j, nst, nsc;
   double total_demand;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -557,9 +557,9 @@ int demand_of_zero_cutoff_school_above_quota(struct process_scp* myscp, double* 
   return 0;
 }
 
-int student_could_become_constrained_at_next_school(struct process_scp* myscp,
-						    struct partial_alloc* demands,
-						    struct vector* delta, int stu, int next_sch) {
+int student_could_become_constrained_at_next_school(process_scp* myscp,
+						    partial_alloc* demands,
+						    vector* delta, int stu, int next_sch) {
   int j, k, next_sch_rank, found, answer;
 
   if (next_sch == 0) {
@@ -589,11 +589,11 @@ int student_could_become_constrained_at_next_school(struct process_scp* myscp,
   return answer;
 }
 
-struct square_int_matrix  big_displ_mat(struct process_scp* myscp, int* next_sch,
-						  struct index** constrained_stu) {
+square_int_matrix  big_displ_mat(process_scp* myscp, int* next_sch,
+						  element_list** constrained_stu) {
   int i, j, k, l, m, nst, nsc, no_sch, seen_next;
 
-  struct square_int_matrix answer;
+  square_int_matrix answer;
   
   nst = myscp->no_students;  
   nsc = myscp->no_schools;  
@@ -611,7 +611,7 @@ struct square_int_matrix  big_displ_mat(struct process_scp* myscp, int* next_sch
 	for (l = 1; l < k; l++) {
 	  m = myscp->preferences[i-1][l-1];
 	  if (constrained_stu[m-1] != NULL) {
-	    if (index_has_element(constrained_stu[m-1],i)) {
+	    if (element_list_has_element(constrained_stu[m-1],i)) {
 	      answer.entries[m-1][j-1] += -1;
 	    }
 	  }
@@ -620,7 +620,7 @@ struct square_int_matrix  big_displ_mat(struct process_scp* myscp, int* next_sch
       
       else {
 	if (constrained_stu[j-1] != NULL) {
-	  if (index_has_element(constrained_stu[j-1],i)) {
+	  if (element_list_has_element(constrained_stu[j-1],i)) {
 	    answer.entries[j-1][j-1] += 1;
 	  }
 	}
@@ -632,7 +632,7 @@ struct square_int_matrix  big_displ_mat(struct process_scp* myscp, int* next_sch
   return answer;
 }
 
-int there_is_excess_demand(struct process_scp* myscp, struct partial_alloc* demands) {
+int there_is_excess_demand(process_scp* myscp, partial_alloc* demands) {
   int j, nsc;
 
   nsc = myscp->no_schools;
@@ -646,10 +646,10 @@ int there_is_excess_demand(struct process_scp* myscp, struct partial_alloc* dema
   return 0;
 }	
 
-int cutoffs_are_below_mcca(struct process_scp* myscp, double* cutoffs) {
+int cutoffs_are_below_mcca(process_scp* myscp, double* cutoffs) {
   int i, j, k, nst, nsc;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -691,16 +691,16 @@ int cutoffs_are_below_mcca(struct process_scp* myscp, double* cutoffs) {
   return 1;
 }
 
-struct partial_alloc mcca_alloc(struct process_scp* myscp) {
+partial_alloc mcca_alloc(process_scp* myscp) {
   int nsc;
   int* coarse;
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
   coarse = malloc(nsc * sizeof(int));
   answer = mcca_alloc_plus_coarse_cutoffs(myscp, coarse);
 
-  struct process_scp reduced;
+  process_scp reduced;
 
   reduced = reduced_scp(myscp, coarse);
 
@@ -713,19 +713,19 @@ struct partial_alloc mcca_alloc(struct process_scp* myscp) {
 
 /*************** Below here is for mccb ***************/
 
-int linear_adjustment_b(struct process_scp* myscp, double* cutoffs) {
+int linear_adjustment_b(process_scp* myscp, double* cutoffs) {
   int j, nsc, no_act_sch, done;
   
   int* active_schools;
   int* lexicon;
   int* rev_lex;
 
-  struct partial_alloc demands;
+  partial_alloc demands;
   int* last_sch;
-  struct index** constrained_stu;
+  element_list** constrained_stu;
   
-  struct square_int_matrix replacements;
-  struct subset T_sub;
+  square_int_matrix replacements;
+  subset T_sub;
 
   nsc = myscp->no_schools;
   
@@ -761,7 +761,7 @@ int linear_adjustment_b(struct process_scp* myscp, double* cutoffs) {
   free(last_sch);
   for (j = 1; j <= nsc; j++) {
     if (constrained_stu[j-1]  != NULL) {
-      destroy_index(*constrained_stu[j-1]);
+      destroy_element_list(*constrained_stu[j-1]);
       free(constrained_stu[j-1]);
     }
   }
@@ -774,8 +774,8 @@ int linear_adjustment_b(struct process_scp* myscp, double* cutoffs) {
   return done;
 }
 
-void adjust_cutoffs_to_create_constrained_students_b(struct process_scp* myscp,
-						     struct partial_alloc* demands,
+void adjust_cutoffs_to_create_constrained_students_b(process_scp* myscp,
+						     partial_alloc* demands,
 						     double* cutoffs, int* last_sch) {
   int i, j, k, l, p, nst, nsc, done, hit, maxcandidate;
   double max_demand;
@@ -826,7 +826,7 @@ void adjust_cutoffs_to_create_constrained_students_b(struct process_scp* myscp,
   }
 }
 
-int* last_schools(struct process_scp* myscp, struct partial_alloc* demands) {
+int* last_schools(process_scp* myscp, partial_alloc* demands) {
   int i, j, k, nst, done, no_sch;
   
   int* answer;
@@ -860,14 +860,14 @@ int* last_schools(struct process_scp* myscp, struct partial_alloc* demands) {
   return answer;
 }
 
-struct square_int_matrix replacement_matrix(struct process_scp* myscp, int* last_sch,
-					     struct partial_alloc* demands, double* cutoffs,
+square_int_matrix replacement_matrix(process_scp* myscp, int* last_sch,
+					     partial_alloc* demands, double* cutoffs,
 					     int no_act_sch, int* rev_lex) {
   int i, j;
 
-  struct square_int_matrix big_repl;
+  square_int_matrix big_repl;
 
-  struct square_int_matrix answer;
+  square_int_matrix answer;
   
   big_repl = big_repl_mat(myscp, last_sch, demands, cutoffs);
   
@@ -883,13 +883,13 @@ struct square_int_matrix replacement_matrix(struct process_scp* myscp, int* last
   return answer;
 }
 
-int adjust_cutoffs_empty_T_sub_b(struct process_scp* myscp, struct partial_alloc* demands,
-				 struct square_int_matrix* replacements, 
+int adjust_cutoffs_empty_T_sub_b(process_scp* myscp, partial_alloc* demands,
+				 square_int_matrix* replacements, 
 				 int* lexicon, int* rev_lex, double* cutoffs, int* last_sch) {
   int nsc, no_act_sch;
   double tuncc, t_star, tuncoals;
 
-  struct vector delta;
+  vector delta;
   
   nsc = myscp->no_schools;
   no_act_sch = replacements->dimension;
@@ -913,9 +913,9 @@ int adjust_cutoffs_empty_T_sub_b(struct process_scp* myscp, struct partial_alloc
   }
 }
 
-double time_until_no_consumption_of_a_last_school(struct process_scp* myscp,
-						  struct partial_alloc* demands, double* cutoffs,
-						  int* last_sch, struct vector* delta) {
+double time_until_no_consumption_of_a_last_school(process_scp* myscp,
+						  partial_alloc* demands, double* cutoffs,
+						  int* last_sch, vector* delta) {
   int i, j, k, l, nst, hit, positive, done;
 
   double answer, delta_sum;
@@ -957,12 +957,12 @@ double time_until_no_consumption_of_a_last_school(struct process_scp* myscp,
   return answer;
 }
 
-void adjust_cutoffs_nonempty_T_sub_b(struct process_scp* myscp,  struct partial_alloc* demands,
-				     struct square_int_matrix* replacements, struct subset* T_sub,
+void adjust_cutoffs_nonempty_T_sub_b(process_scp* myscp,  partial_alloc* demands,
+				     square_int_matrix* replacements, subset* T_sub,
 				     int* lexicon, double* cutoffs, int* last_sch) {
   int nsc;
 
-  struct vector delta;
+  vector delta;
   double tuncc, t_star, tuncoals;
 
   nsc = myscp->no_schools;
@@ -977,7 +977,7 @@ void adjust_cutoffs_nonempty_T_sub_b(struct process_scp* myscp,  struct partial_
   destroy_vector(&delta);
 }
 
-struct partial_alloc mccb_alloc_plus_coarse_cutoffs(struct process_scp* myscp, int* coarse) {  
+partial_alloc mccb_alloc_plus_coarse_cutoffs(process_scp* myscp, int* coarse) {  
   int j, nsc, done;
   double max;
   double* cutoffs;
@@ -1005,19 +1005,19 @@ struct partial_alloc mccb_alloc_plus_coarse_cutoffs(struct process_scp* myscp, i
     coarse[j-1] = floor(cutoffs[j-1]);
   }
 
-  struct partial_alloc answer = compute_demands(myscp, cutoffs);
+  partial_alloc answer = compute_demands(myscp, cutoffs);
 
   free(cutoffs);
 
   return answer;
 }
 
-int compute_new_cutoffs_b(struct process_scp* myscp, double* cutoffs) {
+int compute_new_cutoffs_b(process_scp* myscp, double* cutoffs) {
   int done;
 
   double deficit_sum;
   
-  struct partial_alloc demands;
+  partial_alloc demands;
   
   demands = compute_demands(myscp, cutoffs);
 
@@ -1047,12 +1047,12 @@ int compute_new_cutoffs_b(struct process_scp* myscp, double* cutoffs) {
 }
 
 
-struct square_int_matrix  big_repl_mat(struct process_scp* myscp, int* last_sch,
-					   struct partial_alloc* demands, double* cutoffs) {
+square_int_matrix  big_repl_mat(process_scp* myscp, int* last_sch,
+					   partial_alloc* demands, double* cutoffs) {
   int i, j, k, nst, nsc, pri, hit, last_rank, j_better_than_last;
   double dem, cut;
 
-  struct square_int_matrix big_repl;
+  square_int_matrix big_repl;
   
   nst = myscp->no_students;
   nsc = myscp->no_schools;
@@ -1095,7 +1095,7 @@ struct square_int_matrix  big_repl_mat(struct process_scp* myscp, int* last_sch,
   return big_repl;
 }
 
-int there_is_deficient_demand(struct process_scp* myscp, struct partial_alloc* demands,
+int there_is_deficient_demand(process_scp* myscp, partial_alloc* demands,
 			      double* cutoffs) {
   int j, nsc;
 
@@ -1111,8 +1111,8 @@ int there_is_deficient_demand(struct process_scp* myscp, struct partial_alloc* d
   return 0;
 }
 
-int a_student_does_not_consume_a_probability_measure(struct process_scp* myscp,
-						     struct partial_alloc* demands) {
+int a_student_does_not_consume_a_probability_measure(process_scp* myscp,
+						     partial_alloc* demands) {
   int i, nst, deficient_stu;
 
   nst = myscp->no_students;
@@ -1127,16 +1127,16 @@ int a_student_does_not_consume_a_probability_measure(struct process_scp* myscp,
   return deficient_stu;
 }
 
-struct partial_alloc mccb_alloc(struct process_scp* myscp) {
+partial_alloc mccb_alloc(process_scp* myscp) {
   int nsc;
   int* coarse;
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myscp->no_schools;
   coarse = malloc(nsc * sizeof(int));
   answer = mccb_alloc_plus_coarse_cutoffs(myscp, coarse);
 
-  struct process_scp reduced;
+  process_scp reduced;
 
   reduced = reduced_scp(myscp, coarse);
 
@@ -1217,19 +1217,19 @@ int* get_rev_lex(int* active_schools, int nsc, int no_act_sch) {
   return answer;
 }
 
-struct vector get_delta_empty_T_sub(struct process_scp* myscp, struct partial_alloc* demands,
+vector get_delta_empty_T_sub(process_scp* myscp, partial_alloc* demands,
 				    int no_act_sch, int* lexicon, int* rev_lex,
-				    struct square_int_matrix* placements) {
+				    square_int_matrix* placements) {
   int j, k, m, nsc;
 
   double* large_excess_demands;
 
-  struct vector epsilon;
-  struct square_matrix dbl_place;
-  struct square_matrix dbl_pl_trans;
-  struct square_matrix pl_trans_inv;
-  struct vector little_delta;
-  struct vector answer;
+  vector epsilon;
+  square_matrix dbl_place;
+  square_matrix dbl_pl_trans;
+  square_matrix pl_trans_inv;
+  vector little_delta;
+  vector answer;
 
   nsc = myscp->no_schools;
   
@@ -1263,13 +1263,13 @@ struct vector get_delta_empty_T_sub(struct process_scp* myscp, struct partial_al
   return answer;
 }
 
-struct vector get_delta_nonempty_T_sub(struct square_int_matrix* placements, struct subset* T_sub,
+vector get_delta_nonempty_T_sub(square_int_matrix* placements, subset* T_sub,
 				       int nsc, int* lexicon) {
   int j, count;
 
-  struct vector answer;
-  struct square_int_matrix sub_matrix;
-  struct vector conv_weights;
+  vector answer;
+  square_int_matrix sub_matrix;
+  vector conv_weights;
   
   sub_matrix = sub_mat(placements, T_sub);
 
@@ -1293,7 +1293,7 @@ struct vector get_delta_nonempty_T_sub(struct square_int_matrix* placements, str
   return answer;
 }
 
-void adjust_cutoffs(double* cutoffs, struct vector* delta, int nsc, double t_star, int sign) {
+void adjust_cutoffs(double* cutoffs, vector* delta, int nsc, double t_star, int sign) {
   int j;
   
   for (j = 1; j <= nsc; j++) {

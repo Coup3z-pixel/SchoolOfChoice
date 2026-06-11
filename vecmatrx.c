@@ -1,10 +1,10 @@
 #include "vecmatrx.h"
 
 
-struct vector zero_vector(int dimension) {
+vector zero_vector(int dimension) {
   int i;
 
-  struct vector answer;
+  vector answer;
   answer.dimension = dimension;
   answer.entries = malloc(dimension * sizeof(double));
   for (i = 1; i <= dimension; i++) {
@@ -14,11 +14,11 @@ struct vector zero_vector(int dimension) {
   return answer;
 }
 
-void set_vector_entry(struct vector* vec, int index, double entry) {
+void set_vector_entry(vector* vec, int index, double entry) {
   vec->entries[index - 1] = entry;
 }
 
-void negate_vector(struct vector* vec) {
+void negate_vector(vector* vec) {
   int i;
 
   for (i = 1; i <= vec->dimension; i++) {
@@ -26,10 +26,10 @@ void negate_vector(struct vector* vec) {
   }
 }
 
-struct square_int_matrix zero_int_matrix(int dimension) {
+square_int_matrix zero_int_matrix(int dimension) {
   int i, j;
 
-  struct square_int_matrix answer;
+  square_int_matrix answer;
   answer.dimension = dimension;
   answer.entries = malloc(dimension * sizeof(int*));
   for (i = 1; i <= dimension; i++) {
@@ -42,10 +42,10 @@ struct square_int_matrix zero_int_matrix(int dimension) {
   return answer;
 }
 
-struct square_matrix zero_matrix(int dimension) {
+square_matrix zero_matrix(int dimension) {
   int i, j;
 
-  struct square_matrix answer;
+  square_matrix answer;
   answer.dimension = dimension;
   answer.entries = malloc(dimension * sizeof(double*));
   for (i = 1; i <= dimension; i++) {
@@ -58,14 +58,14 @@ struct square_matrix zero_matrix(int dimension) {
   return answer;
 }
 
-void set_matrix_entry(struct square_matrix* mat, int row, int col, double entry) {
+void set_matrix_entry(square_matrix* mat, int row, int col, double entry) {
   mat->entries[row-1][col-1] = entry;
 }
 
-struct square_matrix copy_of_square_matrix(struct square_matrix* mat) {
+square_matrix copy_of_square_matrix(square_matrix* mat) {
   int i, j, dim;
 
-  struct square_matrix copy;
+  square_matrix copy;
 
   dim = mat->dimension;
 
@@ -79,10 +79,10 @@ struct square_matrix copy_of_square_matrix(struct square_matrix* mat) {
   return copy;
 }
 
-struct square_matrix transpose(struct square_matrix* mat) {
+square_matrix transpose(square_matrix* mat) {
   int i, j, dim;
 
-  struct square_matrix transpose;
+  square_matrix transpose;
 
   dim = mat->dimension;
 
@@ -96,9 +96,9 @@ struct square_matrix transpose(struct square_matrix* mat) {
   return transpose;
 }
 
-struct vector matrix_times_vector(struct square_matrix* mat, struct vector* vec) {
+vector matrix_times_vector(square_matrix* mat, vector* vec) {
   int i, j;
-  struct vector answer;
+  vector answer;
 
   answer = zero_vector(vec->dimension);
 
@@ -111,9 +111,9 @@ struct vector matrix_times_vector(struct square_matrix* mat, struct vector* vec)
   return answer;
 }
 
-struct vector int_matrix_times_vector(struct square_int_matrix* mat, struct vector* vec) {
+vector int_matrix_times_vector(square_int_matrix* mat, vector* vec) {
   int i, j;
-  struct vector answer;
+  vector answer;
 
   answer = zero_vector(vec->dimension);
 
@@ -126,7 +126,7 @@ struct vector int_matrix_times_vector(struct square_int_matrix* mat, struct vect
   return answer;
 }
 
-void multiply_row_by_factor(struct square_matrix* mat, int row, double factor) {
+void multiply_row_by_factor(square_matrix* mat, int row, double factor) {
   int j;
 
   for (j = 1; j <= mat->dimension; j++) {
@@ -134,7 +134,7 @@ void multiply_row_by_factor(struct square_matrix* mat, int row, double factor) {
   }
 }
 
-void swap_rows(struct square_matrix* mat, int row_one, int row_two) {
+void swap_rows(square_matrix* mat, int row_one, int row_two) {
   int j;
   double swap;
 
@@ -145,7 +145,7 @@ void swap_rows(struct square_matrix* mat, int row_one, int row_two) {
   }
 }
 
-void add_row_times_factor_to_row(struct square_matrix* mat, double factor, int r_one, int r_two) {
+void add_row_times_factor_to_row(square_matrix* mat, double factor, int r_one, int r_two) {
   int j;
 
   for (j = 1; j <= mat->dimension; j++) {
@@ -153,10 +153,10 @@ void add_row_times_factor_to_row(struct square_matrix* mat, double factor, int r
   }
 }
 
-struct square_matrix dbl_matrix_from_int_matrix(struct square_int_matrix* mat) {
+square_matrix dbl_matrix_from_int_matrix(square_int_matrix* mat) {
   int k, l, dim;
 
-  struct square_matrix answer;
+  square_matrix answer;
 
   dim = mat->dimension;
 
@@ -172,13 +172,13 @@ struct square_matrix dbl_matrix_from_int_matrix(struct square_int_matrix* mat) {
   return answer;
 }
 
-struct square_matrix inverse(struct square_matrix* mat) {
+square_matrix inverse(square_matrix* mat) {
   int i, k, dim;
 
   double factor;
   
-  struct square_matrix answer;
-  struct square_matrix copy;
+  square_matrix answer;
+  square_matrix copy;
 
   dim = mat->dimension;
 
@@ -229,7 +229,7 @@ struct square_matrix inverse(struct square_matrix* mat) {
   return answer;
 }
 
-int is_WDD(struct square_int_matrix* mat) {
+int is_WDD(square_int_matrix* mat) {
   int i, j, row_sum;
 
   for (i = 1; i <= mat->dimension; i++) {
@@ -252,7 +252,7 @@ int is_WDD(struct square_int_matrix* mat) {
   return 1;
 }
 
-int** directed_graph(struct square_int_matrix* mat) {
+int** directed_graph(square_int_matrix* mat) {
   int i, j, dim;
 
   dim = mat->dimension;
@@ -274,10 +274,10 @@ int** directed_graph(struct square_int_matrix* mat) {
   return answer;
 }
 
-struct subset T_subset(struct square_int_matrix* mat) {
+subset T_subset(square_int_matrix* mat) {
   int i, j, dim, done, little_done, row_sum;
   int** dir_gr;
-  struct subset answer;
+  subset answer;
   
   dim = mat->dimension;
 
@@ -322,12 +322,12 @@ struct subset T_subset(struct square_int_matrix* mat) {
   return answer;
 }
 
-struct subset get_component(struct subset* T_subset, int** dir_gr, int seed) {
+subset get_component(subset* T_subset, int** dir_gr, int seed) {
   int i, j, dim, done;
 
   dim = T_subset->large_set_size;
 
-  struct subset answer;
+  subset answer;
 
   answer = singleton_subset(seed, dim);
 
@@ -350,11 +350,11 @@ struct subset get_component(struct subset* T_subset, int** dir_gr, int seed) {
   return answer;
 }
 
-struct subset minimum_T_subset(struct subset* T_subset, int** dir_gr) {
+subset minimum_T_subset(subset* T_subset, int** dir_gr) {
   int i, dim, done;
 
-  struct subset answer;
-  struct subset component;
+  subset answer;
+  subset component;
 
   dim = T_subset->large_set_size;
 
@@ -378,12 +378,12 @@ struct subset minimum_T_subset(struct subset* T_subset, int** dir_gr) {
   return answer;  
 }
 
-struct subset minimal_T_subset(struct square_int_matrix* mat) {
+subset minimal_T_subset(square_int_matrix* mat) {
   int k, dim;
   
   int** dir_gr;
-  struct subset big_T_subset;
-  struct subset answer;
+  subset big_T_subset;
+  subset answer;
 
   dir_gr = directed_graph(mat);
   big_T_subset = T_subset(mat);
@@ -399,13 +399,13 @@ struct subset minimal_T_subset(struct square_int_matrix* mat) {
   return answer;
 }
 
-struct square_int_matrix sub_mat(struct square_int_matrix* given, struct subset* rows_and_cols) {
+square_int_matrix sub_mat(square_int_matrix* given, subset* rows_and_cols) {
   int k, l, dim, little_dim, row_count, col_count;
 
   dim = given->dimension;
   little_dim = rows_and_cols->subset_size;
   
-  struct square_int_matrix answer;
+  square_int_matrix answer;
 
   answer.dimension = rows_and_cols->subset_size;
   answer.entries = malloc(little_dim * sizeof(int*));
@@ -427,14 +427,14 @@ struct square_int_matrix sub_mat(struct square_int_matrix* given, struct subset*
   return answer;
 }
 
-struct vector convex_weights(struct square_int_matrix* mat) {
+vector convex_weights(square_int_matrix* mat) {
   int j, dim;
 
-  struct square_matrix dbl_mat;
-  struct square_matrix dbl_trans;
-  struct square_matrix dbl_trans_inv;
-  struct vector target;
-  struct vector answer;
+  square_matrix dbl_mat;
+  square_matrix dbl_trans;
+  square_matrix dbl_trans_inv;
+  vector target;
+  vector answer;
 
   dbl_mat = dbl_matrix_from_int_matrix(mat);
   dbl_trans = transpose(&dbl_mat);
@@ -460,7 +460,7 @@ struct vector convex_weights(struct square_int_matrix* mat) {
   return answer;
 }
 
-void print_square_matrix(struct square_matrix* mat) {
+void print_square_matrix(square_matrix* mat) {
   int k, l, dim;
 
   dim = mat->dimension;
@@ -476,7 +476,7 @@ void print_square_matrix(struct square_matrix* mat) {
   }
 }
 
-void print_vector(struct vector* vec) {
+void print_vector(vector* vec) {
   int i;
   
   fprintf(stderr, "(");
@@ -486,7 +486,7 @@ void print_vector(struct vector* vec) {
   fprintf(stderr, "%1.3f)", vec->entries[vec->dimension-1]);
 }
 
-void print_square_int_matrix(struct square_int_matrix* mat) {
+void print_square_int_matrix(square_int_matrix* mat) {
   int k, l, dim;
 
   dim = mat->dimension;
@@ -502,11 +502,11 @@ void print_square_int_matrix(struct square_int_matrix* mat) {
   }
 }
 
-void destroy_vector(struct vector* vec) {
+void destroy_vector(vector* vec) {
   free(vec->entries);
 }
 
-void destroy_square_matrix(struct square_matrix* mat) {
+void destroy_square_matrix(square_matrix* mat) {
   int i;
 
   for (i = 1; i <= mat->dimension; i++) {
@@ -515,7 +515,7 @@ void destroy_square_matrix(struct square_matrix* mat) {
   free(mat->entries);
 }
 
-void destroy_square_int_matrix(struct square_int_matrix* mat) {
+void destroy_square_int_matrix(square_int_matrix* mat) {
   int i;
 
   for (i = 1; i <= mat->dimension; i++) {

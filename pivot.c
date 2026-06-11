@@ -1,7 +1,7 @@
 #include "pivot.h"
 
-struct pivot initialized_pivot(int h) {
-  struct pivot my_pivot;
+pivot initialized_pivot(int h) {
+  pivot my_pivot;
   
   my_pivot.h = h;
   my_pivot.schools = malloc((h+1) * sizeof(int));
@@ -10,10 +10,10 @@ struct pivot initialized_pivot(int h) {
   return my_pivot;
 }
 
-struct pivot* copy_of_pivot(struct pivot* my_pivot) {
+pivot* copy_of_pivot(pivot* my_pivot) {
   int g, h;
   
-  struct pivot* new_pivot = malloc(sizeof(struct pivot));
+  pivot* new_pivot = malloc(sizeof(pivot));
   h = my_pivot->h;
   new_pivot->h = h;
   new_pivot->schools = malloc((h+1) * sizeof(int));
@@ -29,7 +29,7 @@ struct pivot* copy_of_pivot(struct pivot* my_pivot) {
 }
 
 
-int pivot_list_node_has_NULL_the_pivot(struct pivot_list_node* my_node) {
+int pivot_list_node_has_NULL_the_pivot(pivot_list_node* my_node) {
   if (my_node->the_pivot == NULL) {
     return 1;
   }
@@ -37,8 +37,8 @@ int pivot_list_node_has_NULL_the_pivot(struct pivot_list_node* my_node) {
   return 0;
 }
 
-int pivot_list_has_NULL_the_pivot(struct pivot_list* my_list) {
-  struct pivot_list_node* probe;
+int pivot_list_has_NULL_the_pivot(pivot_list* my_list) {
+  pivot_list_node* probe;
   probe = my_list->first_node;
   while (probe != NULL) {
     if (pivot_list_node_has_NULL_the_pivot(probe)) {
@@ -50,10 +50,10 @@ int pivot_list_has_NULL_the_pivot(struct pivot_list* my_list) {
   return 0;
 }
 
-struct pivot_list void_pivot_list() {
-  struct pivot_list my_list;
+pivot_list void_pivot_list() {
+  pivot_list my_list;
   
-  my_list.first_node = malloc(sizeof(struct pivot_list_node));
+  my_list.first_node = malloc(sizeof(pivot_list_node));
   my_list.first_node->the_pivot = NULL;
   my_list.first_node->next = NULL;
   my_list.last_node = my_list.first_node;
@@ -61,7 +61,7 @@ struct pivot_list void_pivot_list() {
   return my_list;
 }
 
-int pivot_list_is_void(struct pivot_list* my_list) {
+int pivot_list_is_void(pivot_list* my_list) {
   if (my_list->first_node == my_list->last_node && (my_list->first_node)->next == NULL &&
       (my_list->first_node)->the_pivot == NULL) {
     return 1;
@@ -71,13 +71,13 @@ int pivot_list_is_void(struct pivot_list* my_list) {
   }
 }
 
-void add_pivot_to_list(struct pivot_list* my_list, struct pivot* new_pivot) {
-  struct pivot* new_pvt = copy_of_pivot(new_pivot);
+void add_pivot_to_list(pivot_list* my_list, pivot* new_pivot) {
+  pivot* new_pvt = copy_of_pivot(new_pivot);
   if (pivot_list_is_void(my_list)) {
     (my_list->first_node)->the_pivot = new_pvt;
   }
   else {
-    struct pivot_list_node* new_node = malloc(sizeof(struct pivot_list_node));
+    pivot_list_node* new_node = malloc(sizeof(pivot_list_node));
     new_node->next = NULL;
     new_node->the_pivot = new_pvt;
     (my_list->last_node)->next = new_node;
@@ -85,8 +85,8 @@ void add_pivot_to_list(struct pivot_list* my_list, struct pivot* new_pivot) {
   }
 }
 
-void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addition) {
-  struct pivot_list_node* probe = addition->first_node;
+void concatenate_pivot_lists(pivot_list* target, pivot_list* addition) {
+  pivot_list_node* probe = addition->first_node;
   if (probe->the_pivot != NULL) {
     add_pivot_to_list(target, probe->the_pivot);
   }
@@ -96,7 +96,7 @@ void concatenate_pivot_lists(struct pivot_list* target, struct pivot_list* addit
   }
 }
 
-void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int* theta_sums) {
+void execute_pivot(pivot* my_pivot, int_sparse_matrix* theta, int* theta_sums) {
   int g;
   theta_sums[my_pivot->schools[0]-1]--;
   for (g = 1; g <= my_pivot->h; g++) {
@@ -106,14 +106,14 @@ void execute_pivot(struct pivot* my_pivot, struct int_sparse_matrix* theta, int*
   theta_sums[my_pivot->schools[my_pivot->h]-1]++;
 }
 
-struct pivot_list reduced_pivot_list(struct pivot_list* given_list,
-				     struct subset* J_subset, struct subset* P_subset) {
+pivot_list reduced_pivot_list(pivot_list* given_list,
+				     subset* J_subset, subset* P_subset) {
   int g, h, valid;
 
-  struct pivot_list new_list;
-  struct pivot_list_node* probe;
-  struct pivot* current;
-  struct pivot new_pivot;
+  pivot_list new_list;
+  pivot_list_node* probe;
+  pivot* current;
+  pivot new_pivot;
 
   int* J_numbers;
   int* P_numbers;
@@ -159,20 +159,20 @@ struct pivot_list reduced_pivot_list(struct pivot_list* given_list,
   return new_list;
 }
 
-struct pivot_list left_reduced_pivot_list(struct pivot_list* given_list,
-					  struct subset* J_subset, struct subset* P_subset) {
-    struct pivot_list left_list;
+pivot_list left_reduced_pivot_list(pivot_list* given_list,
+					  subset* J_subset, subset* P_subset) {
+    pivot_list left_list;
     left_list = reduced_pivot_list(given_list,J_subset,P_subset);
     return left_list;
 }
 
-struct pivot_list right_reduced_pivot_list(struct pivot_list* given_list,
-					   struct subset* J_subset, struct subset* P_subset) {
+pivot_list right_reduced_pivot_list(pivot_list* given_list,
+					   subset* J_subset, subset* P_subset) {
 
-  struct subset J_compl = complement_of_subset(J_subset);
-  struct subset P_compl = complement_of_subset(P_subset);
+  subset J_compl = complement_of_subset(J_subset);
+  subset P_compl = complement_of_subset(P_subset);
 
-  struct pivot_list right_list = reduced_pivot_list(given_list,&J_compl,&P_compl);
+  pivot_list right_list = reduced_pivot_list(given_list,&J_compl,&P_compl);
 
   destroy_subset(J_compl);
   destroy_subset(P_compl);
@@ -181,7 +181,7 @@ struct pivot_list right_reduced_pivot_list(struct pivot_list* given_list,
 }
 
 
-void print_pivot(struct pivot* my_pivot) {
+void print_pivot(pivot* my_pivot) {
   int g, h;
 
   h = my_pivot->h;
@@ -192,8 +192,8 @@ void print_pivot(struct pivot* my_pivot) {
   printf("%i", my_pivot->schools[h]);
 }
 
-void print_pivot_list(struct pivot_list* my_list) {
-  struct pivot_list_node* probe;
+void print_pivot_list(pivot_list* my_list) {
+  pivot_list_node* probe;
 
   if (pivot_list_is_void(my_list)) {
     printf("The pivot list is void.\n");
@@ -208,26 +208,26 @@ void print_pivot_list(struct pivot_list* my_list) {
   }
 }
 
-void destroy_pivot(struct pivot my_pivot) {
+void destroy_pivot(pivot my_pivot) {
   free(my_pivot.schools);
   free(my_pivot.students);
 }
 
-void destroy_pivot_ptr(struct pivot* my_pivot) {
+void destroy_pivot_ptr(pivot* my_pivot) {
   destroy_pivot(*my_pivot);
   free(my_pivot);
 }
 
-void destroy_pivot_list_node(struct pivot_list_node my_pivot_list_node) {
+void destroy_pivot_list_node(pivot_list_node my_pivot_list_node) {
   if (my_pivot_list_node.the_pivot != NULL) {
     destroy_pivot(*(my_pivot_list_node.the_pivot));
   }
   free(my_pivot_list_node.the_pivot);
 }
 
-void destroy_pivot_list(struct pivot_list my_pivot_list) {  
+void destroy_pivot_list(pivot_list my_pivot_list) {  
   while (my_pivot_list.first_node != my_pivot_list.last_node) {
-    struct pivot_list_node* new_list_node = my_pivot_list.first_node->next;
+    pivot_list_node* new_list_node = my_pivot_list.first_node->next;
     destroy_pivot_list_node(*(my_pivot_list.first_node));
     free(my_pivot_list.first_node);
     my_pivot_list.first_node = new_list_node;

@@ -5,8 +5,8 @@
 #include "gcpsbcode.h"
 
 int main(int argc, char *argv[]) {
-  struct input_sch_ch_prob input_scp;
-  struct partial_alloc gcpsb_alloc;
+  input_sch_ch_prob input_scp;
+  partial_alloc gcpsb_alloc;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
   
   print_sparse_partial_alloc(&gcpsb_alloc); 
 
+  destroy_input_sch_ch_prob(input_scp);
   destroy_partial_alloc(gcpsb_alloc);
 
   return 0;

@@ -1,16 +1,16 @@
 #include "defaccep.h"
 
-struct pure_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp) {
+pure_alloc deferred_acceptance(input_sch_ch_prob* myiscp) {
   int j, nst, nsc, rejectee, done;
   
-  struct index** applicant_lists;
+  element_list** applicant_lists;
 
-  struct pure_alloc answer;
+  pure_alloc answer;
 
   nst = myiscp->no_students;
   nsc = myiscp->no_schools;
 
-  applicant_lists = malloc(nsc * sizeof(struct index*));
+  applicant_lists = malloc(nsc * sizeof(element_list*));
   each_student_applies_to_favorite_school(myiscp, applicant_lists, nst, nsc);  
 
   done = 0;
@@ -35,8 +35,8 @@ struct pure_alloc deferred_acceptance(struct input_sch_ch_prob* myiscp) {
 }
 
 
-void each_student_applies_to_favorite_school(struct input_sch_ch_prob* myiscp,
-					     struct index** applicant_lists, int nst, int nsc) {
+void each_student_applies_to_favorite_school(input_sch_ch_prob* myiscp,
+					     element_list** applicant_lists, int nst, int nsc) {
   int i, j;
   
   for (j = 1; j <= nsc; j++) {
@@ -45,28 +45,28 @@ void each_student_applies_to_favorite_school(struct input_sch_ch_prob* myiscp,
 
   for (i = 1; i <= nst; i++) {
     j = myiscp->preferences[i-1][0];
-    add_element_to_possibly_NULL_index(&(applicant_lists[j-1]), i);
+    add_element_to_possibly_NULL_element_list(&(applicant_lists[j-1]), i);
   }
 }
 
-void reject_student(struct input_sch_ch_prob* myiscp, struct index** applicant_lists,
+void reject_student(input_sch_ch_prob* myiscp, element_list** applicant_lists,
 			int i, int j) {
   remove_i_from_applicant_list_j(applicant_lists, i, j);
   i_applies_to_next_school(myiscp, applicant_lists, i, j);
 }
 
-void remove_i_from_applicant_list_j(struct index** applicant_lists, int i, int j) {
+void remove_i_from_applicant_list_j(element_list** applicant_lists, int i, int j) {
   if (applicant_lists[j-1]->no_elements > 1) {
-    remove_element_from_index(applicant_lists[j-1], i);
+    remove_element_from_element_list(applicant_lists[j-1], i);
   }
   else {
-    destroy_index(*(applicant_lists[j-1]));
+    destroy_element_list(*(applicant_lists[j-1]));
     free(applicant_lists[j-1]);
     applicant_lists[j-1] = NULL;
   } 
 }
 
-void i_applies_to_next_school(struct input_sch_ch_prob* myiscp, struct index** applicant_lists,
+void i_applies_to_next_school(input_sch_ch_prob* myiscp, element_list** applicant_lists,
 			      int i, int j) {
   int k, hit, new_school, no_elig;
 
@@ -80,10 +80,10 @@ void i_applies_to_next_school(struct input_sch_ch_prob* myiscp, struct index** a
     }
   }
   
-  add_element_to_possibly_NULL_index(&(applicant_lists[new_school-1]), i);
+  add_element_to_possibly_NULL_element_list(&(applicant_lists[new_school-1]), i);
 }
 
-int lowest_priority_student(struct input_sch_ch_prob* myiscp, struct index* school_app_list,
+int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_list,
 			    int j) {
   int i, cand_worst_pr, cand_worst_st, cand_st, cand_pr;
 
@@ -103,11 +103,11 @@ int lowest_priority_student(struct input_sch_ch_prob* myiscp, struct index* scho
   return cand_worst_st;
 }
 
-struct partial_alloc partial_alloc_from_applicant_lists(struct input_sch_ch_prob* myiscp,
-							struct index** applicant_lists) {
+partial_alloc partial_alloc_from_applicant_lists(input_sch_ch_prob* myiscp,
+							element_list** applicant_lists) {
   int i, j, k, nsc;
 
-  struct partial_alloc answer;
+  partial_alloc answer;
 
   nsc = myiscp->no_schools;
 
@@ -125,11 +125,11 @@ struct partial_alloc partial_alloc_from_applicant_lists(struct input_sch_ch_prob
   return answer;
 }
 
-struct pure_alloc pure_alloc_from_applicant_lists(struct input_sch_ch_prob* myiscp,
-						  struct index** applicant_lists) {
+pure_alloc pure_alloc_from_applicant_lists(input_sch_ch_prob* myiscp,
+						  element_list** applicant_lists) {
   int i, j, k, nsc;
 
-  struct pure_alloc answer;
+  pure_alloc answer;
 
   nsc = myiscp->no_schools;
 
@@ -147,12 +147,12 @@ struct pure_alloc pure_alloc_from_applicant_lists(struct input_sch_ch_prob* myis
   return answer;
 }
 
-void destroy_applicant_lists(struct index** applicant_lists, int nsc) {
+void destroy_applicant_lists(element_list** applicant_lists, int nsc) {
   int j;
   
   for (j = 1; j <= nsc; j++) {
     if (applicant_lists[j-1] != NULL) {
-      destroy_index(*(applicant_lists[j-1]));
+      destroy_element_list(*(applicant_lists[j-1]));
       free(applicant_lists[j-1]);
     }
   }
