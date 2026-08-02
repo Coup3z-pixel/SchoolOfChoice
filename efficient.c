@@ -61,25 +61,48 @@ dgraph* initialize_nodes(partial_alloc* myalloc, process_scp* myscp) {
 }
 
 int i_is_justifiably_envied_for_l(partial_alloc* myalloc, process_scp* myscp, int i, int l) {
-  int k, r, nst, answer;
+  int k, m, n, nst;
 
   nst = myalloc->no_students;
 
-  answer = 0;
-  for (k = 1; k <= nst && answer == 0; k++) {
+  if (get_entry(myalloc, i, l) < 0.000001) {
+    return 0;
+  }
+
+  for (k = 1; k <= nst; k++) {
     if (k != i) {
-      if (int_entry(&(myscp->priorities), k, l) > int_entry(&(myscp->priorities), i, l)) {
-	for (r = student_ranking_of_school(myscp, k, l) + 1; r <= myscp->no_eligible_schools[k-1];
-	     r++) {
-	  if (get_entry(myalloc, k, myscp->preferences[k-1][r-1]) > 0.000001) {
-	    answer = 1;
+      for (m = 1; m <= myscp->no_eligible_schools[k-1]; m++) {
+	if (myscp->preferences[k-1][m-1] == l) {
+	  if (int_entry(&(myscp->priorities), k, l) > int_entry(&(myscp->priorities), i, l)) {
+	    for (n = m + 1; n <= myscp->no_eligible_schools[k-1]; n++) {
+	      if (get_entry(myalloc, k, myscp->preferences[k-1][n-1]) > 0.000001) {
+		return 1;
+	      }
+	    }
 	  }
 	}
       }
     }
   }
 
-  return answer;
+  return 0;
+}
+
+int is_ex_ante_stable(partial_alloc* myalloc, process_scp* myscp) {
+  int i, k, l, nst;
+
+  nst = myscp->no_students;
+
+  for (i = 1; i <= nst; i++) {
+    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+      l = myscp->preferences[i-1][k-1];
+      if (i_is_justifiably_envied_for_l(myalloc, myscp, i, l)) {
+	return 0;
+      }
+    }
+  }
+
+  return 1;
 }
 
 void  add_arcs(dgraph* graph, partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable) {
@@ -140,26 +163,6 @@ dgraph* reduced_graph(partial_alloc* myalloc, process_scp* myscp, int ex_ante_st
   return answer;
 }
 
-void make_alloc_eff_and_par_dominant(partial_alloc* my_alloc, process_scp* myscp,
-				     int ex_ante_stable) {
-  dgraph* graph;
-  stu_sch_pair_list_node* loop; 
-  
-  graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
-
-  while (graph != NULL) {
-    loop = random_loop(graph);
-    cyclic_trade(my_alloc, loop);
-    
-    destroy_stu_sch_pair_list(&loop);
-    destroy_dgraph(graph);
-    
-    graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
-  }
-
-  destroy_dgraph(graph);
-}
-
 int someone_would_like_some_j(int j, partial_alloc* myalloc, process_scp* myscp) {
   int i, k, r, s, nst;
   
@@ -207,42 +210,11 @@ int allocation_is_wasteful(partial_alloc* myalloc, process_scp* myscp) {
   return max_slack_school;;
 }
 
-int allocation_is_nonwasteful(partial_alloc* myalloc, process_scp* myscp) {
-  int i, j, k, r, s, nst, nsc;
-
-  double school_sum;
-  
-  nst = myscp->no_students;
-  nsc = myscp->no_schools;
-
-  for (j = 1; j <= nsc; j++) {
-    school_sum = 0.0;
-    for (i = 1; i <= nst; i++) {
-      school_sum += get_entry(myalloc, i, j);
-    }
-    if (school_sum < (double)myscp->quotas[j-1] - 0.000001) {
-      for (i = 1; i <= nst; i++) {
-	if (is_eligible(myscp, i, j)) {
-	  r = student_ranking_of_school(myscp, i, j);
-	  for (k = r+1; k <= myscp->no_eligible_schools[i-1]; k++) {
-	    s = myscp->preferences[i-1][k-1];
-	    if (get_entry(myalloc, i, s) > 0.000001) {
-	      return 0;
-	    }
-	  }
-	}
-      }
-    }
-  }
-
-  return 1;
-}
-
 int allocation_is_efficient(partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable) {
   int answer;
   dgraph* graph;
   
-  if (!allocation_is_nonwasteful(myalloc,myscp)) {
+  if (allocation_is_wasteful(myalloc,myscp)) {
     return 0;
   }
 
@@ -283,6 +255,26 @@ void cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop) {
     }
     loop_copy = loop_copy->next;
   }
+}
+
+void make_alloc_eff_and_par_dominant(partial_alloc* my_alloc, process_scp* myscp,
+				     int ex_ante_stable) {
+  dgraph* graph;
+  stu_sch_pair_list_node* loop; 
+  
+  graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
+
+  while (graph != NULL) {
+    loop = random_loop(graph);
+    cyclic_trade(my_alloc, loop);
+    
+    destroy_stu_sch_pair_list(&loop);
+    destroy_dgraph(graph);
+    
+    graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
+  }
+
+  destroy_dgraph(graph);
 }
 
 /*************************/

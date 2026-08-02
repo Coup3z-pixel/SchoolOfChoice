@@ -10,6 +10,8 @@
 
 pure_alloc deferred_acceptance(input_sch_ch_prob* myiscp);
 
+void refine_priorities(input_sch_ch_prob* myiscp);
+
 void each_student_applies_to_favorite_school(input_sch_ch_prob* myiscp,
 					     element_list** applicant_lists, int nst, int nsc);
 void reject_student(input_sch_ch_prob* myiscp, element_list** applicant_lists,

@@ -2,26 +2,31 @@
 
 pure_alloc deferred_acceptance(input_sch_ch_prob* myiscp) {
   int j, nst, nsc, rejectee, done;
+
+  input_sch_ch_prob myiscp_copy;
   
   element_list** applicant_lists;
 
   pure_alloc answer;
 
-  nst = myiscp->no_students;
-  nsc = myiscp->no_schools;
+  myiscp_copy = copy_of_input_scp(myiscp);
+  refine_priorities(&myiscp_copy);
+
+  nst = myiscp_copy.no_students;
+  nsc = myiscp_copy.no_schools;
 
   applicant_lists = malloc(nsc * sizeof(element_list*));
-  each_student_applies_to_favorite_school(myiscp, applicant_lists, nst, nsc);  
+  each_student_applies_to_favorite_school(&myiscp_copy, applicant_lists, nst, nsc);  
 
   done = 0;
   while (!done) {
     done = 1;
     for (j = 1; j <= nsc; j++) {
       if (applicant_lists[j-1] != NULL) {
-	if (applicant_lists[j-1]->no_elements > myiscp->quotas[j-1]) {
+	if (applicant_lists[j-1]->no_elements > myiscp_copy.quotas[j-1]) {
 	  done = 0;
-	  rejectee = lowest_priority_student(myiscp, applicant_lists[j-1], j);;
-	  reject_student(myiscp, applicant_lists, rejectee, j);
+	  rejectee = lowest_priority_student(&myiscp_copy, applicant_lists[j-1], j);;
+	  reject_student(&myiscp_copy, applicant_lists, rejectee, j);
 	}
       }
     }
@@ -31,7 +36,81 @@ pure_alloc deferred_acceptance(input_sch_ch_prob* myiscp) {
 
   destroy_applicant_lists(applicant_lists, nsc);
 
+  destroy_input_sch_ch_prob(myiscp_copy);
+
   return answer;  
+}
+
+void refine_priorities(input_sch_ch_prob* myiscp) {
+  int i, j, k, l, nst, nsc, no_eligible, top_priority_class, no_pr_class, cursor, index;
+
+  int* no_with_priority;
+  int* list_of_students;
+  int* ordering;
+  int* new_ordering_of_students;
+
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
+
+  for (j = 1; j <= nsc; j++) {
+    no_eligible = 0;
+    top_priority_class = 0; 
+    for (i = 1; i <= nst; i++) {
+      if (is_eligible_input(myiscp, i, j)) {
+	no_eligible++;
+      }
+      if (myiscp->priorities[i-1][j-1] > top_priority_class) {
+	top_priority_class = myiscp->priorities[i-1][j-1];
+      }
+    }
+
+    new_ordering_of_students = malloc(no_eligible * sizeof(int));
+
+    no_with_priority = malloc((top_priority_class + 1) * sizeof(int));
+    for (k = 0; k <= top_priority_class; k++) {
+      no_with_priority[k] = 0;
+    }
+    for (i = 1; i <= nst; i++) {
+      if (is_eligible_input(myiscp, i, j)) {
+	no_with_priority[myiscp->priorities[i-1][j-1]]++;
+      }
+    }
+
+    cursor = 0;
+    for (k = 0; k <= top_priority_class; k++) {
+      no_pr_class = no_with_priority[k];
+      if (no_pr_class > 0) {
+	list_of_students = malloc(no_with_priority[k] * sizeof(int));
+      
+	index = 0;
+	for (i = 1; i <= nst; i++) {
+	  if (is_eligible_input(myiscp, i, j)) {
+	    if (myiscp->priorities[i-1][j-1] == k) {
+	      list_of_students[index] = i;
+	      index++;
+	    }
+	  }
+	}
+
+	ordering = random_ordering(no_pr_class);
+	for (l = 1; l <= no_pr_class; l++) {
+	  new_ordering_of_students[cursor + ordering[l] - 1] = list_of_students[l-1];
+	}
+	free(ordering);
+	
+	cursor += no_pr_class;
+      }
+      
+      free(list_of_students);
+    }
+
+    for (k = 1; k <= no_eligible; k++) {
+      myiscp->priorities[new_ordering_of_students[k-1]][j-1] = k-1;
+    }
+
+    free(no_with_priority);
+    free(new_ordering_of_students);
+  }
 }
 
 
@@ -83,8 +162,7 @@ void i_applies_to_next_school(input_sch_ch_prob* myiscp, element_list** applican
   add_element_to_possibly_NULL_element_list(&(applicant_lists[new_school-1]), i);
 }
 
-int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_list,
-			    int j) {
+int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_list, int j) {
   int i, cand_worst_pr, cand_worst_st, cand_st, cand_pr;
 
   cand_worst_st = school_app_list->indices[0];

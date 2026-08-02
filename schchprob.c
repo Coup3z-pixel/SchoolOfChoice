@@ -51,6 +51,18 @@ int is_eligible(process_scp* myscp, int i, int j) {
   return 0;
 }
 
+int is_eligible_input(input_sch_ch_prob* myiscp, int i, int j) {
+  int k;
+
+  for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
+    if (myiscp->preferences[i-1][k-1] == j) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 int inp_safe_school(input_sch_ch_prob* myiscp, int i) {
   return myiscp->preferences[i-1][myiscp->no_eligible_schools[i-1]-1];
 }

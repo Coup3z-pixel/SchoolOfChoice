@@ -19,4 +19,6 @@ double normal();
 
 int random_integer_in_one_to_max(int max);
 
+int* random_ordering(int no_elmts);
+
 #endif /* NORMAL_H */

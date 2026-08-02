@@ -21,6 +21,8 @@ dgraph* initialize_nodes(partial_alloc* myalloc, process_scp* myscp);
 
 int i_is_justifiably_envied_for_l(partial_alloc* myalloc, process_scp* myscp, int i, int l);
 
+int is_ex_ante_stable(partial_alloc* myalloc, process_scp* myscp);
+
 void add_arcs(dgraph* graph, partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable); 
 
 dgraph* reduced_graph(partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable);
@@ -28,8 +30,6 @@ dgraph* reduced_graph(partial_alloc* myalloc, process_scp* myscp, int ex_ante_st
 int someone_would_like_some_j(int j, partial_alloc* myalloc, process_scp* myscp);
 
 int allocation_is_wasteful(partial_alloc* myalloc, process_scp* myscp);
-
-int allocation_is_nonwasteful(partial_alloc* myalloc, process_scp* myscp);
 
 int allocation_is_efficient(partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable);
 

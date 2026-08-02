@@ -39,6 +39,8 @@ int* get_favorites(process_scp* working_scp);
 
 int is_eligible(process_scp* myscp, int i, int j);
 
+int is_eligible_input(input_sch_ch_prob* myiscp, int i, int j);
+
 int inp_safe_school(input_sch_ch_prob* myiscp, int i);
 
 int safe_school(process_scp* myscp, int i);

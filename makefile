@@ -19,7 +19,7 @@ LDFLAGS= -fsanitize=address -static-libsan -lm
 # CFLAGS=-I. -Wall -Wextra -fsanitize=address -g
 # LDFLAGS= -fsanitize=address -static-libasan -lm
 
-all: makex da gcps gcpsa gcpsb gcpsaeff gcpsbeff purify 
+all: makex da gcps gcpsa gcpsb effpardo purify 
 
 makex: makex.c normal.o subset.o sprsmtrx.o schchprob.o  makexcode.o
 	$(CC) -o makex makex.c normal.o subset.o sprsmtrx.o schchprob.o makexcode.o $(LDFLAGS)
@@ -36,16 +36,13 @@ gcpsa: gcpsa.c gcpsacode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o s
 gcpsb: gcpsb.c gcpsbcode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
 	$(CC) -o gcpsb gcpsb.c gcpsbcode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
 
-gcpsaeff: gcpsaeff.c gcpsacode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
-	$(CC) -o gcpsaeff gcpsaeff.c gcpsacode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
-
-gcpsbeff: gcpsbeff.c gcpsbcode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
-	$(CC) -o gcpsbeff gcpsbeff.c gcpsbcode.o mcccode.o fdamcc.o vecmatrx.o gcpscode.o defaccep.o segment.o endpoint.o pivot.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
+effpardo: effpardo.c vecmatrx.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o
+	$(CC) -o effpardo effpardo.c vecmatrx.o pairlist.o dgraph.o efficient.o partalloc.o subset.o normal.o parser.o schchprob.o sprsmtrx.o $(LDFLAGS)
 
 purify: purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o
 	$(CC) -o purify purify.c normal.o parser.o subset.o partalloc.o purifycode.o sprsmtrx.o schchprob.o $(LDFLAGS)
 
 
 clean:
-	rm *.o *~ makex da gcps gcpsa gcpsb gcpsaeff gcpsbeff purify 
+	rm *.o *~ makex da gcps gcpsa gcpsb effpardo purify 
 

@@ -72,3 +72,31 @@ int random_integer_in_one_to_max(int max) {
 
   return answer;
 }
+
+int* random_ordering(int no_elmts) {
+  int i, no_remaining, random_int, count;
+
+  int* answer;
+
+  answer = malloc(no_elmts * sizeof(int));
+  for (i = 1; i <= no_elmts; i++) {
+    answer[i-1] = 0;
+  }
+
+  no_remaining = no_elmts;
+  while (no_remaining > 0) {
+    random_int = random_integer_in_one_to_max(no_remaining);
+    i = 0;
+    count = 0;
+    while (count < random_int) {
+      if (answer[i-1] == 0) {
+	count++;
+      }
+      i++;
+    }
+    answer[i-1] = no_remaining;
+    no_remaining--;
+  }
+
+  return answer;
+}
