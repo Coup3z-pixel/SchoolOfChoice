@@ -232,7 +232,7 @@ int allocation_is_efficient(partial_alloc* myalloc, process_scp* myscp, int ex_a
  return answer;
 }
 
-void cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop) {
+double cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop) {
   double max_trade;
 
   stu_sch_pair_list_node* loop_copy;
@@ -255,24 +255,59 @@ void cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop) {
     }
     loop_copy = loop_copy->next;
   }
+
+  return max_trade;
+}
+
+int rank_gain_of_loop(process_scp* myscp, stu_sch_pair_list_node* loop) {
+  int gain;
+
+  stu_sch_pair_list_node* loop_copy;
+
+  gain = 0;
+  
+  loop_copy = loop;
+  while (loop_copy != NULL) {
+    
+    gain += student_ranking_of_school(myscp, loop_copy->stu, loop_copy->sch);
+    if (loop_copy->next != NULL) {
+      gain -= student_ranking_of_school(myscp, loop_copy->stu, loop_copy->next->sch);
+    }
+    else {
+      gain -= student_ranking_of_school(myscp, loop_copy->stu, loop->sch);
+    }
+    
+    loop_copy = loop_copy->next;
+  }
+
+  return gain;
 }
 
 void make_alloc_eff_and_par_dominant(partial_alloc* my_alloc, process_scp* myscp,
 				     int ex_ante_stable) {
+  int rank_gain;
+  double max_trade, total_gain;
+  
   dgraph* graph;
-  stu_sch_pair_list_node* loop; 
+  stu_sch_pair_list_node* loop;
+
+  total_gain = 0.0;
   
   graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
 
   while (graph != NULL) {
     loop = random_loop(graph);
-    cyclic_trade(my_alloc, loop);
+    rank_gain = rank_gain_of_loop(myscp, loop);
+    max_trade = cyclic_trade(my_alloc, loop);
+    total_gain += max_trade * rank_gain;
     
     destroy_stu_sch_pair_list(&loop);
     destroy_dgraph(graph);
     
     graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
   }
+
+  fprintf(stderr, "The total efficiency gain was %1.3f ranks.\n", total_gain);
 
   destroy_dgraph(graph);
 }

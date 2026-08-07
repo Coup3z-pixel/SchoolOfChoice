@@ -162,7 +162,6 @@ dbl_sparse_matrix copy_of_dbl_sp_mat(dbl_sparse_matrix* given) {
   return copy;
 }
 
-
 int* new_nos_active_cols(dbl_sparse_matrix* mydsp,
 			 subset* J_subset, subset* P_subset) {
   int i, k, new_row_no;

@@ -45,6 +45,7 @@ partial_alloc gcpsb_allocation(input_sch_ch_prob* myiscp) {
   return gcpsb_alloc;
 }
 
+/*
 partial_alloc gcpsbeff_allocation(input_sch_ch_prob* myiscp, int ex_ante_stable) {
   partial_alloc gcpsb_alloc;
   process_scp myscp;
@@ -57,4 +58,5 @@ partial_alloc gcpsbeff_allocation(input_sch_ch_prob* myiscp, int ex_ante_stable)
 
   return gcpsb_alloc;
 }
+*/
 

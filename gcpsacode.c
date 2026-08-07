@@ -44,16 +44,3 @@ partial_alloc gcpsa_allocation(input_sch_ch_prob* myiscp) {
 
   return gcpsa_alloc;
 }
-
-partial_alloc gcpsaeff_allocation(input_sch_ch_prob* myiscp, int ex_ante_stable) {
-  partial_alloc gcpsa_alloc;
-  process_scp myscp;
-  
-  myscp = process_scp_from_input(myiscp);
-  gcpsa_alloc = gcpsa_allocation(myiscp);
-  make_alloc_eff_and_par_dominant(&gcpsa_alloc, &myscp, ex_ante_stable);
-
-  destroy_process_scp(myscp);
-
-  return gcpsa_alloc;
-}

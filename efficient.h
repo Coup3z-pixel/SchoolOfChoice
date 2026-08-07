@@ -33,7 +33,9 @@ int allocation_is_wasteful(partial_alloc* myalloc, process_scp* myscp);
 
 int allocation_is_efficient(partial_alloc* myalloc, process_scp* myscp, int ex_ante_stable);
 
-void cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop);
+double cyclic_trade(partial_alloc* myalloc, stu_sch_pair_list_node* loop);
+
+int rank_gain_of_loop(process_scp* myscp, stu_sch_pair_list_node* loop);
 
 void make_alloc_eff_and_par_dominant(partial_alloc* my_alloc, process_scp* myscp,
 				     int ex_ante_stable);

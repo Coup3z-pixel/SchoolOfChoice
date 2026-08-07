@@ -24,6 +24,11 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "effpardo invoked with too many (> 4) command line arguments.\n");
     exit(0);
   }
+
+  if (!is_feasible_for_input_scp(&input_alloc, &input_scp)) {
+    fprintf(stderr, "effpardo was called on an alloc that is not feasible.");
+    exit(0);
+  }
   
   input_process_scp = process_scp_from_input(&input_scp);
 

@@ -40,7 +40,6 @@ void increment_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, doubl
 int_sparse_matrix copy_of_int_sp_matrix(int_sparse_matrix* given);
 
 dbl_sparse_matrix copy_of_dbl_sp_mat(dbl_sparse_matrix* given);
-
  
 int* new_nos_active_cols(dbl_sparse_matrix* mydsp,
 			 subset* J_subset, subset* P_subset);
