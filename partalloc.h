@@ -32,6 +32,8 @@ void set_integer_entry(pure_alloc* alloc, int i, int j, int val);
 
 void increment_entry(partial_alloc* alloc, int i, int j, double incr);
 
+int sch_is_active_for_stu(partial_alloc* alloc, int i, int j);
+
 double remaining_time(partial_alloc* alloc);
 
 partial_alloc compute_demands(process_scp* myscp, double* cutoffs);
@@ -66,7 +68,9 @@ int gives_some_student_nothing(partial_alloc* myalloc);
 
 partial_alloc zero_alloc_for_process_scp(process_scp* myscp);
 
-partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myscp);
+partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myiscp);
+
+partial_alloc translate_alloc_for_input_scp(input_sch_ch_prob* target, partial_alloc* source);
 
 pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myscp);
 
@@ -98,8 +102,6 @@ void set_pure_entry(pure_alloc* alloc, int i, int j, int val);
 int pure_alloc_is_valid(pure_alloc* my_pure_alloc);
 
 void increment_pure_entry(pure_alloc* alloc, int i, int j, int incr);
-
-void print_sparse_partial_alloc(partial_alloc* my_alloc);
 
 void print_partial_alloc(partial_alloc* my_alloc);
 

@@ -16,8 +16,11 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   if (argc == 4) {
+    
     input_alloc = allocation_from_file(argv[1]);
+    
     input_scp = sch_ch_prob_from_file(argv[2]);
+    
     ex_ante_stable = atoi(argv[3]);
   }
   if (argc > 4)  {
@@ -41,7 +44,7 @@ int main(int argc, char *argv[]) {
   
   make_alloc_eff_and_par_dominant(&input_alloc, &input_process_scp, ex_ante_stable);
   
-  print_sparse_partial_alloc(&input_alloc); 
+  print_partial_alloc(&input_alloc); 
 
   destroy_process_scp(input_process_scp);
   destroy_input_sch_ch_prob(input_scp);

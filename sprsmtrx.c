@@ -94,6 +94,18 @@ void increment_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, doubl
   }
 }
 
+int col_is_active_for_row(dbl_sparse_matrix* mymat, int row_no, int col_no) {
+  int k;
+  
+  for (k = 1; k <= mymat->nos_active_cols[row_no-1]; k++) {
+    if (mymat->index_of_active_cols[row_no-1][k-1] == col_no) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 int_sparse_matrix copy_of_int_sp_matrix(int_sparse_matrix* given) {
   int i, k, no_rows;
 

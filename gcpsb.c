@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
   gcpsb_alloc = gcpsb_allocation(&input_scp);
   
-  print_sparse_partial_alloc(&gcpsb_alloc); 
+  print_partial_alloc(&gcpsb_alloc); 
 
   destroy_input_sch_ch_prob(input_scp);
   destroy_partial_alloc(gcpsb_alloc);

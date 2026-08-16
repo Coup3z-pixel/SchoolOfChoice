@@ -8,6 +8,10 @@ int get_priority(process_scp* myscp, int i, int j) {
   return int_entry(&(myscp->priorities), i, j);
 }
 
+void set_input_priority(input_sch_ch_prob* myiscp, int i, int j, int priority) {
+  myiscp->priorities[i-1][j-1] = priority;
+}
+
 int maximum_priority(process_scp* myscp) {
   int i, j, nst, nsc;
 
@@ -20,6 +24,24 @@ int maximum_priority(process_scp* myscp) {
   for (i = 1; i <= nst; i++) {
     for (j = 1; j <= nsc; j++) {
       answer = int_max(answer, get_priority(myscp, i, j));
+    }
+  }
+
+  return answer;
+}
+
+int maximum_input_priority(input_sch_ch_prob* myiscp) {
+  int i, j, nst, nsc;
+
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
+  
+  int answer;
+
+  answer = 0;
+  for (i = 1; i <= nst; i++) {
+    for (j = 1; j <= nsc; j++) {
+      answer = int_max(answer, get_input_priority(myiscp, i, j));
     }
   }
 
@@ -150,27 +172,23 @@ int student_ranking_of_school(process_scp* myscp, int i, int j) {
 }
 
 int safe_schools_are_safe(input_sch_ch_prob* myiscp) {
-  int i, j, nst, nsc, top_pr, no_safe_st;
+  int i, k, nst, safe_school, safe_priority, no_at_or_above;
 
   nst = myiscp->no_students;
-  nsc = myiscp->no_schools;
 
-  for (j = 1; j <= nsc; j++) {
-    top_pr = get_input_priority(myiscp, 1, j);
-    for (i = 2; i <= nst; i++) {
-      top_pr = max(top_pr, get_input_priority(myiscp, i, j));
-    }
-
-    no_safe_st = 0;
-    for (i = 1; i <= nst; i++) {
-      if (get_input_priority(myiscp, i, j) == top_pr) {
-	no_safe_st++;
+  for (i = 1; i <= nst; i++) {
+    safe_school = myiscp->preferences[i-1][myiscp->no_eligible_schools[i-1]-1];
+    safe_priority = get_input_priority(myiscp, i, safe_school);
+    no_at_or_above = 0;
+    for (k = 1; k <= nst; k++) {
+      if (is_eligible_input(myiscp, k, safe_school)) {
+	if (get_input_priority(myiscp, k, safe_school) >= safe_priority) {
+	  no_at_or_above++;
+	}
       }
     }
-
-    if (no_safe_st > myiscp->quotas[j-1]) {
-      fprintf(stderr, "At school %i the quota is %i and no_safe_st is %i.\n",
-	      j, myiscp->quotas[j-1], no_safe_st);
+    if (no_at_or_above > myiscp->quotas[safe_school-1]) {
+      fprintf(stderr, "Student %i is not safe at school %i.\n", i, safe_school);
       return 0;
     }
   }
@@ -265,11 +283,11 @@ dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp) {
   return answer;
 }
 
-dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp) {
+dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   int i, k, swap, nst, nsc;
 
-  nst = myscp->no_students;
-  nsc = myscp->no_schools;
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
 
   dbl_sparse_matrix answer;
 
@@ -278,14 +296,14 @@ dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp) {
   
   answer.nos_active_cols = malloc(nst * sizeof(int));
   for (i = 1; i <= nst; i++) {
-    answer.nos_active_cols[i-1] = myscp->no_eligible_schools[i-1];
+    answer.nos_active_cols[i-1] = myiscp->no_eligible_schools[i-1];
   }
   
   answer.index_of_active_cols = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
-    answer.index_of_active_cols[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int));
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
-      answer.index_of_active_cols[i-1][k-1] = myscp->preferences[i-1][k-1];
+    answer.index_of_active_cols[i-1] = malloc(myiscp->no_eligible_schools[i-1] * sizeof(int));
+    for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
+      answer.index_of_active_cols[i-1][k-1] = myiscp->preferences[i-1][k-1];
     }
     k = 1;
     while (k < answer.nos_active_cols[i-1]) {
@@ -308,8 +326,8 @@ dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp) {
   
   answer.entries = malloc(nst * sizeof(double*));
   for (i = 1; i <= nst; i++) {
-    answer.entries[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(double));
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+    answer.entries[i-1] = malloc(myiscp->no_eligible_schools[i-1] * sizeof(double));
+    for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
       answer.entries[i-1][k-1] = 0.0;
     }
   }
@@ -317,11 +335,11 @@ dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp) {
   return answer;
 }
 
-int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myscp) {
+int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   int i, k, swap, nst, nsc;
 
-  nst = myscp->no_students;
-  nsc = myscp->no_schools;
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
 
   int_sparse_matrix answer;
 
@@ -330,14 +348,14 @@ int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myscp) {
   
   answer.nos_active_cols = malloc(nst * sizeof(int));
   for (i = 1; i <= nst; i++) {
-    answer.nos_active_cols[i-1] = myscp->no_eligible_schools[i-1];
+    answer.nos_active_cols[i-1] = myiscp->no_eligible_schools[i-1];
   }
   
   answer.index_of_active_cols = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
-    answer.index_of_active_cols[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int));
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
-      answer.index_of_active_cols[i-1][k-1] = myscp->preferences[i-1][k-1];
+    answer.index_of_active_cols[i-1] = malloc(myiscp->no_eligible_schools[i-1] * sizeof(int));
+    for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
+      answer.index_of_active_cols[i-1][k-1] = myiscp->preferences[i-1][k-1];
     }
     k = 1;
     while (k < answer.nos_active_cols[i-1]) {
@@ -360,8 +378,8 @@ int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myscp) {
   
   answer.entries = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
-    answer.entries[i-1] = malloc(myscp->no_eligible_schools[i-1] * sizeof(int));
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
+    answer.entries[i-1] = malloc(myiscp->no_eligible_schools[i-1] * sizeof(int));
+    for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
       answer.entries[i-1][k-1] = 0;
     }
   }
@@ -750,28 +768,6 @@ input_sch_ch_prob copy_of_input_scp(input_sch_ch_prob* myiscp) {
     for (j = 1; j <= nsc; j++) {
       answer.priorities[i-1][j-1] = myiscp->priorities[i-1][j-1];
     }
-  }
-
-  return answer;
-}
-
-input_sch_ch_prob stu_no_priority_scp(input_sch_ch_prob* myiscp) {
-  int i, j, k, nst, nsc;
-  
-  input_sch_ch_prob answer;
-
-  answer = copy_of_input_scp(myiscp);
-
-  nst = answer.no_students;
-  nsc = answer.no_schools;
-
-  for (i = 1; i <= nst; i++ ) {
-    for (j = 1; j <= nsc; j++) {
-      answer.priorities[i-1][j-1] = i;
-    }
-    k = answer.no_eligible_schools[i-1];
-    j = answer.preferences[i-1][k-1];
-    answer.priorities[i-1][j-1] = nst + 1;
   }
 
   return answer;

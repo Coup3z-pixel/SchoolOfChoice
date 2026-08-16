@@ -66,7 +66,8 @@ int random_integer_in_one_to_max(int max) {
   unif_rv = uniform();
 
   answer = 1;
-  while (!(answer/max <= unif_rv && (answer+1)/max >= unif_rv)) {
+  
+  while ((double)(answer - 1) > max * unif_rv || (double)answer < max * unif_rv) {
     answer++;
   }
 
@@ -74,7 +75,7 @@ int random_integer_in_one_to_max(int max) {
 }
 
 int* random_ordering(int no_elmts) {
-  int i, no_remaining, random_int, count;
+  int i, no_remaining, random_int, cand_slot, count;
 
   int* answer;
 
@@ -86,15 +87,17 @@ int* random_ordering(int no_elmts) {
   no_remaining = no_elmts;
   while (no_remaining > 0) {
     random_int = random_integer_in_one_to_max(no_remaining);
-    i = 0;
-    count = 0;
-    while (count < random_int) {
-      if (answer[i-1] == 0) {
+    cand_slot = 1;
+    count = 1;
+    
+    while (answer[cand_slot-1] != 0 || count < random_int) {
+      if (answer[cand_slot-1] == 0) {
 	count++;
       }
-      i++;
+      cand_slot++;
     }
-    answer[i-1] = no_remaining;
+    
+    answer[cand_slot-1] = no_remaining;
     no_remaining--;
   }
 

@@ -307,6 +307,7 @@ stu_sch_pair_list_node* random_loop(dgraph* graph) {
     tip_node = node_of_pair(graph, tip->stu, tip->sch);
     no_cand = length_of_list(tip_node->targets);
     cand_no = random_integer_in_one_to_max(no_cand);
+    
     next_target = copy_of_list_element_n(tip_node->targets, cand_no);
     if (list_contains_pair(initial_node, next_target->stu, next_target->sch)) {
       done = 1;

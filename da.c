@@ -18,13 +18,17 @@ int main(int argc, char const *argv[])
     exit(0);
   }
   
-  pure_alloc da_alloc;
-  da_alloc = deferred_acceptance(&input_scp);
+  pure_alloc pure_da_alloc;
+  pure_da_alloc = deferred_acceptance(&input_scp);
+  
+  partial_alloc da_alloc;
+  da_alloc = partial_allocation_from_pure(&pure_da_alloc);
 
-  print_pure_alloc(&da_alloc); 
+  print_partial_alloc(&da_alloc); 
   
   destroy_input_sch_ch_prob(input_scp); 
-  destroy_pure_alloc(da_alloc); 
+  destroy_pure_alloc(pure_da_alloc);
+  destroy_partial_alloc(da_alloc);
 
   return 0;
 }

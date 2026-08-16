@@ -8,8 +8,9 @@ partial_alloc gcpsb_allocation(input_sch_ch_prob* myiscp) {
   process_scp pr_scp;
   input_sch_ch_prob red_scp;
   partial_alloc mccb_alloc;
+  partial_alloc feas_guide;
+  partial_alloc red_scp_alloc;
   partial_alloc gcpsb_alloc;
-  partial_alloc gcpsb_copy;
 
   nsc = myiscp->no_schools;
   coarse = malloc(nsc * sizeof(int));
@@ -18,9 +19,14 @@ partial_alloc gcpsb_allocation(input_sch_ch_prob* myiscp) {
   }
   
   pr_scp = process_scp_from_input(myiscp);
-  mccb_alloc = mcca_alloc_plus_coarse_cutoffs(&pr_scp, coarse);
+  
+  mccb_alloc = mccb_alloc_plus_coarse_cutoffs(&pr_scp, coarse);
   red_scp = reduced_input_scp(myiscp, coarse);
-  gcpsb_alloc = simple_GCPS_alloc_with_guide(&red_scp,&mccb_alloc);
+  feas_guide = translate_alloc_for_input_scp(&red_scp, &mccb_alloc);
+  destroy_partial_alloc(mccb_alloc);
+  red_scp_alloc = simple_GCPS_alloc_with_guide(&red_scp, &feas_guide);;
+  gcpsb_alloc = translate_alloc_for_input_scp(myiscp, &red_scp_alloc);
+  destroy_partial_alloc(red_scp_alloc);
   
   max_slack_school = allocation_is_wasteful(&gcpsb_alloc, &pr_scp);
 
@@ -28,12 +34,15 @@ partial_alloc gcpsb_allocation(input_sch_ch_prob* myiscp) {
     fprintf(stderr, "We have a wasteful allocation.\n");
     
     destroy_input_sch_ch_prob(red_scp);
-    coarse[max_slack_school-1]--;
-    red_scp = reduced_input_scp(myiscp, coarse);
     
-    gcpsb_copy = copy_of_partial_alloc(&gcpsb_alloc);
+    coarse[max_slack_school-1]--;
+    
+    red_scp = reduced_input_scp(myiscp, coarse);
+    feas_guide = translate_alloc_for_input_scp(&red_scp, &gcpsb_alloc);
     destroy_partial_alloc(gcpsb_alloc);
-    gcpsb_alloc = simple_GCPS_alloc_with_guide(&red_scp, &gcpsb_copy);
+    red_scp_alloc = simple_GCPS_alloc_with_guide(&red_scp, &feas_guide);
+    gcpsb_alloc = translate_alloc_for_input_scp(myiscp, &red_scp_alloc);
+    destroy_partial_alloc(red_scp_alloc);
 
     max_slack_school = allocation_is_wasteful(&gcpsb_alloc, &pr_scp);
   }
@@ -44,19 +53,4 @@ partial_alloc gcpsb_allocation(input_sch_ch_prob* myiscp) {
 
   return gcpsb_alloc;
 }
-
-/*
-partial_alloc gcpsbeff_allocation(input_sch_ch_prob* myiscp, int ex_ante_stable) {
-  partial_alloc gcpsb_alloc;
-  process_scp myscp;
-  
-  myscp = process_scp_from_input(myiscp);
-  gcpsb_alloc = gcpsb_allocation(myiscp);
-  make_alloc_eff_and_par_dominant(&gcpsb_alloc, &myscp, ex_ante_stable);
-
-  destroy_process_scp(myscp);
-
-  return gcpsb_alloc;
-}
-*/
 

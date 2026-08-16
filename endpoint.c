@@ -133,119 +133,8 @@ double time_until_trajectory_change(int_sparse_matrix* theta,
   final_min = min(final_min,time_til_feasible_guide_not_above);
 
   time_til_feasible_guide_not_feasible = time_until_feasible_guide_not_feasible(theta, 
-										    working_scp,
-										    feasible_guide);
-  
-  final_min = min(final_min,time_til_feasible_guide_not_feasible);
-
-  return final_min;
-}
-
-double time_until_feasible_guide_not_above_allocOLD(int_sparse_matrix* theta,
-						     element_list* alpha, int* favorites,
-						     process_scp* working_scp,
-						     partial_alloc* feasible_guide)  {
-  int i, j, k, slope;
-  
-  int nst = working_scp->no_students;
-
-  double lower_bound_min,temp_min;
-
-  lower_bound_min = working_scp->time_remaining;;
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      slope = int_entry(theta, i, j);
-      if (favorites[i-1] == j) {
-	slope--;
-      }
-      if (slope < 0) {
-	temp_min = - get_entry(feasible_guide, i, j)/slope;
-	lower_bound_min = min(lower_bound_min, temp_min);
-      }
-    }
-  }
-
-  return lower_bound_min;
-}
-
-double time_until_feasible_guide_not_feasibleOLD(int_sparse_matrix* theta,
-						  element_list* alpha, process_scp* working_scp,
-						  partial_alloc* feasible_guide) {
-  int i, j, k, slope;
-  
-  int nst = working_scp->no_students;
-  int nsc = working_scp->no_schools;
-
-  double individual_min, school_quota_min, temp_min, final_min;
-
-  individual_min = working_scp->time_remaining;
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      slope = int_entry(theta, i, j);
-      if (slope < 0) {	
-	temp_min = - get_entry(feasible_guide, i, j)/slope;
-      }
-      if (slope > 0) {
-	temp_min = (is_eligible(working_scp, i, j) * working_scp->time_remaining)/slope;
-      }
-      if (slope != 0) {
-	individual_min = min(individual_min, temp_min);
-      }
-    }
-  }
-
-  double* unalloc_quota = malloc(nsc * sizeof(double));
-  int* slopes = malloc(nsc * sizeof(int));
-  for (j = 1; j <= nsc; j++) {
-    unalloc_quota[j-1] = working_scp->quotas[j-1];
-    slopes[j-1] = 0;
-  }
-
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      unalloc_quota[j-1] -= get_entry(feasible_guide, i, j);
-      slopes[j-1] += int_entry(theta, i, j);
-    }
-  }
-
-  school_quota_min = working_scp->time_remaining;
-  for (j = 1; j <= nsc; j++) {
-    if (slopes[j-1] > 0) {
-      temp_min = unalloc_quota[j-1]/slopes[j-1];      
-      school_quota_min = min(school_quota_min, temp_min);
-    }
-  }
-
-  free(unalloc_quota);
-  free(slopes);
-  final_min = min(individual_min, school_quota_min);
-  
-  return final_min;
-}
-
-double time_until_trajectory_changeOLD(int_sparse_matrix* theta, element_list* alpha,
-					int* favorites, process_scp* working_scp,
-					partial_alloc* feasible_guide) {
-  double final_min, time_til_some_school_exhaustion, time_til_feasible_guide_not_above,
-    time_til_feasible_guide_not_feasible;
-
-  final_min = working_scp->time_remaining;
-
-  time_til_some_school_exhaustion = time_until_some_school_exhausted(favorites, working_scp);
-  final_min = min(final_min,time_til_some_school_exhaustion);
-
-  time_til_feasible_guide_not_above = time_until_feasible_guide_not_above_allocOLD(theta, alpha,
-										favorites,
 										working_scp,
 										feasible_guide);
-  final_min = min(final_min,time_til_feasible_guide_not_above);
-
-  time_til_feasible_guide_not_feasible = time_until_feasible_guide_not_feasibleOLD(theta, alpha,
-										    working_scp,
-										    feasible_guide);
   
   final_min = min(final_min,time_til_feasible_guide_not_feasible);
 
@@ -283,24 +172,6 @@ void adjust_feasible_guide(partial_alloc* feasible_guide, process_scp* myscp,
   }
 }
 
-void adjust_feasible_guideOLD(partial_alloc* feasible_guide, int_sparse_matrix* theta,
-			       element_list* alpha, int* favorites, double delta) {
-  int i, j, k;
-
-  int nst = feasible_guide->no_students;
-
-  for (i = 1; i <= nst; i++) {
-    for (k = 1; k <= alpha[i-1].no_elements; k++) {
-      j = alpha[i-1].indices[k-1];
-      increment_entry(feasible_guide, i, j, int_entry(theta, i, j) * delta);
-    }
-  }
-  
-  for (i = 1; i <= nst; i++) { 
-    increment_entry(feasible_guide, i, favorites[i-1], -delta);
-  }
-}
-
 void decrement_working_scp(process_scp* working_scp, int* favorites, double delta) {
   int i, j, k, nst, nsc, no_elig, cursor;
 
@@ -322,16 +193,6 @@ void decrement_working_scp(process_scp* working_scp, int* favorites, double delt
       full_schools[j-1] = 0;
     }
   }
-
-  /*
-  for (i = 1; i <= nst; i++) {
-    for (j = 1; j <= nsc; j++) {
-      if (full_schools[j-1] == 1) {
-	working_scp->eligible[i-1][j-1] = 0;
-      }
-    }
-  }
-  */
 
   for (i = 1; i <= nst; i++) {
     no_elig = working_scp->no_eligible_schools[i-1];
@@ -362,60 +223,10 @@ void decrement_working_scp(process_scp* working_scp, int* favorites, double delt
   free(full_schools);
 }
 
-void move_to_endpoint_of_segmentOLD(int_sparse_matrix* theta, element_list* alpha,
-				     int* favorites, process_scp* working_scp,
-				     partial_alloc* feasible_guide,
-				     partial_alloc* final_alloc) {
-
-  int nst = working_scp->no_students;
-  int nsc = working_scp->no_schools;
-
-  /*  fprintf(stderr, "There are %i students and %i schools.\n", nst, nsc); */
-  
-  double delta = time_until_trajectory_changeOLD(theta, alpha, favorites, working_scp,
-						  feasible_guide);
-  
-  augment_partial_alloc(final_alloc, favorites, delta);
-
-  if (!is_a_feasible_allocation(feasible_guide, working_scp)) {
-    fprintf(stderr, "Before adjusting and decrementing, the feasible guide is not feasible\n.");
-    exit(0);
-  }
-  /*
-  else {
-    fprintf(stderr, "Before adjusting and decrementing, things seem OK.\n");
-  }
-  */
-    
-  adjust_feasible_guideOLD(feasible_guide, theta, alpha, favorites, delta);
-  decrement_working_scp(working_scp, favorites, delta);
-
-  if (!is_a_feasible_allocation(feasible_guide, working_scp)) {
-    fprintf(stderr, "The time remaining is %1.4f.\n", working_scp->time_remaining);
-    for (int i = 1; i <= nst; i++) {
-      double sum = 0.0;
-      for (int j = 1; j <= nsc; j++) {
-	sum += get_entry(feasible_guide, i, j);
-      }
-      if (sum < working_scp->time_remaining - 0.000001) {
-	fprintf(stderr, "Student %i is getting only %1.4f.\n", i, sum);
-      }
-    }
-    
-    fprintf(stderr, "After adjusting and decrementing, the feasible guide is not feasible\n.");
-    exit(0);
-  }
-  /*
-  else {
-    fprintf(stderr, "After adjusting and decrementing, things seem OK.\n");
-  }
-  */
-}
-
 void move_to_endpoint_of_segment(int_sparse_matrix* theta, 
-				     int* favorites, process_scp* working_scp,
-				     partial_alloc* feasible_guide,
-				     partial_alloc* final_alloc) {
+				 int* favorites, process_scp* working_scp,
+				 partial_alloc* feasible_guide,
+				 partial_alloc* final_alloc) {
 
   int nst = working_scp->no_students;
   int nsc = working_scp->no_schools;

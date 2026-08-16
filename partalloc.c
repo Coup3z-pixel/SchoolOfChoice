@@ -28,6 +28,10 @@ void increment_entry(partial_alloc* alloc, int i, int j, double incr) {
   increment_dbl_entry(&(alloc->sparse), i, j, incr);
 }
 
+int sch_is_active_for_stu(partial_alloc* alloc, int i, int j) {
+  return col_is_active_for_row(&(alloc->sparse), i, j);
+}
+
 double remaining_time(partial_alloc* alloc) {
   int j, nsc;
 
@@ -409,18 +413,39 @@ partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myscp) {
   return answer;
 }
 
-pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myscp) {
+partial_alloc translate_alloc_for_input_scp(input_sch_ch_prob* target, partial_alloc* source) {
+  int i, j, k, nst;
+  
+  nst = target->no_students;
+  
+  partial_alloc answer;
+
+  answer = zero_alloc_for_input_scp(target);
+
+  for (i = 1; i <= nst; i++) {
+    for (k = 1; k <= answer.sparse.nos_active_cols[i-1]; k++) {
+      j = answer.sparse.index_of_active_cols[i-1][k-1];
+      if (sch_is_active_for_stu(source, i, j)) {
+	set_entry(&answer, i, j, get_entry(source, i, j));
+      }
+    }
+  }
+
+  return answer;  
+}
+
+pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myiscp) {
 
   int nst, nsc;
   
-  nst = myscp->no_students;
-  nsc = myscp->no_schools;
+  nst = myiscp->no_students;
+  nsc = myiscp->no_schools;
   
   pure_alloc answer;
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_int_sp_mat_for_input(myscp);
+  answer.sparse = new_int_sp_mat_for_input(myiscp);
   
   return answer;
 }
@@ -606,8 +631,7 @@ void increment_pure_entry(pure_alloc* alloc, int i, int j, int incr) {
   increment_int_entry(&(alloc->sparse), i, j, incr);
 }
 
-
-void print_sparse_partial_alloc(partial_alloc* my_alloc) {
+void print_partial_alloc(partial_alloc* my_alloc) {
   int i, k, l, nst, nsc, sch_no, old_sch_no;
   
   nst = my_alloc->no_students;
@@ -657,67 +681,51 @@ void print_sparse_partial_alloc(partial_alloc* my_alloc) {
   printf("\n");
 }
 
-void print_partial_alloc(partial_alloc* my_alloc) {
-  int i, j, nst, nsc;
-  
-  nst = my_alloc->no_students;
-  nsc = my_alloc->no_schools;
-  
-  printf("/* This is a sample introductory comment. */\n");
-
-  printf("There are %d students and %d schools\n",nst,nsc);
-  
-  for (j = 1; j <= my_alloc->no_schools; j++) {
-    if (j < 10) {
-      printf(" ");
-    }
-    printf("         %i:", j);
-  }
-  
-  for (i = 1; i <= my_alloc->no_students; i++) {
-    printf("\n%i:",i);
-    if (i < 10) {
-      printf(" ");
-    }
-    for (j = 1; j <= my_alloc->no_schools; j++) {
-      if (get_entry(my_alloc, i, j) < -0.000001) {
-	fprintf(stderr, "We have a negative allocation probability.\n");
-	exit(0);
-      }
-      printf("  %2.8f", fabs(get_entry(my_alloc, i, j)));
-    }
-  }
-  printf("\n");
-}
-
 void fprint_partial_alloc(partial_alloc* my_alloc) {
-  int i, j, nst, nsc;
+  int i, k, l, nst, nsc, sch_no, old_sch_no;
   
   nst = my_alloc->no_students;
   nsc = my_alloc->no_schools;
   
   fprintf(stderr, "/* This is a sample introductory comment. */\n");
 
-  fprintf(stderr, "There are %d students and %d schools\n",nst,nsc); 
-  
-  for (j = 1; j <= my_alloc->no_schools; j++) {
-    if (j < 10) {
-      fprintf(stderr, " ");
-    }
-    fprintf(stderr, "         %i:", j);
+  fprintf(stderr, "There are %d students and %d schools\n",nst,nsc);
+
+  fprintf(stderr, "The numbers of eligible schools are\n");
+  fprintf(stderr, "(");
+  for (i = 1; i <= nst - 1; i++) {
+    fprintf(stderr, "%i,", my_alloc->sparse.nos_active_cols[i-1]);
   }
+  fprintf(stderr, "%i)\n", my_alloc->sparse.nos_active_cols[nst-1]);
+  fprintf(stderr, "The lists of eligible schools are");
+  for (i = 1; i <= nst; i++) {
+    fprintf(stderr, "\n");
+    l = my_alloc->sparse.nos_active_cols[i-1];
+    fprintf(stderr, "%i: ", i);
+    for (k = 1; k <= l - 1; k++) {
+      fprintf(stderr, "%i, ", my_alloc->sparse.index_of_active_cols[i-1][k-1]);
+    }
+    fprintf(stderr, "%i", my_alloc->sparse.index_of_active_cols[i-1][l-1]);
+  }
+  
+  fprintf(stderr, "\nThe allocations are");
   
   for (i = 1; i <= my_alloc->no_students; i++) {
     fprintf(stderr, "\n%i:",i);
     if (i < 10) {
       fprintf(stderr, " ");
     }
-    for (j = 1; j <= my_alloc->no_schools; j++) {
-      if (get_entry(my_alloc, i, j) < -0.000001) {
-	fprintf(stderr, "We have a negative allocation probability.\n");
-	exit(0);
+    old_sch_no = 0;
+    for (k = 1; k <= my_alloc->sparse.nos_active_cols[i-1]; k++) {
+      sch_no = my_alloc->sparse.index_of_active_cols[i-1][k-1];
+      for (l = 1; l <= sch_no - old_sch_no - 1; l++) {
+	fprintf(stderr, "               ");
       }
-      fprintf(stderr, "  %2.8f", fabs(get_entry(my_alloc, i, j)));
+      if (sch_no < 10) {
+	fprintf(stderr, " ");
+      }
+      fprintf(stderr, " %i: %2.8f", sch_no, fabs(get_entry(my_alloc, i, sch_no)));
+      old_sch_no = sch_no;
     }
   }
   fprintf(stderr, "\n");

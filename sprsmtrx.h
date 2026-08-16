@@ -37,6 +37,8 @@ void set_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, double val)
 
 void increment_dbl_entry(dbl_sparse_matrix* mymat, int row_no, int col_no, double incr);
 
+int col_is_active_for_row(dbl_sparse_matrix* mymat, int row_no, int col_no);
+
 int_sparse_matrix copy_of_int_sp_matrix(int_sparse_matrix* given);
 
 dbl_sparse_matrix copy_of_dbl_sp_mat(dbl_sparse_matrix* given);

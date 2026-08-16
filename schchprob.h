@@ -31,6 +31,10 @@ int get_input_priority(input_sch_ch_prob* myiscp, int i, int j);
 
 int get_priority(process_scp* myscp, int i, int j);
 
+void set_input_priority(input_sch_ch_prob* myiscp, int i, int j, int priority); 
+
+int maximum_input_priority(input_sch_ch_prob* myiscp);
+
 int maximum_priority(process_scp* myscp);
 
 /* favorites[i-1] is i's favorite among schools i is eligible for */
@@ -53,15 +57,15 @@ int a_school_has_too_many_only_students(process_scp* myscp);
 
 int student_ranking_of_school(process_scp* myscp, int i, int j);
 
-int safe_schools_are_safe(input_sch_ch_prob* myscp);
+int safe_schools_are_safe(input_sch_ch_prob* myiscp);
 
 int_sparse_matrix new_int_sp_mat(process_scp* myscp);
 
 dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp);
 
-dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myscp);
+dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp);
 
-int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myscp);
+int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myiscp);
 
 int_sparse_matrix sparse_priorities(input_sch_ch_prob* myscp);
 
@@ -76,8 +80,6 @@ process_scp reduced_scp(process_scp* myscp, int* coarse_cutoffs);
 input_sch_ch_prob reduced_input_scp(input_sch_ch_prob* myiscp, int* coarse_cutoffs);
 
 input_sch_ch_prob copy_of_input_scp(input_sch_ch_prob* myiscp);
-
-input_sch_ch_prob stu_no_priority_scp(input_sch_ch_prob* myiscp);
 
 input_sch_ch_prob make_toy_sch_ch_prob();
 

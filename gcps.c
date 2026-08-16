@@ -36,8 +36,7 @@ int main(int argc, char const *argv[])
     }
   }
 
-
-  print_sparse_partial_alloc(&gcps_alloc); 
+  print_partial_alloc(&gcps_alloc); 
   
   destroy_process_scp(input_process_scp); 
   destroy_partial_alloc(gcps_alloc);

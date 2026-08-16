@@ -31,20 +31,20 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "The gcpsa allocation is inefficient.\n");
 
     graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
-    report_on_the_directed_graph(graph); 
+    /* report_on_the_directed_graph(graph); */
     destroy_dgraph(graph);
 
     graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
-    report_on_the_components(graph);
+    /* report_on_the_components(graph); */
     destroy_dgraph(graph);
 
     graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
-    report_on_trade_set_decomp(graph);
+    /* report_on_trade_set_decomp(graph); */
     destroy_dgraph(graph);
   }
 
   
-  print_sparse_partial_alloc(&gcpsa_alloc); 
+  print_partial_alloc(&gcpsa_alloc); 
 
   destroy_partial_alloc(gcpsa_alloc);
   destroy_process_scp(input_process_scp);

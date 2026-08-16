@@ -94,7 +94,7 @@ int length_of_list(stu_sch_pair_list_node* list) {
     answer = 0;
   }
   else {
-    answer = 1;
+    answer = 0;
     while (list != NULL) {
       answer++;
       list = list->next;
