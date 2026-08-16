@@ -164,11 +164,6 @@ void i_applies_to_next_school(input_sch_ch_prob* myiscp, element_list** applican
 			      int i, int j) {
   int k, hit, new_school, no_elig;
 
-  if (j == 3) {
-    fprintf(stderr, "Now student %i is being rejected by school 3.\n", i);
-    fprintf(stderr, "Student %i has %i eligible schools.\n", i, myiscp->no_eligible_schools[i-1]);
-  }
-
   no_elig = myiscp->no_eligible_schools[i-1];
 
   hit = 0;
@@ -178,8 +173,6 @@ void i_applies_to_next_school(input_sch_ch_prob* myiscp, element_list** applican
       new_school = myiscp->preferences[i-1][k];
     }
   }
-
-  /*  fprintf(stderr, "Now we are rejecting %i.\n", i); */
   
   add_element_to_possibly_NULL_element_list(&(applicant_lists[new_school-1]), i);
 }
@@ -191,17 +184,9 @@ int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_
   
   cand_worst_pr = get_input_priority(myiscp, cand_worst_st, j);
 
-  if (j == 3) {
-    fprintf(stderr, "Student %i had priority %i at school 3.\n", cand_worst_st, cand_worst_pr);
-  }
-
   for (i = 2; i <= school_app_list->no_elements; i++) {
     cand_st = school_app_list->indices[i-1];  
     cand_pr = get_input_priority(myiscp, cand_st, j);
-
-    if (j == 3) {
-      fprintf(stderr, "Student %i has priority %i at school 3.\n", cand_st, cand_pr);
-    }
     
     if (cand_pr < cand_worst_pr) {
       cand_worst_pr = cand_pr;

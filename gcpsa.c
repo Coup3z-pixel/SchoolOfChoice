@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
   gcpsa_alloc = gcpsa_allocation(&input_scp);
 
   if (!allocation_is_efficient(&gcpsa_alloc, &input_process_scp, 0)) {
-    fprintf(stderr, "The gcpsa allocation is inefficient.\n");
 
     graph = reduced_graph(&gcpsa_alloc, &input_process_scp, 0);
     /* report_on_the_directed_graph(graph); */

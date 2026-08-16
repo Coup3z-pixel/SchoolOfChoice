@@ -30,29 +30,16 @@ partial_alloc GCPS_allocation(input_sch_ch_prob* input, run_data* data) {
   pivot_list probe_list;
   process_scp input_pr_scp;
   pure_alloc pure_da;
-
-  if (!safe_schools_are_safe(input)) {
-    fprintf(stderr, "Unsafe safe schools in input!\n");
-    exit(0);
-  }
-  else {
-    fprintf(stderr, "input is OK.\n");
-  }
-
-  fprintf(stderr, "Going into deferred acceptannce.\n");
   
   pure_da = deferred_acceptance(input); 
-
-  fprintf(stderr, "Leaving deferred acceptannce.\n");
   
   feasible_guide = partial_allocation_from_pure(&pure_da);
   
   /*  destroy_input_sch_ch_prob(stu_no_pr_scp); */
-  destroy_pure_alloc(pure_da);  
-  destroy_input_sch_ch_prob(*input);
-  
+  destroy_pure_alloc(pure_da);    
   
   input_pr_scp = process_scp_from_input(input);
+  destroy_input_sch_ch_prob(*input);
   probe_list = void_pivot_list();
 
   return GCPS_allocation_with_guide(&input_pr_scp, &feasible_guide, &probe_list, data);

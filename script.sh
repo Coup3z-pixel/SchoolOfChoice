@@ -3,16 +3,17 @@
 echo "The script began at "
 date
 
-mkdir TestSCPs TestMATs TestDETs
+mkdir TestSCPs TestMATs TestEFFs TestDETs
 
-for schno in 10 15 20 25 30 35 40 45
+for schno in 10 20 30 40 50
 do
-    stuno=5
+    stuno=10
     nameone=sch$schno
     nametwo=stu$stuno
 
     SCPfilename=$nameone$nametwo.scp
     MATfilename=$nameone$nametwo.mat
+    EFFfilename=$nameone$nametwo.eff
     DETfilename=$nameone$nametwo.det
 
     no_sch=$schno
@@ -26,11 +27,15 @@ do
 
     cd ../TestMATs
     touch "$MATfilename"
-    ../gcps ../TestSCPs/"$SCPfilename" > "$MATfilename"
+    ../gcpsa ../TestSCPs/"$SCPfilename" > "$MATfilename"
+
+    cd ../TestEFFs
+    touch "$EFFfilename"
+    ../effpardo ../TestMATs/"$MATfilename" ../TestSCPs/"$SCPfilename" 0 > "$EFFfilename"
 
     cd ../TestDETs
     touch "$DETfilename"
-    ../purify ../TestMATs/"$MATfilename" > "$DETfilename"
+    ../purify ../TestEFFs/"$EFFfilename" > "$DETfilename"
 
     cd ..
 done
@@ -49,6 +54,14 @@ then
     rm *
     cd ..
     rmdir TestMATs
+fi
+
+if [ -d TestEFFs ]
+then
+    cd TestEFFs
+    rm *
+    cd ..
+    rmdir TestEFFs
 fi
 
 if [ -d TestDETs ]
