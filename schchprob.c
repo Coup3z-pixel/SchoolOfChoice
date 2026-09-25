@@ -196,7 +196,7 @@ int safe_schools_are_safe(input_sch_ch_prob* myiscp) {
   return 1;
 }
 
-int_sparse_matrix new_int_sp_mat(process_scp* myscp) {
+int_sparse_matrix zero_int_sp_mat_for_process(process_scp* myscp) {
   int i, k, nst, nsc;
 
   nst = myscp->no_students;
@@ -231,7 +231,7 @@ int_sparse_matrix new_int_sp_mat(process_scp* myscp) {
   return answer;
 } 
 
-dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp) {
+dbl_sparse_matrix zero_dbl_sp_mat_for_process(process_scp* myscp) {
   int i, k, swap, nst, nsc;
 
   nst = myscp->no_students;
@@ -283,7 +283,7 @@ dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp) {
   return answer;
 }
 
-dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp) {
+dbl_sparse_matrix zero_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   int i, k, swap, nst, nsc;
 
   nst = myiscp->no_students;
@@ -335,7 +335,7 @@ dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   return answer;
 }
 
-int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myiscp) {
+int_sparse_matrix zero_int_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   int i, k, swap, nst, nsc;
 
   nst = myiscp->no_students;
@@ -387,42 +387,48 @@ int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myiscp) {
   return answer;
 }
 
-process_scp process_scp_from_input(input_sch_ch_prob* myscp) {
+process_scp process_scp_from_input(input_sch_ch_prob* myiscp) {
   
   process_scp new_scp;
 
   int i, j, k;
 
-  int nst = myscp->no_students;
-  int nsc = myscp->no_schools;
+  int nst = myiscp->no_students;
+  int nsc = myiscp->no_schools;
 
   new_scp.no_students = nst;
   new_scp.no_schools = nsc;
 
+  new_scp.requirements = malloc(nst * sizeof(double));
+  for (i = 1; i <= nst; i++) {
+    new_scp.requirements[i-1] = 1.0;
+  }
+
   new_scp.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
-    new_scp.quotas[j-1] = (double)myscp->quotas[j-1];
+    new_scp.quotas[j-1] = (double)myiscp->quotas[j-1];
   }
 
   new_scp.no_eligible_schools = malloc(nst * sizeof(int));
   for (i = 1; i <= nst; i++) {
-    new_scp.no_eligible_schools[i-1] = myscp->no_eligible_schools[i-1];
+    new_scp.no_eligible_schools[i-1] = myiscp->no_eligible_schools[i-1];
   }
   
   new_scp.preferences = malloc(nst * sizeof(int*));
   for (i = 1; i <= nst; i++) {
     new_scp.preferences[i-1] = malloc(new_scp.no_eligible_schools[i-1] * sizeof(int));
-    for (k = 1; k <= myscp->no_eligible_schools[i-1]; k++) {
-      new_scp.preferences[i-1][k-1] = myscp->preferences[i-1][k-1];
+    for (k = 1; k <= myiscp->no_eligible_schools[i-1]; k++) {
+      new_scp.preferences[i-1][k-1] = myiscp->preferences[i-1][k-1];
     }
   }
 
-  new_scp.priorities = sparse_priorities(myscp);
+  new_scp.priorities = sparse_priorities(myiscp);
 
   new_scp.time_remaining = 1.0;
 
   return new_scp;
 } 
+
 
 int_sparse_matrix sparse_priorities(input_sch_ch_prob* myscp) {
   int i, k, l, nst, nsc;
@@ -455,8 +461,7 @@ int_sparse_matrix sparse_priorities(input_sch_ch_prob* myscp) {
   return answer;
 }
 
-process_scp left_sub_process_scp(process_scp* myscp, subset* J_subset,
-					      subset* P_subset) {
+process_scp left_sub_process_scp(process_scp* myscp, subset* J_subset, subset* P_subset) {
   process_scp new_scp;
   
   int i, j, k, l, p, count;
@@ -485,6 +490,11 @@ process_scp left_sub_process_scp(process_scp* myscp, subset* J_subset,
   new_scp.no_students = nst;
   new_scp.no_schools = nsc;
 
+  new_scp.requirements = malloc(nst * sizeof(double));
+  for (i = 1; i <= nst; i++) {
+    new_scp.requirements[i-1] = myscp->requirements[J_index.indices[i-1]-1];
+  }
+
   new_scp.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
     new_scp.quotas[j-1] = myscp->quotas[P_index.indices[j-1]-1];
@@ -510,7 +520,7 @@ process_scp left_sub_process_scp(process_scp* myscp, subset* J_subset,
     }
   }
 
-  new_scp.priorities = new_int_sp_mat(&new_scp);
+  new_scp.priorities = zero_int_sp_mat_for_process(&new_scp);
   for (i = 1; i <= nst; i++ ) {
     for (k = 1; k <= new_scp.no_eligible_schools[i-1]; k++) {
       l = new_scp.preferences[i-1][k-1];
@@ -559,6 +569,11 @@ process_scp right_sub_process_scp(process_scp* myscp, subset* J_subset,
   new_scp.no_students = nst;
   new_scp.no_schools = nsc;
 
+  new_scp.requirements = malloc(nst * sizeof(double));
+  for (i = 1; i <= nst; i++) {
+    new_scp.requirements[i-1] = myscp->requirements[J_index.indices[i-1]-1];
+  }
+
   new_scp.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
     new_scp.quotas[j-1] = myscp->quotas[P_index.indices[j-1]-1];
@@ -590,7 +605,7 @@ process_scp right_sub_process_scp(process_scp* myscp, subset* J_subset,
     }
   }
 
-  new_scp.priorities = new_int_sp_mat(&new_scp);
+  new_scp.priorities = zero_int_sp_mat_for_process(&new_scp);
   for (i = 1; i <= nst; i++ ) {
     for (k = 1; k <= new_scp.no_eligible_schools[i-1]; k++) {
       l = new_scp.preferences[i-1][k-1];
@@ -619,6 +634,10 @@ process_scp reduced_scp(process_scp* myscp, int* coarse_cutoffs) {
 
   answer.no_students = nst;
   answer.no_schools = nsc;
+
+  for (i = 1; i <= nst; i++) {
+    answer.requirements[i-1] = myscp->requirements[i-1];
+  }
 
   answer.quotas = malloc(nsc * sizeof(double));
   for (j = 1; j <= nsc; j++) {
@@ -657,7 +676,7 @@ process_scp reduced_scp(process_scp* myscp, int* coarse_cutoffs) {
     }
   }
 
-  answer.priorities = new_int_sp_mat(&answer);
+  answer.priorities = zero_int_sp_mat_for_process(&answer);
   for (i = 1; i <= nst; i++ ) {
     for (k = 1; k <= answer.no_eligible_schools[i-1]; k++) {
       l = answer.preferences[i-1][k-1];
@@ -809,39 +828,6 @@ input_sch_ch_prob make_toy_sch_ch_prob() {
       myscp.priorities[i-1][j-1] = 0;
     }
   }
-
-  return myscp;
-}
-
-process_scp make_toy_process_scp() {
-  process_scp myscp;
-
-  myscp.no_eligible_schools = malloc(4 * sizeof(int));
-  myscp.no_eligible_schools[0] = 3;
-  myscp.no_eligible_schools[1] = 1;
-  myscp.no_eligible_schools[2] = 3;
-  myscp.no_eligible_schools[3] = 3;
-
-  myscp.preferences = malloc(4 * sizeof(int*));
-  myscp.preferences[0] = malloc(3 * sizeof(int));
-  myscp.preferences[1] = malloc(1 * sizeof(int));
-  myscp.preferences[2] = malloc(3 * sizeof(int));
-  myscp.preferences[3] = malloc(3 * sizeof(int));
-
-  myscp.preferences[0][0] = 1;
-  myscp.preferences[1][0] = 1;
-  myscp.preferences[2][0] = 1;
-  myscp.preferences[3][0] = 1;
-
-  myscp.preferences[0][1] = 2;
-  myscp.preferences[2][1] = 2;
-  myscp.preferences[3][1] = 2;
-
-  myscp.preferences[0][2] = 3;
-  myscp.preferences[2][2] = 3;
-  myscp.preferences[3][2] = 3;
-
-  myscp.priorities = new_int_sp_mat(&myscp);
 
   return myscp;
 }
@@ -1095,6 +1081,8 @@ void destroy_process_scp(process_scp myscp) {
   int i;
   
   int nst = myscp.no_students;
+
+  free(myscp.requirements);
 
   free(myscp.quotas);
   

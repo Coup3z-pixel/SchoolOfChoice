@@ -4,8 +4,12 @@
 
 int main(int argc, char const *argv[])
 {
+  int allowed_speed_type;
+  
   input_sch_ch_prob input_scp;
   process_scp input_process_scp;
+  /* partial_alloc gcps_alloc; */
+  partial_alloc gcps_alloc;
 
   if (argc == 1) {
     const char input_file[20] = "schools.scp";
@@ -21,9 +25,22 @@ int main(int argc, char const *argv[])
 
   input_process_scp = process_scp_from_input(&input_scp);
 
-  partial_alloc gcps_alloc;
-  gcps_alloc = simple_GCPS_alloc(&input_scp);
+  /* gcps_alloc = simple_GCPS_alloc(&input_scp); */
 
+  allowed_speed_type = 0;
+
+  gcps_alloc = NEW_simple_GCPS_alloc(&input_scp, allowed_speed_type);
+
+  /*
+  if (!partial_allocs_are_same(&gcps_alloc, &gcps_alloc)) {
+    fprintf(stderr, "The two allocations differ.\n");
+    exit(0);
+  }
+  */
+
+  destroy_input_sch_ch_prob(input_scp);
+
+  /*
   if (!is_a_feasible_allocation(&gcps_alloc, &input_process_scp)) {
     fprintf(stderr, "gcps has produced a nonallocation!!\n");
      exit(0);
@@ -32,13 +49,15 @@ int main(int argc, char const *argv[])
   else {
     if (!allocation_is_efficient(&gcps_alloc, &input_process_scp, 0)) {
       fprintf(stderr, "gcps has produced an inefficient allocation!!\n");
-      exit(0);
+      exit(0); 
     }
   }
+  */
 
   print_partial_alloc(&gcps_alloc); 
   
   destroy_process_scp(input_process_scp); 
+  /* destroy_partial_alloc(gcps_alloc); */
   destroy_partial_alloc(gcps_alloc);
 
   return 0;

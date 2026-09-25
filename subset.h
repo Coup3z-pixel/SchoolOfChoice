@@ -20,6 +20,39 @@ typedef struct List_of_Element_Lists {
   struct List_of_Element_Lists* next;
 } list_of_elt_lists;
 
+typedef struct Correspondence_Node {
+  int domain_pt;
+  element_list* image;
+  struct Correspondence_Node* next;
+} correspondence_node;
+
+typedef struct Correspondence {
+  correspondence_node* first_node;
+} correspondence;
+
+element_list* domain_of_correspondence(correspondence* mycorr);
+
+element_list* image_of_correspondence(correspondence* mycorr);
+
+element_list* image_of_corr_at_pt(correspondence* mycorr, int pt);
+
+int preimage_of_correspondence(correspondence* mycorr, int val);
+
+int y_is_in_image_of_x(correspondence* mycorr, int x, int y);
+
+typedef struct Correspondence_List {
+  correspondence* node_corr;
+  struct Correspondence_List* next;
+} correspondence_list;
+
+int length_of_cl(correspondence_list* list);
+
+correspondence*  nth_corr_of_cl(correspondence_list* list, int n);
+
+element_list*  J_list(correspondence_list* list);
+
+element_list*  P_list(correspondence_list* list);
+
 subset nullset(int large_set_size);
 
 subset fullset(int large_set_size);
@@ -31,6 +64,8 @@ int is_fullset(subset* my_set);
 int is_element(subset* my_set, int i);
 
 void add_element(subset* my_set, int new_elt);
+
+void add_element_list_to_subset(subset* my_set, element_list* increment);
 
 void add_subset(subset* my_set, subset* increment);
 
@@ -71,19 +106,29 @@ subset subset_of_element_list(element_list* my_index, int large_set_size);
 void subset_of_subset_to_subset(subset* new_subset, subset* given_subset,
 				subset* subset_of_subset);
 
-int indices_are_same(element_list* first, element_list* second);
+int element_lists_are_same(element_list* first, element_list* second);
 
 int element_list_has_element(element_list* my_ind, int elt);
 
-int* indices_of_elements(subset* my_subset);
+int first_element_list_contained_in_second(element_list* first, element_list* second);
+
+int* indices_of_elements(subset* my_subset); 
 
 void add_element_to_element_list(element_list* index_ptr, int elt);
+
+void add_element_list_to_element_list(element_list* index_ptr, element_list* increment);
 
 void add_element_to_possibly_NULL_element_list(element_list** index_ptr, int elt);
 
 void remove_element_from_element_list(element_list* index_ptr, int elt);
 
+void remove_subset_from_element_list(element_list* index_ptr, subset* decrement);
+
+void remove_element_list_from_element_list(element_list* index_ptr, element_list* decrement);
+
 void add_element_to_element_list_ptr(element_list** index_ptr, int elt);
+
+void add_element_list_to_element_list(element_list* index_ptr, element_list* increment);
 
 element_list* copy_of_element_list(element_list* given_index);
 
@@ -103,6 +148,8 @@ int list_of_elt_lists_is_empty(list_of_elt_lists* my_list);
 
 int length_of_list_of_elt_lists(list_of_elt_lists* my_list);
 
+element_list* union_of_the_lists(list_of_elt_lists* my_list);
+
 int element_of_list_set(list_of_elt_lists* my_list, int set_no, int elt_no);
 
 void add_element_list_to_list_of_elt_lists(list_of_elt_lists* my_list, element_list* my_index);
@@ -115,16 +162,26 @@ void print_vector_of_ints(int* vector, int dim);
 
 void fprint_subset(subset* my_subset);
 
-void print_element_list(element_list* my_index);
+void fprint_element_list(element_list* my_index);
 
 void print_element_list_of_subset(subset* my_subset);
 
 void print_list_of_elt_lists(list_of_elt_lists* my_list);
 
+void fprint_correspondence(correspondence* my_corr);
+
+void fprint_correspondence_list(correspondence_list* my_list);
+
 void destroy_subset(subset my_subset);
 
 void destroy_element_list(element_list my_index);
 
+void destroy_element_list_ptr(element_list* my_ptr);
+
 void destroy_list_of_elt_lists(list_of_elt_lists* my_list);
+
+void destroy_correspondence(correspondence* corr);
+
+void destroy_correspondence_list(correspondence_list* list);
 
 #endif /* SUBSET_H */

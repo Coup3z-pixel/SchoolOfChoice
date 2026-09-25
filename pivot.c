@@ -28,6 +28,30 @@ pivot* copy_of_pivot(pivot* my_pivot) {
   return new_pivot;
 }
 
+int pivots_are_same(pivot* pivot1, pivot* pivot2) {
+  int h, i;
+  
+  if (pivot1->h != pivot2->h) {
+    return 0;
+  }
+
+  h = pivot1->h;
+
+  for (i = 0; i <= h; i++) {
+    if (pivot1->schools[i] != pivot2->schools[i]) {
+      return 0;
+    }
+  }
+
+  for (i = 1; i <= h; i++) {
+    if (pivot1->students[i-1] != pivot2->students[i-1]) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 
 int pivot_list_node_has_NULL_the_pivot(pivot_list_node* my_node) {
   if (my_node->the_pivot == NULL) {
@@ -98,6 +122,11 @@ void concatenate_pivot_lists(pivot_list* target, pivot_list* addition) {
 
 void execute_pivot(pivot* my_pivot, int_sparse_matrix* theta, int* theta_sums) {
   int g;
+
+  /*
+  fprintf(stderr, "At this point my_pivot->schools[0] = %i.\n", my_pivot->schools[0]);
+  */
+  
   theta_sums[my_pivot->schools[0]-1]--;
   for (g = 1; g <= my_pivot->h; g++) {
     increment_int_entry(theta, my_pivot->students[g-1], my_pivot->schools[g-1], -1);
@@ -190,6 +219,17 @@ void print_pivot(pivot* my_pivot) {
     printf("%i -> %i <- ", my_pivot->schools[g-1], my_pivot->students[g-1]);
   }
   printf("%i", my_pivot->schools[h]);
+}
+
+void fprint_pivot(pivot* my_pivot) {
+  int g, h;
+
+  h = my_pivot->h;
+
+  for (g = 1; g <= h; g++) {
+    fprintf(stderr, "%i -> %i -> ", my_pivot->schools[g-1], my_pivot->students[g-1]);
+  }
+  fprintf(stderr, "%i", my_pivot->schools[h]);
 }
 
 void print_pivot_list(pivot_list* my_list) {

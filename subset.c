@@ -1,5 +1,164 @@
 #include "subset.h"
 
+int length_of_cl(correspondence_list* list) {
+  int length;
+
+  correspondence_list* probe;
+  
+  if (list == NULL) {
+    length = 0;;
+  }
+  else {
+    length = 1;
+    probe = list;
+    while (probe->next != NULL) {
+      length++;
+      probe = probe->next;
+    }
+  }
+
+  return length;
+}
+
+correspondence*  nth_corr_of_cl(correspondence_list* list, int n) {
+  int i;
+  correspondence_list* probe;
+
+  probe = list;
+
+  for (i = 1; i <= n-1; i++) {
+    probe = probe->next;
+  }
+
+  return probe->node_corr;
+}
+
+element_list*  J_list(correspondence_list* list) {
+  int len, pos;
+  element_list* answer;
+  element_list* increment;
+
+  len = length_of_cl(list);
+
+  pos = 1;
+
+  answer = image_of_correspondence(nth_corr_of_cl(list, pos));
+
+  while (pos + 2 <= len) {
+    pos+=2;
+    increment = image_of_correspondence(nth_corr_of_cl(list, pos));
+    add_element_list_to_element_list(answer, increment);
+    destroy_element_list_ptr(increment);
+  }
+
+  return answer;
+}
+
+element_list*  P_list(correspondence_list* list) {
+  int len, pos;
+  element_list* answer;
+  element_list* increment;
+
+  len = length_of_cl(list);
+
+  pos = 1;
+
+  answer = domain_of_correspondence(nth_corr_of_cl(list, pos));
+
+  pos = 2;
+
+  while (pos <= len) {
+    increment = image_of_correspondence(nth_corr_of_cl(list, pos));
+    add_element_list_to_element_list(answer, increment);
+    destroy_element_list_ptr(increment);
+    pos+=2;
+  }
+
+  return answer;
+}
+
+element_list* domain_of_correspondence(correspondence* mycorr) {
+  element_list* domain;
+  correspondence_node* probe;
+
+  probe = mycorr->first_node;
+
+  domain = malloc(sizeof(element_list));  
+  *domain = singleton_element_list(probe->domain_pt);
+
+  while (probe->next != NULL) {
+    probe = probe->next;
+    add_element_to_element_list(domain, probe->domain_pt);
+  }
+
+  return domain;
+}
+
+element_list* image_of_correspondence(correspondence* mycorr) {
+  element_list* image;
+  correspondence_node* probe;
+
+  probe = mycorr->first_node;
+  image = NULL;
+
+  while (probe != NULL) {
+    if (probe->image != NULL) {
+      if (image == NULL) {
+	image = copy_of_element_list(probe->image);
+      }
+      else {
+	add_element_list_to_element_list(image, probe->image);
+      }
+    }
+    probe = probe->next;
+  }
+
+  return image;
+}
+
+element_list* image_of_corr_at_pt(correspondence* mycorr, int pt) {
+  correspondence_node* cnode;
+
+  cnode = mycorr->first_node;
+  while (cnode->domain_pt != pt) {
+    cnode = cnode->next;
+  }
+
+  return cnode->image;
+}
+
+int preimage_of_correspondence(correspondence* mycorr, int val) {
+  correspondence_node* probe;
+
+  probe = mycorr->first_node;
+  while (probe != NULL) {
+    if (element_list_has_element(probe->image, val)) {
+      return probe->domain_pt;
+    }
+    else {
+      probe = probe->next;
+    }
+  }
+
+  return 0;
+}
+
+int y_is_in_image_of_x(correspondence* mycorr, int x, int y) {
+  correspondence_node* probe;
+  probe = mycorr->first_node;
+  while (probe->domain_pt != x && probe != NULL) {
+    probe = probe->next;
+  }
+
+  if (probe == NULL) {
+    return 0;
+  }
+  else {
+    return element_list_has_element(probe->image, y);
+  }
+  
+}
+
 subset nullset(int large_set_size) {
   int i;
   subset my_subset;
@@ -131,6 +290,15 @@ void add_element(subset* my_set, int new_elt) {
   if (!is_element(my_set, new_elt)) {
     my_set->subset_size++;
     my_set->indicator[new_elt-1] = 1;
+  }
+}
+
+void add_element_list_to_subset(subset* my_set, element_list* increment) {
+  int i, n;
+
+  n = increment->no_elements;
+  for (i = 1; i <= n; i++) {
+    add_element(my_set, increment->indices[i-1]);
   }
 }
 
@@ -311,7 +479,7 @@ int* indices_of_elements(subset* my_subset) {
   return list_of_indices;
 }
 
-int indices_are_same(element_list* first, element_list* second) {
+int element_lists_are_same(element_list* first, element_list* second) {
   if (first->no_elements != second->no_elements) {
     return 0;
   }
@@ -332,14 +500,32 @@ int element_list_has_element(element_list* my_ind, int elt) {
       return 1;
     }
   }
+  
   return 0;
+}
 
+int first_element_list_contained_in_second(element_list* first, element_list* second) {
+  int i, n;
+
+  n = first->no_elements;
+
+  for (i = 1; i <= n; i++) {
+    if (!element_list_has_element(second, first->indices[i-1])) {
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 
 element_list* copy_of_element_list(element_list* given_index) {
-  element_list* copy = malloc(sizeof(element_list));
-  int no_elts = given_index->no_elements;
+  int no_elts;
+  element_list* copy;
+
+  
+  copy = malloc(sizeof(element_list));
+  no_elts = given_index->no_elements;
   
   copy->no_elements = no_elts;
 
@@ -363,33 +549,57 @@ element_list element_list_of_fullset(int large_set_size) {
 }
 
 void add_element_to_element_list(element_list* index_ptr, int elt) {
-  int m, n, hit;
+  int m, n, hit, rupture, done;
   int* new_indices;
-  
+
   n = index_ptr->no_elements;
 
-  new_indices = malloc((n+1) * sizeof(int));
   hit = 0;
   for (m = 1; m <= n; m++) {
-    if (!hit && index_ptr->indices[m-1] > elt) {
-      new_indices[m-1] = elt;
+    if (index_ptr->indices[m-1] == elt) {
       hit = 1;
     }
-    if (!hit) {
+  }
+  
+  if (!hit) {
+    
+    index_ptr->no_elements = n+1;
+    new_indices = malloc((n+1) * sizeof(int));
+
+    done = 0;
+    rupture = 0;
+    while (!done && rupture < n) {
+      if (elt > index_ptr->indices[rupture]) {
+	rupture++;
+      }
+      else {
+	done = 1;
+      }
+    }
+    
+    for (m = 1; m <= rupture; m++) {
       new_indices[m-1] = index_ptr->indices[m-1];
     }
-    else {
+    new_indices[rupture] = elt;
+    for (m = rupture + 1; m <= n; m++) {
       new_indices[m] = index_ptr->indices[m-1];
     }
+    
+    free(index_ptr->indices);
+    index_ptr->indices = new_indices; 
+    
   }
-  if (!hit) {
-    new_indices[n] = elt;
+}
+
+void add_element_list_to_element_list(element_list* index_ptr, element_list* increment) {
+  int i, n;
+
+  n = increment->no_elements;
+  for (i = 1; i <= n; i++) {
+    
+    add_element_to_element_list(index_ptr, increment->indices[i-1]);
+    
   }
-
-  free(index_ptr->indices);
-
-  index_ptr->no_elements = n+1;
-  index_ptr->indices = new_indices;  
 }
 
 void add_element_to_possibly_NULL_element_list(element_list** index_ptr, int elt) {
@@ -416,30 +626,48 @@ void remove_element_from_element_list(element_list* index_ptr, int elt) {
       present = 1;
     }
   }
-  if (!present) {
-    fprintf(stderr, "We are trying to delete an element that is not present.\n");
-    exit(0);
-  }
 
-  new_indices = malloc((n-1) * sizeof(int));
+  if (present) {
+    new_indices = malloc((n-1) * sizeof(int));
   
-  hit = 0;
-  for (m = 1; m <= n; m++) {
-    if (!hit && index_ptr->indices[m-1] != elt) {
-      new_indices[m-1] = index_ptr->indices[m-1];
+    hit = 0;
+    for (m = 1; m <= n; m++) {
+      if (!hit && index_ptr->indices[m-1] != elt) {
+	new_indices[m-1] = index_ptr->indices[m-1];
+      }
+      if (!hit && index_ptr->indices[m-1] == elt) {
+	hit = 1;
+      }
+      if (hit && index_ptr->indices[m-1] != elt) {
+	new_indices[m-2] = index_ptr->indices[m-1];
+      }
     }
-    if (!hit && index_ptr->indices[m-1] == elt) {
-      hit = 1;
-    }
-    if (hit && index_ptr->indices[m-1] != elt) {
-      new_indices[m-2] = index_ptr->indices[m-1];
+
+    free(index_ptr->indices);
+
+    index_ptr->no_elements = n-1;
+    index_ptr->indices = new_indices;
+  }
+}
+
+void remove_subset_from_element_list(element_list* index_ptr, subset* decrement) {
+  int i, n;
+
+  n = decrement->large_set_size;
+  for (i = 1; i <= n; i++) {
+    if (decrement->indicator[i-1] == 1) {      
+      remove_element_from_element_list(index_ptr, i);
     }
   }
+}
 
-  free(index_ptr->indices);
+void remove_element_list_from_element_list(element_list* index_ptr, element_list* decrement) {
+  int i, n;
 
-  index_ptr->no_elements = n-1;
-  index_ptr->indices = new_indices;  
+  n = decrement->no_elements;
+  for (i = 1; i <= n; i++) {
+    remove_element_from_element_list(index_ptr, decrement->indices[i-1]);
+  }
 }
 
 void add_element_to_element_list_ptr(element_list** index_ptr, int elt) {
@@ -542,10 +770,34 @@ int length_of_list_of_elt_lists(list_of_elt_lists* my_list) {
   return length;
 }
 
+element_list* union_of_the_lists(list_of_elt_lists* my_list) {
+  list_of_elt_lists* probe;
+  element_list* answer;
+
+  answer = NULL;
+
+  probe = my_list;
+  while (probe != NULL) {
+    if (probe->node_index != NULL) {
+      if (answer == NULL) {
+	answer = copy_of_element_list(probe->node_index);
+      }
+      else {
+	add_element_list_to_element_list(answer, probe->node_index);
+      }
+    }
+    probe = probe->next;
+  }
+  
+  return answer;
+}
+
 int element_of_list_set(list_of_elt_lists* my_list, int set_no, int elt_no) {
   int k = 1;
 
-  list_of_elt_lists* probe = my_list;
+  list_of_elt_lists* probe;
+
+  probe = my_list;
   while (k < set_no) {
     probe = probe->next;
     k++;
@@ -594,15 +846,15 @@ void fprint_subset(subset* my_subset) {
   fprintf(stderr, "%d)",my_subset->indicator[my_subset->large_set_size-1]);
 }
 
-void print_element_list(element_list* my_index) {
+void fprint_element_list(element_list* my_index) {
   int i;
   
-  fprintf(stderr, "(");
+  fprintf(stderr, "{");
   
   for (i = 1; i < my_index->no_elements; i++) {
     fprintf(stderr, "%d,",my_index->indices[i-1]);
   }
-  fprintf(stderr, "%d)",my_index->indices[my_index->no_elements-1]);
+  fprintf(stderr, "%d}",my_index->indices[my_index->no_elements-1]);
 }
 
 void print_list_of_elt_lists(list_of_elt_lists* my_list) {
@@ -611,9 +863,9 @@ void print_list_of_elt_lists(list_of_elt_lists* my_list) {
   }
   else {
     list_of_elt_lists* probe = my_list;
-    print_element_list(probe->node_index); 
+    fprint_element_list(probe->node_index); 
     while (probe->next != NULL) {
-      print_element_list(probe->next->node_index); 
+      fprint_element_list(probe->next->node_index); 
       probe = probe->next;
     }
   }
@@ -621,8 +873,37 @@ void print_list_of_elt_lists(list_of_elt_lists* my_list) {
 
 void print_element_list_of_subset(subset* my_subset) {
   element_list the_index = element_list_of_subset(my_subset);
-  print_element_list(&the_index);
+  fprint_element_list(&the_index);
   destroy_element_list(the_index);
+}
+
+void fprint_correspondence(correspondence* my_corr) {
+  correspondence_node* probe;
+  
+  probe = my_corr->first_node;
+  while (probe != NULL) {
+    fprintf(stderr, "%i -> ", probe->domain_pt);
+    fprint_element_list(probe->image);
+    fprintf(stderr, "\n"); 
+    probe = probe->next;
+  }
+}
+
+void fprint_correspondence_list(correspondence_list* my_list) {
+  int n;
+
+  correspondence_list* probe;
+
+  n = 0;
+  probe = my_list;
+
+  while(probe != NULL) {
+    n++;
+    fprintf(stderr, "      Correspondence_%i:\n", n);
+    fprint_correspondence(probe->node_corr);
+    /* fprintf(stderr, "\n"); */
+    probe = probe->next;
+  }
 }
 
 void destroy_subset(subset my_subset) {
@@ -631,6 +912,11 @@ void destroy_subset(subset my_subset) {
 
 void destroy_element_list(element_list my_index) {
   free(my_index.indices);
+}
+
+void destroy_element_list_ptr(element_list* my_ptr) {
+  destroy_element_list(*my_ptr);
+  free(my_ptr);
 }
 
 void destroy_list_of_elt_lists(list_of_elt_lists* my_list) {
@@ -648,6 +934,46 @@ void destroy_list_of_elt_lists(list_of_elt_lists* my_list) {
     destroy_element_list(*(probe->node_index));
     free(probe->node_index);
   }
+  free(probe);
+}
+
+void destroy_correspondence(correspondence* corr) {
+  correspondence_node* node;
+  correspondence_node* trailer;;
+
+  node = corr->first_node;
+
+  while (node->next != NULL) {
+    if (node->image != NULL) {
+      destroy_element_list(*(node->image));
+      free(node->image);
+    }
+    trailer = node;
+    node = node->next;
+    free(trailer);
+  }
+  if (node->image != NULL) {
+    destroy_element_list(*(node->image));
+    free(node->image);
+  }
+  free(node);
+  free(corr);
+}
+
+
+void destroy_correspondence_list(correspondence_list* list) {
+  correspondence_list* probe;
+  correspondence_list* trailer;;
+
+  probe = list;
+
+  while (probe->next != NULL) {
+    destroy_correspondence(probe->node_corr);
+    trailer = probe;
+    probe = probe->next;
+    free(trailer);
+  }
+  destroy_correspondence(probe->node_corr);
   free(probe);
 }
 

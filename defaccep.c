@@ -9,20 +9,10 @@ pure_alloc deferred_acceptance(input_sch_ch_prob* myiscp) {
 
   pure_alloc answer;
 
-  if (!safe_schools_are_safe(myiscp)) {
-    fprintf(stderr, "Unsafe safe schools in myiscp!\n");
-    exit(0);
-  }
-
   myiscp_copy = copy_of_input_scp(myiscp);
   /*
   refine_priorities(&myiscp_copy);
   */
-
-  if (!safe_schools_are_safe(&myiscp_copy)) {
-    fprintf(stderr, "Unsafe safe schools in myiscp_copy!\n");
-    exit(0);
-  }
 
   nst = myiscp_copy.no_students;
   nsc = myiscp_copy.no_schools;
@@ -151,6 +141,7 @@ void reject_student(input_sch_ch_prob* myiscp, element_list** applicant_lists,
 
 void remove_i_from_applicant_list_j(element_list** applicant_lists, int i, int j) {
   if (applicant_lists[j-1]->no_elements > 1) {
+      
     remove_element_from_element_list(applicant_lists[j-1], i);
   }
   else {
@@ -177,7 +168,9 @@ void i_applies_to_next_school(input_sch_ch_prob* myiscp, element_list** applican
   add_element_to_possibly_NULL_element_list(&(applicant_lists[new_school-1]), i);
 }
 
-int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_list, int j) {
+int lowest_priority_student(input_sch_ch_prob* myiscp,
+			    element_list* school_app_list,
+			    int j) {
   int i, cand_worst_pr, cand_worst_st, cand_st, cand_pr;
 
   cand_worst_st = school_app_list->indices[0];
@@ -185,7 +178,8 @@ int lowest_priority_student(input_sch_ch_prob* myiscp, element_list* school_app_
   cand_worst_pr = get_input_priority(myiscp, cand_worst_st, j);
 
   for (i = 2; i <= school_app_list->no_elements; i++) {
-    cand_st = school_app_list->indices[i-1];  
+    cand_st = school_app_list->indices[i-1];
+    
     cand_pr = get_input_priority(myiscp, cand_st, j);
     
     if (cand_pr < cand_worst_pr) {

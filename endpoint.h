@@ -15,40 +15,75 @@
    go on before some condition is violated, then we adjust the
    final_alloc, the feasible_guide, and the working_scp. */
 
+double NEW_time_until_some_requirement_filled(double* eating_speeds, process_scp* working_scp);
+
+/*
 double time_until_some_school_exhausted(int* favorites, process_scp* working_scp);
+*/
 
+double NEW_time_until_some_school_exhausted(int* favorites, double* eating_speeds,
+					    process_scp* working_scp);
+
+/*
 double time_until_feasible_guide_not_above_alloc(int_sparse_matrix* theta,
-						     int* favorites,
-						     process_scp* working_scp,
+						 int* favorites,
+						 process_scp* working_scp,
 						 partial_alloc* feasible_guide);
+*/
 
-double time_until_feasible_guide_not_feasible(int_sparse_matrix* theta,
-						  process_scp* working_scp,
-					      partial_alloc* feasible_guide);
-
-double time_until_trajectory_change(int_sparse_matrix* theta, 
-				    int* favorites, process_scp* working_scp,
-				    partial_alloc* feasible_guide);
-
-double time_until_feasible_guide_not_above_allocOLD(int_sparse_matrix* theta,
-						     element_list* alpha, int* favorites,
+double NEW_time_until_feasible_guide_not_above_alloc(int_sparse_matrix* theta,
+						     int* favorites,
+						     double* eating_speeds,
 						     process_scp* working_scp,
 						     partial_alloc* feasible_guide);
 
-double time_until_feasible_guide_not_feasibleOLD(int_sparse_matrix* theta,
-						  element_list* alpha, process_scp* working_scp,
-						  partial_alloc* feasible_guide);
+double time_until_feasible_guide_not_feasible(int_sparse_matrix* theta,
+					      process_scp* working_scp,
+					      partial_alloc* feasible_guide);
+/*
+double time_until_trajectory_change(int_sparse_matrix* theta, 
+				    int* favorites, process_scp* working_scp,
+				    partial_alloc* feasible_guide);
+*/
 
+double NEW_time_until_trajectory_change(int_sparse_matrix* theta, int* favorites,
+					double* eating_speeds, process_scp* working_scp,
+					partial_alloc* feasible_guide);
+
+/*
 void augment_partial_alloc(partial_alloc* my_alloc, int* favorites, double delta);
+*/
 
+void NEW_augment_partial_alloc(partial_alloc* my_alloc, int* favorites, double* eating_speeds,
+			       double delta);
+
+/*
 void adjust_feasible_guide(partial_alloc* feasible_guide, process_scp* myscp,
 			   int_sparse_matrix* theta,
 			   int* favorites, double delta);
+*/
 
+void NEW_adjust_feasible_guide(partial_alloc* feasible_guide, process_scp* myscp,
+			       int_sparse_matrix* theta,
+			       int* favorites, double* eating_speeds, double delta);
+
+/*
 void decrement_working_scp(process_scp* working_scp, int* favorites, double delta);
+*/
 
+void NEW_decrement_working_scp(process_scp* working_scp, int* favorites, double* eating_speeds,
+			       double delta);
+
+/*
 void move_to_endpoint_of_segment(int_sparse_matrix* theta, 
-				     int* favorites, process_scp* working_scp,
+				 int* favorites, process_scp* working_scp,
+				 partial_alloc* feasible_guide,
+				 partial_alloc* final_alloc);
+*/
+
+void NEW_move_to_endpoint_of_segment(int_sparse_matrix* theta, 
+				     int* favorites, double* eating_speeds,
+				     process_scp* working_scp,
 				     partial_alloc* feasible_guide,
 				     partial_alloc* final_alloc);
 

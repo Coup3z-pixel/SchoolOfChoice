@@ -27,6 +27,8 @@ pivot initialized_pivot(int h);
 
 pivot* copy_of_pivot(pivot* my_pivot);
 
+int pivots_are_same(pivot* pivot1, pivot* pivot2);
+
 void execute_pivot(pivot* my_pivot, int_sparse_matrix* theta, int* theta_sums);
 
 
@@ -53,6 +55,8 @@ pivot_list right_reduced_pivot_list(pivot_list* given_list,
 
 
 void print_pivot(pivot* my_pivot);
+
+void fprint_pivot(pivot* my_pivot);
 
 void print_pivot_list(pivot_list* my_list);
 

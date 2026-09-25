@@ -128,6 +128,33 @@ double* school_sums(partial_alloc* my_alloc) {
   return sums;
 }
 
+int* compute_fully_allocated_schools(process_scp* working_scp, partial_alloc* feasible_guide) {
+  int i, j, nst, nsc;
+  
+  double school_sum;
+  int* sch_fully_alloc;
+
+  nst = working_scp->no_students;
+  nsc = working_scp->no_schools;
+
+  sch_fully_alloc = malloc(nsc * sizeof(int));
+  
+  for (j = 1; j <= nsc; j++) {
+    school_sum = 0.0;
+    for (i = 1; i <= nst; i++) {
+      school_sum += get_entry(feasible_guide, i, j);
+    }
+    if (school_sum > working_scp->quotas[j-1] - 0.000000001) {
+      sch_fully_alloc[j-1] = 1;
+    }
+    else {
+      sch_fully_alloc[j-1] = 0;
+    }
+  }
+
+  return sch_fully_alloc;
+}
+
 double* excess_demands(process_scp* myscp, partial_alloc* demands) {
   int j, nsc;
   double total_demand;
@@ -393,7 +420,7 @@ partial_alloc zero_alloc_for_process_scp(process_scp* myscp) {
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_dbl_sp_mat_for_process(myscp);
+  answer.sparse = zero_dbl_sp_mat_for_process(myscp);
   
   return answer;
 }
@@ -408,7 +435,7 @@ partial_alloc zero_alloc_for_input_scp(input_sch_ch_prob* myscp) {
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_dbl_sp_mat_for_input(myscp);
+  answer.sparse = zero_dbl_sp_mat_for_input(myscp);
   
   return answer;
 }
@@ -445,7 +472,7 @@ pure_alloc zero_pure_alloc_for_input_scp(input_sch_ch_prob* myiscp) {
   answer.no_students = nst;
   answer.no_schools = nsc;
 
-  answer.sparse = new_int_sp_mat_for_input(myiscp);
+  answer.sparse = zero_int_sp_mat_for_input(myiscp);
   
   return answer;
 }

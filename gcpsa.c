@@ -5,6 +5,7 @@
 #include "gcpsacode.h"
 
 int main(int argc, char *argv[]) {
+  int allowed_speed_type;
   input_sch_ch_prob input_scp;
   partial_alloc gcpsa_alloc;
   process_scp input_process_scp;
@@ -25,7 +26,8 @@ int main(int argc, char *argv[]) {
   
   input_process_scp = process_scp_from_input(&input_scp);
 
-  gcpsa_alloc = gcpsa_allocation(&input_scp);
+  allowed_speed_type = 0;
+  gcpsa_alloc = NEW_gcpsa_allocation(&input_scp, allowed_speed_type);
 
   if (!allocation_is_efficient(&gcpsa_alloc, &input_process_scp, 0)) {
 

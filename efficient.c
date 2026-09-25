@@ -307,7 +307,7 @@ void make_alloc_eff_and_par_dominant(partial_alloc* my_alloc, process_scp* myscp
     graph = reduced_graph(my_alloc, myscp, ex_ante_stable);
   }
 
-  fprintf(stderr, "The total efficiency gain was %1.3f ranks.\n", total_gain);
+  /*  fprintf(stderr, "The total efficiency gain was %1.3f ranks.\n", total_gain); */
 
   destroy_dgraph(graph);
 }

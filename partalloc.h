@@ -44,6 +44,8 @@ double get_total_demand_for_school(partial_alloc* alloc, int j);
 
 double* school_sums(partial_alloc* my_alloc);
 
+int* compute_fully_allocated_schools(process_scp* working_scp, partial_alloc* feasible_guide);
+
 double* excess_demands(process_scp* myscp, partial_alloc* demands);
 
 double sum_of_excesses(process_scp* myscp, double* cutoffs);

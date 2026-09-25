@@ -5,6 +5,7 @@
 #include "gcpsbcode.h"
 
 int main(int argc, char *argv[]) {
+  int allowed_speed_type;
   input_sch_ch_prob input_scp;
   partial_alloc gcpsb_alloc;
 
@@ -20,7 +21,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  gcpsb_alloc = gcpsb_allocation(&input_scp);
+  gcpsb_alloc = NEW_gcpsb_allocation(&input_scp, allowed_speed_type);
   
   print_partial_alloc(&gcpsb_alloc); 
 

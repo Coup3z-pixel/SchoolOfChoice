@@ -20,6 +20,7 @@ typedef struct Input_Sch_Ch_Prob {
 typedef struct Process_Scp {
   int no_students;
   int no_schools;
+  double* requirements;
   double* quotas;
   int* no_eligible_schools; /* for each student, the number of eligible schools */
   int** preferences; /* each student's list of eligible schools, from best to worst */
@@ -36,8 +37,6 @@ void set_input_priority(input_sch_ch_prob* myiscp, int i, int j, int priority);
 int maximum_input_priority(input_sch_ch_prob* myiscp);
 
 int maximum_priority(process_scp* myscp);
-
-/* favorites[i-1] is i's favorite among schools i is eligible for */
 
 int* get_favorites(process_scp* working_scp);
 
@@ -59,17 +58,17 @@ int student_ranking_of_school(process_scp* myscp, int i, int j);
 
 int safe_schools_are_safe(input_sch_ch_prob* myiscp);
 
-int_sparse_matrix new_int_sp_mat(process_scp* myscp);
+int_sparse_matrix zero_int_sp_mat_for_process(process_scp* myscp);
 
-dbl_sparse_matrix new_dbl_sp_mat_for_process(process_scp* myscp);
+dbl_sparse_matrix zero_dbl_sp_mat_for_process(process_scp* myscp);
 
-dbl_sparse_matrix new_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp);
+dbl_sparse_matrix zero_dbl_sp_mat_for_input(input_sch_ch_prob* myiscp);
 
-int_sparse_matrix new_int_sp_mat_for_input(input_sch_ch_prob* myiscp);
+int_sparse_matrix zero_int_sp_mat_for_input(input_sch_ch_prob* myiscp);
 
 int_sparse_matrix sparse_priorities(input_sch_ch_prob* myscp);
 
-process_scp process_scp_from_input(input_sch_ch_prob* myscp);
+process_scp process_scp_from_input(input_sch_ch_prob* myiscp);
 
 process_scp left_sub_process_scp(process_scp* myscp,subset* J_subset, subset* P_subset);
 
@@ -82,8 +81,6 @@ input_sch_ch_prob reduced_input_scp(input_sch_ch_prob* myiscp, int* coarse_cutof
 input_sch_ch_prob copy_of_input_scp(input_sch_ch_prob* myiscp);
 
 input_sch_ch_prob make_toy_sch_ch_prob();
-
-process_scp make_toy_process_scp();
 
 int J_P_split_OK(process_scp* myscp, subset* J_subset, subset* P_subset);
 
